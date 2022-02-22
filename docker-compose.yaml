@@ -1,0 +1,13 @@
+version: '3'
+services:
+  db:
+    image: postgres:14
+    restart: always
+    volumes: 
+      - ./db:/data/db
+    ports: 
+      - "5432:5432"
+    environment:
+        POSTGRES_USER: exampleuser
+        POSTGRES_PASSWORD: wheelbarrow
+        POSTGRES_DB: musicmap
