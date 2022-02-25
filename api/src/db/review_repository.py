@@ -1,13 +1,11 @@
 from .db import BaseRepository, get_cursor
 import logging
-from models import Artist
+from models import Review
 
-LOG = logging.getLogger(__name__)
-
-SELECT_ALL_SQL = "SELECT id, name FROM artist LIMIT %(limit)s OFFSET %(offset)s"
+SELECT_ALL_SQL = "SELECT id, title, body FROM review LIMIT %(limit)s OFFSET %(offset)s"
 
 
-class Artists(BaseRepository):
+class Reviews(BaseRepository):
     def find_all(self, limit=10, offset=0):
         with get_cursor() as cursor:
             cursor.execute(
@@ -15,7 +13,7 @@ class Artists(BaseRepository):
                 {"limit": limit, "offset": offset},
             )
             results = cursor.fetchall()
-        return [Artist(id=id_, name=name) for (id_, name) in results]
+        return [Review(id=id_, name=name) for (id_, name) in results]
 
     def by_id(self, id_):
         return super().by_id(id_)

@@ -21,18 +21,17 @@ class Albums(BaseRepository):
                 {"limit": limit, "offset": offset},
             )
             results = cursor.fetchall()
-        out = []
-        for (album_id, title, artists_json) in results:
-            a = Album(
-                _id=album_id,
+        return [
+            Album(
+                id=album_id,
                 name=title,
                 artists=[
-                    Artist(_id=artist_id, name=artist_name)
+                    Artist(id=artist_id, name=artist_name)
                     for (artist_id, artist_name) in artists_json.items()
                 ],
             )
-            out.append(a)
-        return out
+            for (album_id, title, artists_json) in results
+        ]
 
     def by_id(self, id_):
         return super().by_id(id_)
