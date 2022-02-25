@@ -19,11 +19,11 @@ SQL = """
 -- Your SQL goes here
 CREATE TABLE IF NOT EXISTS album (
     id SERIAL PRIMARY KEY,
-    title VARCHAR NOT NULL
+    title VARCHAR UNIQUE NOT NULL
 );
 CREATE TABLE IF NOT EXISTS artist (
     id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL
+    name VARCHAR UNIQUE NOT NULL
 );
 CREATE TABLE IF NOT EXISTS review (
     id SERIAL PRIMARY KEY,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS review (
 );
 CREATE TABLE IF NOT EXISTS topic (
     id SERIAL PRIMARY KEY,
-    name VARCHAR NOT NULL
+    name VARCHAR UNIQUE NOT NULL
 );
 
 -- relation tables. rel_a_b in alphabetic order.
@@ -43,34 +43,40 @@ CREATE TABLE IF NOT EXISTS topic (
 CREATE TABLE IF NOT EXISTS rel_album_artist (
     id SERIAL PRIMARY KEY,
     album_id INTEGER REFERENCES album,
-    artist_id INTEGER REFERENCES artist
+    artist_id INTEGER REFERENCES artist,
+    UNIQUE (album_id, artist_id)
 );
 CREATE TABLE IF NOT EXISTS rel_album_review (
     id SERIAL PRIMARY KEY,
     album_id INTEGER REFERENCES album,
-    review_id INTEGER REFERENCES review
+    review_id INTEGER REFERENCES review,
+    UNIQUE (album_id, review_id)
 );
 CREATE TABLE IF NOT EXISTS rel_album_topic (
     id SERIAL PRIMARY KEY,
     album_id INTEGER REFERENCES album,
-    topic_id INTEGER REFERENCES topic
+    topic_id INTEGER REFERENCES topic,
+    UNIQUE (album_id, topic_id)
 );
 -- artist_thing
 CREATE TABLE IF NOT EXISTS rel_artist_review (
     id SERIAL PRIMARY KEY,
     artist_id INTEGER REFERENCES artist,
-    review_id INTEGER REFERENCES review
+    review_id INTEGER REFERENCES review,
+    UNIQUE (artist_id, review_id)
 );
 CREATE TABLE IF NOT EXISTS rel_artist_topic (
     id SERIAL PRIMARY KEY,
     artist_id INTEGER REFERENCES artist,
-    topic_id INTEGER REFERENCES topic
+    topic_id INTEGER REFERENCES topic,
+    UNIQUE (artist_id, topic_id)
 );
 -- review_thing
 CREATE TABLE IF NOT EXISTS rel_review_topic (
     id SERIAL PRIMARY KEY,
     review_id INTEGER REFERENCES review,
-    topic_id INTEGER REFERENCES topic
+    topic_id INTEGER REFERENCES topic,
+    UNIQUE (review_id, topic_id)
 );
 """
 
