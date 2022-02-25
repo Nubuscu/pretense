@@ -13,7 +13,7 @@ class Reviews(BaseRepository):
                 {"limit": limit, "offset": offset},
             )
             results = cursor.fetchall()
-        return [Review(id=id_, name=name) for (id_, name) in results]
+        return [Review(id=id_, name=name, body=body) for (id_, name, body) in results]
 
     def by_id(self, id_):
         return super().by_id(id_)
