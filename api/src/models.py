@@ -1,29 +1,42 @@
+from typing import List, NewType, Optional
 from uuid import uuid4
 
-from pydantic import BaseModel, Optional
+from pydantic import BaseModel
+
+UUID = NewType("UUID", uuid4)
 
 
 class Tag(BaseModel):
-    _id: uuid4
+    """A generic string tag to search other objects by."""
+
+    _id: UUID
     key: str
 
 
 class Review(BaseModel):
-    _id: uuid4
+    """Long(er) form text about another object."""
+
+    _id: UUID
     title: Optional[str]
     body: str
 
 
 class Base(BaseModel):
-    _id: uuid4
-    tags: Optional[set[Tag]]
-    reviews: Optional[set[Review]]
+    """Base model from which reviewable/taggable objects are created."""
+
+    _id: UUID
+    tags: Optional[List[Tag]]
+    reviews: Optional[List[Review]]
 
 
 class Artist(Base):
+    """Represents an artist/musician."""
+
     name: str
 
 
 class Album(Base):
+    """Represents an album."""
+
     name: str
-    artists: Optional[list[Artist]]
+    artists: Optional[List[Artist]]
