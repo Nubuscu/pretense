@@ -3,8 +3,6 @@ services:
   db:
     image: postgres:14
     restart: always
-    volumes: 
-      - ./db:/data/db
     ports: 
       - "5432:5432"
     environment:
