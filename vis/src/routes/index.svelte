@@ -1,38 +1,32 @@
 <script>
-    import Graph from '../components/Graph.svelte'
-    import GraphNode from '../components/GraphNode.svelte'
-    import GraphEdge from '../components/GraphEdge.svelte'
-    const nodes = [
-      { id: 'N1', label: 'Start' },
-      { id: 'N2', label: '4' },
-      { id: 'N4', label: '8' },
-      { id: 'N5', label: '15' },
-      { id: 'N3', label: '16' },
-      { id: 'N6', label: '23' },
-      { id: 'N7', label: '42' },
-      { id: 'N8', label: 'End' }
-    ]
-    const edges = [
-      { id: 'E1', source: 'N1', target: 'N2' },
-      { id: 'E2', source: 'N2', target: 'N3' },
-      { id: 'E3', source: 'N3', target: 'N6' },
-      { id: 'E4', source: 'N2', target: 'N4' },
-      { id: 'E5', source: 'N4', target: 'N5' },
-      { id: 'E6', source: 'N5', target: 'N4', label: '2' },
-      { id: 'E7', source: 'N5', target: 'N6' },
-      { id: 'E8', source: 'N6', target: 'N7' },
-      { id: 'E9', source: 'N7', target: 'N7', label: '3' },
-      { id: 'E10', source: 'N7', target: 'N8' }
-    ]
-  </script>
-  
-  <h1>Pretense</h1>
+  import Graph from "../components/Graph.svelte";
+  import GraphNode from "../components/GraphNode.svelte";
+  import GraphEdge from "../components/GraphEdge.svelte";
+
+  async function getGraph() {
+    let root = "http://localhost:5000"; // TODO sensible value
+    let res = await fetch(`${root}/v1/albums/graph/all?limit=100`);
+    if (res.ok) {
+      return await res.json();
+    } else {
+      throw new Error(await res.text());
+    }
+  }
+</script>
+
+<h1>Pretense</h1>
+{#await getGraph()}
+  waiting...
+{:then graphRes}
   <Graph>
-    {#each nodes as node}
-      <GraphNode node={node}/>
+    {#each graphRes.nodes as node}
+      <GraphNode {node} />
     {/each}
-  
-    {#each edges as edge}
-      <GraphEdge edge={edge}/>
+
+    {#each graphRes.edges as edge}
+      <GraphEdge {edge} />
     {/each}
   </Graph>
+{:catch err}
+  {err.message}
+{/await}

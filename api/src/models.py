@@ -54,3 +54,20 @@ class Topic(Base):
     name: str
     albums: Optional[List[Album]]
     artists: Optional[List[Artist]]
+
+
+class Node(BaseModel):
+    id_: str = Field(None, alias="id")
+    label: str
+
+
+class Edge(BaseModel):
+    id_: str = Field(None, alias="id")
+    label: Optional[str]
+    source: str  # node id
+    target: str  # node id
+
+
+class GraphDTO(BaseModel):
+    nodes: List[Node]
+    edges: List[Edge]
