@@ -1,10 +1,19 @@
-from sys import prefix
-from typing import Optional
+import logging
+import os
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from routes import albums, artists, reviews, topics
+
+LOG = logging.getLogger(__name__)
+
+
+def list_from_env_var(raw):
+    try:
+        return [clean for item in raw.split(",") if (clean := item.strip())]
+    except AttributeError:
+        return []
 
 
 def create_app():
@@ -13,7 +22,8 @@ def create_app():
         "http://localhost",
         "http://localhost:3000",
     ]
-
+    origins += list_from_env_var(os.environ.get("CORS_ALLOW_LIST"))
+    LOG.info("Allowed origins: %s", origins)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,

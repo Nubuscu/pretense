@@ -1,5 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter
+from models import GraphDTO
 from db.topic_repository import Topics
 
 topics = APIRouter()
@@ -13,5 +14,5 @@ def get(tag: Optional[int] = None, limit: int = 10, offset: int = 0):
 
 
 @topics.get("/{id_}")
-def get_one(id_):
+def get_one(id_: int):
     return Topics().by_id(id_)

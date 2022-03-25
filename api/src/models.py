@@ -69,5 +69,5 @@ class Edge(BaseModel):
 
 
 class GraphDTO(BaseModel):
-    nodes: List[Node]
-    edges: List[Edge]
+    nodes: List[Node] = list
+    edges: List[Edge] = list

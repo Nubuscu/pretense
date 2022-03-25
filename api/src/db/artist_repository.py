@@ -18,6 +18,8 @@ class Artists(BaseRepository):
         return [Artist(id=id_, name=name) for (id_, name) in results]
 
     def by_id(self, id_):
+        if not id_:
+            return None
         return super().by_id(id_)
 
     def by_tag(self, tag_id):
