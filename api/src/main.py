@@ -4,8 +4,21 @@ import os
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes import albums, artists, reviews, topics
+from src.routes import albums, artists, reviews, topics, health
 
+from fastapi.logger import logger as fastapi_logger
+
+gunicorn_error_logger = logging.getLogger("gunicorn.error")
+gunicorn_logger = logging.getLogger("gunicorn")
+uvicorn_access_logger = logging.getLogger("uvicorn.access")
+uvicorn_access_logger.handlers = gunicorn_error_logger.handlers
+
+fastapi_logger.handlers = gunicorn_error_logger.handlers
+
+if __name__ != "__main__":
+    fastapi_logger.setLevel(gunicorn_logger.level)
+else:
+    fastapi_logger.setLevel(logging.DEBUG)
 LOG = logging.getLogger(__name__)
 
 
@@ -19,8 +32,9 @@ def list_from_env_var(raw):
 def create_app():
     app = FastAPI()
     origins = [
-        "http://localhost",
-        "http://localhost:3000",
+        "*",
+        # "http://localhost",
+        # "http://localhost:3000",
     ]
     origins += list_from_env_var(os.environ.get("CORS_ALLOW_LIST"))
     LOG.info("Allowed origins: %s", origins)
@@ -36,6 +50,7 @@ def create_app():
     v1_router.include_router(artists, prefix="/artists")
     v1_router.include_router(reviews, prefix="/reviews")
     v1_router.include_router(topics, prefix="/topics")
+    v1_router.include_router(health, prefix="/health")
 
     app.include_router(v1_router)
     return app

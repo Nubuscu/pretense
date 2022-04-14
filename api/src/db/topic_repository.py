@@ -1,9 +1,9 @@
 from .db import BaseRepository, get_cursor
 import logging
-from models import Topic
-from db.review_repository import Reviews
-from db.album_repository import Albums
-from db.artist_repository import Artists
+from src.models import Topic
+from src.db.review_repository import Reviews
+from src.db.album_repository import Albums
+from src.db.artist_repository import Artists
 
 LOG = logging.getLogger(__name__)
 

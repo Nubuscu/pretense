@@ -1,4 +1,4 @@
-from db.db import get_cursor
+from src.db.db import get_cursor
 
 INSERT_TOPIC_SQL = "INSERT INTO topic (name) VALUES (%(name)s)"
 SELECT_TOPIC_SQL = "SELECT id FROM topic WHERE name = %(name)s"

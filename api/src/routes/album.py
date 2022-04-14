@@ -1,7 +1,7 @@
 from typing import Optional
-from models import Edge, GraphDTO, Node
+from src.models import Edge, GraphDTO, Node
 from fastapi import APIRouter
-from db.album_repository import Albums
+from src.db.album_repository import Albums
 
 albums = APIRouter()
 

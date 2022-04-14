@@ -1,6 +1,6 @@
 from .db import BaseRepository, get_cursor
 import logging
-from models import Artist
+from src.models import Artist
 
 LOG = logging.getLogger(__name__)
 

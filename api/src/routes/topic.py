@@ -1,7 +1,7 @@
 from typing import Optional
 from fastapi import APIRouter
-from models import GraphDTO
-from db.topic_repository import Topics
+from src.models import GraphDTO
+from src.db.topic_repository import Topics
 
 topics = APIRouter()
 

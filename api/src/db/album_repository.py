@@ -1,5 +1,5 @@
 from .db import BaseRepository, get_cursor
-from models import Album, Artist
+from src.models import Album, Artist
 from typing import List
 import logging
 

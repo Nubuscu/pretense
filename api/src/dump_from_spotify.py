@@ -6,7 +6,7 @@ Intended as a one-off pull but should be safely re-runnable.
 """
 import requests
 
-from db.db import get_cursor
+from src.db.db import get_cursor
 
 # a token for the spotify api. e.g.:
 # https://developer.spotify.com/console/get-current-user-saved-albums/?limit=&offset=&market=

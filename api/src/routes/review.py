@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter
-from db.review_repository import Reviews
+from src.db.review_repository import Reviews
 
 reviews = APIRouter()
 

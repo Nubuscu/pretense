@@ -1,6 +1,6 @@
 
 run:
-	@cd src && uvicorn main:app --reload --port=5000
+	@uvicorn src.main:app --reload --port=5000
 
 format:
 	isort src/*

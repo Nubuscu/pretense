@@ -1,6 +1,6 @@
 from .db import BaseRepository, get_cursor
 import logging
-from models import Review
+from src.models import Review
 
 SELECT_ALL_SQL = "SELECT id, title, body FROM review LIMIT %(limit)s OFFSET %(offset)s"
 SELECT_ONE_SQL = "SELECT id, title, body FROM review WHERE id = %(id)s LIMIT 1"

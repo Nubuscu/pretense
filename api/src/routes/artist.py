@@ -1,6 +1,6 @@
 from typing import Optional
 from fastapi import APIRouter
-from db.artist_repository import Artists
+from src.db.artist_repository import Artists
 
 artists = APIRouter()
 
