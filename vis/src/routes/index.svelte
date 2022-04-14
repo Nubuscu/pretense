@@ -3,9 +3,11 @@
   import GraphNode from "../components/GraphNode.svelte";
   import GraphEdge from "../components/GraphEdge.svelte";
 
+  let root = `${import.meta.env.VITE_BACKEND_HOST}:${
+    import.meta.env.VITE_BACKEND_PORT
+  }`;
   async function getGraph() {
-    let root = "http://localhost:5000"; // TODO sensible value
-    let res = await fetch(`${root}/v1/albums/graph/all?limit=100`);
+    let res = await fetch(`${root}/v1/topics/4`);
     if (res.ok) {
       return await res.json();
     } else {
