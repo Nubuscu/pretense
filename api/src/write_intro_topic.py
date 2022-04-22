@@ -1,4 +1,4 @@
-from src.db.db import get_cursor
+from db.db import get_cursor
 
 INSERT_TOPIC_SQL = "INSERT INTO topic (name) VALUES (%(name)s)"
 SELECT_TOPIC_SQL = "SELECT id FROM topic WHERE name = %(name)s"
@@ -22,19 +22,25 @@ WITH cte_albums AS (
 INSERT INTO rel_album_topic (album_id, topic_id) SELECT * FROM cte_albums
 """
 
+title = "Starting somewhere"
+
 body = """
-Hi there! This is the first "review" on here, so I'll use it as an intro rant:
-This is a side project to help me map out my music tastes and discoveries - where they came from, what lead to what, etc.
-I'll probably write it like a series of reviews, which - as a nameless voice on the internet - can sound quite pretentious.
-Some grounding opinions:
-- there is no universally good/bad music. If you enjoy it, it's good (for you)
+I like music and I didn't think the internet had enough faceless opinions on subjective matter, so here we are.
+This project is intended for me to grapple with what I listen to, how my tastes evolved over time, and what discoveries were made.
+It's also an excuse for me to play with some new(ish, to me) technologies.
+
+If I ever publish this, hi Mum!
+
+Some grounding opinions and factoids:
 - being exact about subgenres is often silly but sometimes helpful
+- there is no universally good/bad music. If you enjoy it, it's good, even if your opinion is in the minority
 - I typically listen to some form of metal these days
 - my roots are mostly in niche NZ and/or Christian rock, which progressed into Christian metalcore, then into other metalcore/deathcore
-- some rap, some funk, some electronic thrown in somewhere along the line
+- some mixture of rap, funk, and electronic thrown in along the line
 - djent is a real genre, but only if you want it to be
 
-Some things I seem to keep recommending to people are somewhat attached here. I'll try to leave words on each of them individually.
+Some things I seem to keep recommending to people are attached here.
+I'll try to leave words on each of them individually, pending some work.
 """
 
 with get_cursor() as cursor:
@@ -42,8 +48,8 @@ with get_cursor() as cursor:
     cursor.execute(SELECT_TOPIC_SQL, {"name": "intro"})
     topic_id = cursor.fetchone()
 
-    cursor.execute(INSERT_REVIEW_SQL, {"title": "Gotta start somewhere", "body": body})
-    cursor.execute(SELECT_REVIEW_SQL, {"title": "Gotta start somewhere"})
+    cursor.execute(INSERT_REVIEW_SQL, {"title": title, "body": body})
+    cursor.execute(SELECT_REVIEW_SQL, {"title": title})
     review_id = cursor.fetchone()
 
     cursor.execute(
