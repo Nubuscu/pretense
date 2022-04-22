@@ -36,3 +36,11 @@
     <slot />
   {/if}
 </div>
+
+<style>
+  .graph {
+    min-height: 500px;
+    left: 12.5%;
+    width: 75%;
+  }
+</style>

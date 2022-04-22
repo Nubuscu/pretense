@@ -59,7 +59,3 @@ html, body {
   button:focus {
     border-color: #666;
   }
-  
-  .graph {
-    height: 500px;
-  }
