@@ -1,6 +1,7 @@
+import json
 from .db import BaseRepository, get_cursor
 import logging
-from src.models import Topic
+from src.models import Topic, TopicMeta
 from src.db.review_repository import Reviews
 from src.db.album_repository import Albums
 from src.db.artist_repository import Artists
@@ -13,6 +14,7 @@ SELECT_ONE_SQL = (
     "SELECT"
     " topic.id,"
     " topic.name,"
+    " topic.meta,"
     " array_agg(rel_album_topic.album_id),"
     " array_agg(rel_artist_topic.artist_id),"
     " array_agg(rel_review_topic.review_id)"
@@ -41,10 +43,20 @@ class Topics(BaseRepository):
             result = cursor.fetchone()
             if not result:
                 return None
-            (topic_id, name, album_ids, artist_ids, review_ids) = result
+            (topic_id, name, meta, album_ids, artist_ids, review_ids) = result
+            if meta:
+                try:
+                    meta = json.loads(meta)
+                except ValueError:
+                    LOG.warning(
+                        "Failed to load metadata of topic %s, %s", topic_id, meta
+                    )
+                    meta = None
+
             return Topic(
                 id=topic_id,
                 name=name,
+                meta=TopicMeta(layout=meta),
                 albums=[
                     Albums().by_id(album_id) for album_id in set(album_ids) if album_id
                 ],

@@ -1,4 +1,4 @@
-from typing import List, NewType, Optional
+from typing import Any, List, NewType, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -40,6 +40,24 @@ class Album(Base):
     artists: Optional[List[Artist]]
 
 
+class TopicMeta(BaseModel):
+    """Metadata specifying the graph layout of a Topic.
+    
+    layout is an infinitely-nested list of integers or lists.
+    integers within `layout` represent an album id.
+    top level elements represent root groupings, lists within are nested
+    groups, and so on.
+    ```
+    layout : [
+        1,
+        [2, 3]
+    ]
+    ```
+    means 1 and a group containing 2 and 3.
+    """
+    layout: Optional[List[Any]]
+
+
 class Topic(Base):
     """A broad(er) thing that can be talked to.
 
@@ -54,6 +72,7 @@ class Topic(Base):
     name: str
     albums: Optional[List[Album]]
     artists: Optional[List[Artist]]
+    meta: Optional[TopicMeta]
 
 
 class Node(BaseModel):
