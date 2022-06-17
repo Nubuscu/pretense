@@ -7,45 +7,45 @@
  * @param {*} topicData json blob from the backend detailing a topic
  * @returns nodes, edges, and (review) text content of the topic
  */
-export function singleTopic(topicData, topic_id = null) {
+export function singleTopic(topicData, topicId = null) {
   let nodes = [];
   let edges = [];
 
-  if (topic_id !== null) {
-    nodes.push({ id: `topic_${topic_id}`, label: topicData.name });
+  if (topicId !== null) {
+    nodes.push({ id: `topic_${topicId}`, label: topicData.name });
   }
 
   const content = topicData.reviews[0];
   topicData.albums.forEach((album) => {
-    let album_id = `album_${album.id}`;
-    let unique_album_id = `${album_id}_${topic_id}`;
+    let albumId = `album_${album.id}`;
+    let uniqueAlbumId = `${albumId}_${topicId}`;
     let album_node = {
-      id: unique_album_id,
-      raw_id: album_id,
+      id: uniqueAlbumId,
+      rawId: albumId,
       label: album.name,
     };
-    if (topic_id !== null) {
-      album_node["parent"] = `topic_${topic_id}`;
+    if (topicId !== null) {
+      album_node["parent"] = `topic_${topicId}`;
     }
     nodes.push(album_node);
     album.artists.forEach((artist) => {
-      let artist_id = `artist_${artist.id}`;
-      let unique_artist_id = `${artist_id}_${topic_id}`;
-      let artist_node = {
-        id: unique_artist_id,
-        raw_id: artist_id,
+      let artistId = `artist_${artist.id}`;
+      let uniqueArtistId = `${artistId}_${topicId}`;
+      let artistNode = {
+        id: uniqueArtistId,
+        rawId: artistId,
         label: artist.name,
       };
-      if (topic_id !== null) {
-        artist_node["parent"] = `topic_${topic_id}`;
+      if (topicId !== null) {
+        artistNode["parent"] = `topic_${topicId}`;
       }
       let edge = {
-        id: `${artist_id}_${album_id}_${topic_id}`,
-        source: unique_artist_id,
-        target: unique_album_id,
+        id: `${artistId}_${albumId}_${topicId}`,
+        source: uniqueArtistId,
+        target: uniqueAlbumId,
       };
       edges.push(edge);
-      nodes.push(artist_node);
+      nodes.push(artistNode);
     });
   });
   return {
@@ -68,9 +68,9 @@ export function multiTopic(topicsData) {
     allNodes.forEach((existing) => {
       newNodes.forEach((newNode) => {
         if (
-          newNode.raw_id !== undefined &&
-          existing.raw_id !== undefined &&
-          newNode.raw_id === existing.raw_id
+          newNode.rawId !== undefined &&
+          existing.rawId !== undefined &&
+          newNode.rawId === existing.rawId
         ) {
           newEdges.push({
             id: `${existing.id}_${newNode.id}`,
