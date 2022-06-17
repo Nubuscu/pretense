@@ -35,18 +35,24 @@ Also an excuse to try some new technologies :shrug:
 
 - where the magic ~~happens~~ is stored
 
-## deps
+## Setup
 
-as I go
-
-### api
+api and vis both need `.env` files for runtime, and the api scripts expect environement variables by the same names. If you're running direnv, make a `.envrc`.
+Some of the required things are overwritten in docker-compose.
 
 ```sh
+# get a python venv for the api
+docker-compose up --detach # to make sure there's a db instance
 cd api
-pip install -r requirements_dev.in
-docker-compose up -d  # starts a postgres db
-cp example.envrc .envrc  # insert environment variables
-direnv allow
-alembic upgrade head  # setup db schema
-make run  # start the server
+alembic upgrade head
+
+# open the dump_from_spotify file below and add a token (follow the url in the file)
+PYTHONPATH=. python src/dump_from_spotify.py
+(cd src && python <write_topic_file_goes_here.py>)
+
+cd <root>/vis
+npm install  # creates the .svelte-kit/tsconfig that jsconfig references.
+
+#stop and restart docker-compose. may need to rebuild.
+# don't `down` the database, otherwise you'll need to re-seed the data.
 ```
