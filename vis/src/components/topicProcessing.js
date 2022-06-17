@@ -19,34 +19,17 @@ export function singleTopic(topicData, topicId = null) {
   topicData.albums.forEach((album) => {
     let albumId = `album_${album.id}`;
     let uniqueAlbumId = `${albumId}_${topicId}`;
-    let album_node = {
+
+    let albumNode = {
       id: uniqueAlbumId,
       rawId: albumId,
-      label: album.name,
+      label: `${album.name} - ${album.artists.map(a => a.name).join(', ')}`,
+      artists: album.artists
     };
     if (topicId !== null) {
-      album_node["parent"] = `topic_${topicId}`;
+      albumNode["parent"] = `topic_${topicId}`;
     }
-    nodes.push(album_node);
-    album.artists.forEach((artist) => {
-      let artistId = `artist_${artist.id}`;
-      let uniqueArtistId = `${artistId}_${topicId}`;
-      let artistNode = {
-        id: uniqueArtistId,
-        rawId: artistId,
-        label: artist.name,
-      };
-      if (topicId !== null) {
-        artistNode["parent"] = `topic_${topicId}`;
-      }
-      let edge = {
-        id: `${artistId}_${albumId}_${topicId}`,
-        source: uniqueArtistId,
-        target: uniqueAlbumId,
-      };
-      edges.push(edge);
-      nodes.push(artistNode);
-    });
+    nodes.push(albumNode);
   });
   return {
     nodes: nodes,
@@ -67,11 +50,13 @@ export function multiTopic(topicsData) {
 
     allNodes.forEach((existing) => {
       newNodes.forEach((newNode) => {
-        if (
-          newNode.rawId !== undefined &&
+        let sameAlbum = (newNode.rawId !== undefined &&
           existing.rawId !== undefined &&
-          newNode.rawId === existing.rawId
-        ) {
+          newNode.rawId === existing.rawId);
+        let sameArtist = (newNode.artists !== undefined &&
+          existing.artists !== undefined &&
+          existing.artists.some(a => newNode.artists.map(n => n.id).includes(a.id)));
+        if (sameAlbum || sameArtist) {
           newEdges.push({
             id: `${existing.id}_${newNode.id}`,
             source: existing.id,
@@ -82,15 +67,7 @@ export function multiTopic(topicsData) {
     });
     allNodes = allNodes.concat(newNodes);
     allEdges = allEdges.concat(newEdges);
-    // iterate through nodes
-    // flatmap into buckets of nodes with same album id
-    // create edges for those
-    // flatmap again for artist ids
-    // create edges for those
   });
-  // TODO process each topic individually
-  //  check for duplicate albums, artists
-  //  link between the dups
   return {
     nodes: allNodes,
     edges: allEdges,
