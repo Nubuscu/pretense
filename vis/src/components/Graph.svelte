@@ -40,8 +40,6 @@
 <style>
   .graph {
     min-height: 100vh;
-    left: 12.5%;
-    width: 75%;
     background-color: white;
   }
 </style>

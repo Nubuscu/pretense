@@ -4,6 +4,8 @@
   import GraphEdge from "../components/GraphEdge.svelte";
   import { multiTopic } from "../components/topicProcessing";
   import { onMount } from "svelte";
+  import { Container, Row, Col, Styles } from "sveltestrap";
+  import Navigation from "../components/Navigation.svelte";
 
   let root = `${import.meta.env.VITE_BACKEND_HOST}:${
     import.meta.env.VITE_BACKEND_PORT
@@ -38,18 +40,36 @@
   });
 </script>
 
+<!-- <Styles /> -->
+
 <html lang="en">
-  <h1>Pretense</h1>
-  hello yes this is a homepage
-  <br />
-  {#if processed !== null}
-    <Graph>
-      {#each processed.nodes as node}
-        <GraphNode {node} />
-      {/each}
-      {#each processed.edges as edge}
-        <GraphEdge {edge} />
-      {/each}
-    </Graph>
-  {/if}
+  <Container class="main">
+    <Row class="fullheight">
+      <Col xs="2">
+        <Navigation {topics} />
+      </Col>
+      <Col xs="10">
+        {#if processed !== null}
+          <Graph>
+            {#each processed.nodes as node}
+              <GraphNode {node} />
+            {/each}
+            {#each processed.edges as edge}
+              <GraphEdge {edge} />
+            {/each}
+          </Graph>
+        {/if}
+      </Col>
+    </Row>
+  </Container>
 </html>
+
+<style>
+  .main {
+    height: 100vh;
+    width: 100%;
+  }
+  .fullheight {
+    height: 100vh;
+  }
+</style>

@@ -20,6 +20,7 @@
     "cytoscape-cola": "^2.5.1",
     "cytoscape-cxtmenu": "^3.4.0",
     "cytoscape-dagre": "^2.4.0",
-    "svelte-markdown": "^0.2.2"
+    "svelte-markdown": "^0.2.2",
+    "sveltestrap": "^5.9.0"
   }
 }
