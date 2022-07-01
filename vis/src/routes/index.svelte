@@ -63,13 +63,3 @@
     </Row>
   </Container>
 </html>
-
-<style>
-  .main {
-    height: 100vh;
-    width: 100%;
-  }
-  .fullheight {
-    height: 100vh;
-  }
-</style>

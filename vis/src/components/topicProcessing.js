@@ -3,31 +3,42 @@
  */
 
 /**
- *
- * @param {*} topicData json blob from the backend detailing a topic
+ * Format a topic as a central node linked to all the albums.
+ * @param {object} topicData json blob from the backend detailing a topic
+ * @param {number} topicId id of the topic (if the topic should be displayed)
  * @returns nodes, edges, and (review) text content of the topic
  */
 export function singleTopic(topicData, topicId = null) {
   let nodes = [];
   let edges = [];
 
+  let topicNodeId;
   if (topicId !== null) {
-    nodes.push({ id: `topic_${topicId}`, label: topicData.name });
+    topicNodeId = `topic_${topicId}`
+    nodes.push({
+      id: topicNodeId,
+      label: topicData.name,
+      isTopic: true,
+      cluster: topicNodeId,
+    });
   }
 
   const content = topicData.reviews[0];
   topicData.albums.forEach((album) => {
-    let albumId = `album_${album.id}`;
-    let uniqueAlbumId = `${albumId}_${topicId}`;
+    let albumNodeId = `album_${album.id}`;
 
     let albumNode = {
-      id: uniqueAlbumId,
-      rawId: albumId,
+      id: albumNodeId,
       label: `${album.name} - ${album.artists.map(a => a.name).join(', ')}`,
-      artists: album.artists
+      artists: album.artists,
+      cluster: topicNodeId,  // for cytoscape-cise
     };
     if (topicId !== null) {
-      albumNode["parent"] = `topic_${topicId}`;
+      edges.push({
+        id: `${topicNodeId}_${albumNodeId}`,
+        source: albumNodeId,
+        target: topicNodeId
+      })
     }
     nodes.push(albumNode);
   });
@@ -38,7 +49,13 @@ export function singleTopic(topicData, topicId = null) {
   };
 }
 
-export function multiTopic(topicsData) {
+/**
+ * process multiple topics into nodes and edges.
+ * @param {array[object]} topicsData multiple topics in a list
+ * @param {function} method a function to process a single topic
+ * @returns nodes and edges
+ */
+export function multiTopic(topicsData, method = singleTopic) {
   let allNodes = [];
   let allEdges = [];
   topicsData.forEach((topicData) => {
@@ -46,28 +63,52 @@ export function multiTopic(topicsData) {
       nodes: newNodes,
       edges: newEdges,
       content: _content,
-    } = singleTopic(topicData, topicData.id);
-
-    allNodes.forEach((existing) => {
-      newNodes.forEach((newNode) => {
-        let sameAlbum = (newNode.rawId !== undefined &&
-          existing.rawId !== undefined &&
-          newNode.rawId === existing.rawId);
-        let sameArtist = (newNode.artists !== undefined &&
-          existing.artists !== undefined &&
-          existing.artists.some(a => newNode.artists.map(n => n.id).includes(a.id)));
-        if (sameAlbum || sameArtist) {
-          newEdges.push({
-            id: `${existing.id}_${newNode.id}`,
-            source: existing.id,
-            target: newNode.id,
-          });
-        }
+    } = method(topicData, topicData.id);
+    newNodes.forEach(newNode => {
+      // just add topics, no dups or artists to process
+      if (newNode.isTopic) {
+        allNodes.push(newNode);
+        return;
+      }
+      let existingNode = allNodes.find(existing => existing.id === newNode.id);
+      // new node isn't really new, just update edge references
+      if (existingNode !== undefined) {
+        newEdges.forEach(edge => {
+          if (edge.source === newNode.id) {
+            edge.source = existingNode.id
+          } else if (edge.target === newNode.id) {
+            edge.target = existingNode.id
+          }
+        })
+        return
+      }
+      // look for other albums by the same artist and link them
+      let candidateArtistIds = newNode.artists.map(ar => ar.id);
+      allNodes.filter(n => !n.isTopic).forEach(ex => {
+        ex.artists.forEach(artist => {
+          if (candidateArtistIds.includes(artist.id)) {
+            newEdges.push({
+              id: `${ex.id}_${newNode.id}`,
+              source: ex.id,
+              target: newNode.id,
+            });
+          }
+        })
       });
+      allNodes.push(newNode);
+    })
+    // add all the remaining edges, if source/dest both exist
+    newEdges.forEach(newEdge => {
+      let sourceExists = allNodes.map(n => n.id).includes(newEdge.source);
+      let targetExists = allNodes.map(n => n.id).includes(newEdge.target);
+      let sourceIsNotTarget = newEdge.source !== newEdge.target
+      if (sourceExists && targetExists && sourceIsNotTarget) {
+        allEdges.push(newEdge)
+      }
     });
-    allNodes = allNodes.concat(newNodes);
-    allEdges = allEdges.concat(newEdges);
-  });
+  })
+  console.log(allNodes)
+  console.log(allEdges)
   return {
     nodes: allNodes,
     edges: allEdges,

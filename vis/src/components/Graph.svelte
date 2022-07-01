@@ -1,9 +1,8 @@
 <script>
   import { onMount, setContext } from "svelte";
   import cytoscape from "cytoscape";
-  // import dagre from "cytoscape-dagre";
-  // import cxtmenu from "cytoscape-cxtmenu";
   import cola from "cytoscape-cola";
+  import cise from "cytoscape-cise";
   import GraphStyles from "./GraphStyles.js";
   setContext("graphSharedState", {
     getCyInstance: () => cyInstance,
@@ -11,8 +10,7 @@
   let refElement = null;
   let cyInstance = null;
   onMount(() => {
-    // cytoscape.use(dagre);
-    cytoscape.use(cola);
+    cytoscape.use(cise);
     cyInstance = cytoscape({
       container: refElement,
       style: GraphStyles,
@@ -21,10 +19,8 @@
       cyInstance
         .makeLayout({
           animate: true,
-          name: "cola",
-          avoidOverlap: true,
-          handleDisconnected: true,
-          nodeDimensionsIncludeLabels: true,
+          name: "cise",
+          clusters: (node) => node.cluster,
         })
         .run();
     });
