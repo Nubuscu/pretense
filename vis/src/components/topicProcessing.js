@@ -107,8 +107,6 @@ export function multiTopic(topicsData, method = singleTopic) {
       }
     });
   })
-  console.log(allNodes)
-  console.log(allEdges)
   return {
     nodes: allNodes,
     edges: allEdges,

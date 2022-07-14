@@ -6,9 +6,9 @@ export default [
   {
     selector: 'node',
     style: {
-      'width': '50',
-      'height': '50',
-      'font-size': '18',
+      'width': '20',
+      'height': '20',
+      'font-size': '10',
       'font-weight': 'bold',
       'content': `data(label)`,
       'text-valign': 'center',
@@ -23,8 +23,9 @@ export default [
   {
     selector: 'node[isTopic]',
     style: {
-      'width': '75',
-      'height': '75',
+      'width': '30',
+      'height': '30',
+      'shape': 'hexagon',
     }
   },
   {
