@@ -56,6 +56,9 @@ with get_cursor() as cursor:
     ]
     for i, subset_albums in enumerate(test_albums):
         title_id = f"test{i}"
+        # find albums (and artists) by id
+        # push a new topic with the things and stuff
+        # what's a gremlin db like?
         album_relations = INSERT_ALBUM_RELATIONS_SQL.format(
             albums=", ".join(f"'{a}'" for a in subset_albums)
         )

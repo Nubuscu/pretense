@@ -16,6 +16,6 @@ def router_for_collection(get_collection_fn: Callable, type_: Base) -> APIRouter
     @router.get("/{id_}")
     def get_one(id_: UUID, collection: Collection = Depends(get_collection_fn)) -> Base:
         resp = collection.find_one({"id": id_})
-        return type_.from_orm(resp) if resp else None
+        return type_.from_orm(resp)
 
     return router
