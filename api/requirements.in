@@ -1,4 +1,4 @@
-pymongo
+gremlinpython
 fastapi
 uvicorn
 cachetools

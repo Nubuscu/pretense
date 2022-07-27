@@ -1,20 +1,4 @@
-from db.db import get_cursor
-
-INSERT_TOPIC_SQL = "INSERT INTO topic (name) VALUES (%(name)s)"
-SELECT_TOPIC_SQL = "SELECT id FROM topic WHERE name = %(name)s"
-INSERT_REVIEW_SQL = "INSERT INTO review (title, body) VALUES (%(title)s, %(body)s)"
-SELECT_REVIEW_SQL = "SELECT id FROM review WHERE title = %(title)s"
-INSERT_REVIEW_TOPIC_REL_SQL = "INSERT INTO rel_review_topic (review_id, topic_id) VALUES (%(review_id)s, %(topic_id)s)"
-
-INSERT_ALBUM_RELATIONS_SQL = """
-WITH cte_albums AS (
-    SELECT id, %(topic_id)s FROM album
-    WHERE title IN (
-        {albums}
-        )
-)
-INSERT INTO rel_album_topic (album_id, topic_id) SELECT * FROM cte_albums
-"""
+from graph import ContentWriter
 
 title = "My Test Topic"
 
@@ -26,52 +10,36 @@ Proin imperdiet ante velit, sed sodales sem ultricies vel. Curabitur at viverra 
 Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Ut consequat sapien id euismod ornare. In ultricies nibh id neque consectetur efficitur. Ut tempor finibus nulla et porta. Duis a massa non enim molestie dictum vehicula at lacus. Phasellus maximus tincidunt neque vel ullamcorper. Praesent orci arcu, mollis vitae tincidunt at, tempor ut sem. Integer turpis eros, elementum eget vulputate eget, pellentesque in libero. Aenean sit amet massa non lacus luctus rutrum.
 """
 
-with get_cursor() as cursor:
-
-    test_albums = [
-        [
-            "Koloss",
-            "I Let It in and It Took Everything",
-            "Thegodmachine",
-            "A Tear in the Fabric of Life",
-        ],
-        [
-            "A Tear in the Fabric of Life",
-            "Awakened",
-            "måsstaden under vatten",
-            "Oh What The Future Holds",
-        ],
-        [
-            "Oh What The Future Holds",
-            "May Our Chambers Be Full",
-            "Oxidized",
-            "Absolute",
-            "Menschenmühle",
-        ],
-        [
-            "Lifeblood",
-            "Melancholy",
-            "Laugh Tracks",
-        ],
-    ]
-    for i, subset_albums in enumerate(test_albums):
-        title_id = f"test{i}"
-        # find albums (and artists) by id
-        # push a new topic with the things and stuff
-        # what's a gremlin db like?
-        album_relations = INSERT_ALBUM_RELATIONS_SQL.format(
-            albums=", ".join(f"'{a}'" for a in subset_albums)
-        )
-        cursor.execute(INSERT_TOPIC_SQL, {"name": title_id})
-        cursor.execute(SELECT_TOPIC_SQL, {"name": title_id})
-        topic_id = cursor.fetchone()
-
-        cursor.execute(INSERT_REVIEW_SQL, {"title": title, "body": body})
-        cursor.execute(SELECT_REVIEW_SQL, {"title": title})
-        review_id = cursor.fetchone()
-
-        cursor.execute(
-            INSERT_REVIEW_TOPIC_REL_SQL, {"review_id": review_id, "topic_id": topic_id}
-        )
-
-        cursor.execute(album_relations, {"topic_id": topic_id})
+test_albums = [
+    [
+        "Koloss",
+        "I Let It in and It Took Everything",
+        "Thegodmachine",
+        "A Tear in the Fabric of Life",
+    ],
+    [
+        "A Tear in the Fabric of Life",
+        "Awakened",
+        "måsstaden under vatten",
+        "Oh What The Future Holds",
+    ],
+    [
+        "Oh What The Future Holds",
+        "May Our Chambers Be Full",
+        "Oxidized",
+        "Absolute",
+        "Menschenmühle",
+    ],
+    [
+        "Lifeblood",
+        "Melancholy",
+        "Laugh Tracks",
+    ],
+]
+for i, subset_albums in enumerate(test_albums):
+    title_id = f"test{i}"
+    ContentWriter().write_topic(
+        title=title_id,
+        review_content=body,
+        album_names=subset_albums,
+    )

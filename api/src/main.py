@@ -4,8 +4,7 @@ import os
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.models import Album, Artist, Topic
-from src.db.db import get_topics, get_albums, get_artists
-from src.routes import router_for_collection
+from src.routes import topic_router
 
 from src.routes import health
 
@@ -45,12 +44,7 @@ def create_app():
         allow_headers=["*"],
     )
     v1_router = APIRouter(prefix="/v1")
-    topics_router = router_for_collection(get_topics, Topic)
-    albums_router = router_for_collection(get_albums, Album)
-    artists_router = router_for_collection(get_artists, Artist)
-    v1_router.include_router(topics_router, prefix="/topics")
-    v1_router.include_router(albums_router, prefix="/albums")
-    v1_router.include_router(artists_router, prefix="/artists")
+    v1_router.include_router(topic_router, prefix="/topics")
     v1_router.include_router(health, prefix="/health")
 
     app.include_router(v1_router)

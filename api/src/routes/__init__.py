@@ -1,2 +1,2 @@
 from .health import health
-from .codegen import router_for_collection
+from .topics import router as topic_router

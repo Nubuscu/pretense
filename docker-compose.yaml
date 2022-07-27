@@ -1,12 +1,12 @@
 version: '3'
 services:
   db:
-    image: mongo
+    image: janusgraph/janusgraph
     restart: always
     ports:
-      - "27017:27017"
+      - "8182:8182"
     expose:
-      - "27017"
+      - "8182"
     networks:
       - backend
     environment:
@@ -30,7 +30,7 @@ services:
       - api/.env
     environment:
       DB_HOST: db
-      DB_PORT: "27017"
+      DB_PORT: "8182"
 
   vis:
     build:
