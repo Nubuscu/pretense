@@ -1,10 +1,11 @@
-# Music Map // Pretense
+# Pretense
 
 ## What is it?
 
-An attempt at talking about the albums and artists I know and enjoy, how I came in contact with them, and who I'd recommend them to, and why.
-
-...In a client/server app so I can relate things together in a more complete manner than _just_ writing about them.
+An attempt at:
+1. Talking about the albums and artists I know and enjoy, how I came in contact with them
+1. Recommending related bands.
+1. Explaining the life-long frog boiling that got me from CCM to actually enjoying death metal.
 
 Also an excuse to try some new technologies :shrug:
 
@@ -14,26 +15,30 @@ Also an excuse to try some new technologies :shrug:
 - A complete list of the things I like or actively listen to
 - A hotdog stand..?
 
+## What's in a name?
+talking about music, or art in general, can feel a bit pretentious
+
 ## Parts
 
-### Visualization (something js probably)
+monorepo for convenience, docker-compose etc.
 
-- 'deployable' ui
-- good for reading
-- doesn't need to be super secure
+### Visualization (svelte-kit, cytoscape.js)
 
-### Writer (same as vis)
+A read-only ui for looking, but not touching.
 
-- thing for me to write content in
-- semi-ui. Mostly just conveniences for me making links etc
+### Writer (tbd)
 
-### API (Python/FastAPI)
+simplistic way of writing and inserting content. Likely markdown files and some sprinkles.
 
-- the backend, keeps the other two from reading directly from the db
+### API (FastAPI)
 
-### db (postgres)
+- Abstracts the db from the two apps above, or at least `vis`
+- converts db to pydantic models
+- is the closest to things I actually work on, so some experimentation going on
 
-- where the magic ~~happens~~ is stored
+### db (gremlin/janusgraph)
+
+A graph-based nosql thing that seemed like a good idea at the time. Definitely intended for larger scale than what I'm doing, but it looks cool :shrug:
 
 ## Setup
 
@@ -42,17 +47,16 @@ Some of the required things are overwritten in docker-compose.
 
 ```sh
 # get a python venv for the api
-docker-compose up --detach # to make sure there's a db instance
-cd api
-alembic upgrade head
+docker-compose up --build # to make sure there's a db instance
 
 # open the dump_from_spotify file below and add a token (follow the url in the file)
+cd api
 PYTHONPATH=. python src/dump_from_spotify.py
-(cd src && python <write_topic_file_goes_here.py>)
+PYTHONPATH=. python src/write_<names go here>.py
 
 cd <root>/vis
 npm install  # creates the .svelte-kit/tsconfig that jsconfig references.
 
-#stop and restart docker-compose. may need to rebuild.
+# stop the compose and re-run that command
 # don't `down` the database, otherwise you'll need to re-seed the data.
 ```

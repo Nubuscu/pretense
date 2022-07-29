@@ -1,5 +1,0 @@
-- insert dummy data
-- get dummy data as pydantic model, return via api
-
-- dump a bunch of data from spotify or something. one-off:tm: transfer
-- consider frontend, how to display things
