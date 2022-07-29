@@ -9,26 +9,17 @@ from gremlin_python.process.graph_traversal import (
     unfold,
     value_map,
 )
-
-
 from src.models import Album, Artist, Topic, Review
 
 single = Cardinality.single
 
-# TODO readonly auth, somehow.
-CONN = "ws://{host}:{port}/gremlin".format(
-    host=os.environ["DB_HOST"], port=os.environ["DB_PORT"]
-)
-
 
 class GraphRepository:
-    def __init__(self):
+    def __init__(self, host, port, username, password):
+        conn_string = f"ws://{host}:{port}/gremlin"
         self.g: GraphTraversalSource = traversal().withRemote(
             DriverRemoteConnection(
-                CONN,
-                "g",
-                username=os.environ.get("DB_USER"),
-                password=os.environ.get("DB_PASS"),
+                conn_string, "g", username=username, password=password
             )
         )
 
