@@ -3,7 +3,6 @@ import os
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.models import Album, Artist, Topic
 from src.routes import topic_router
 
 from src.routes import health
@@ -40,7 +39,7 @@ def create_app():
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET"],
         allow_headers=["*"],
     )
     v1_router = APIRouter(prefix="/v1")

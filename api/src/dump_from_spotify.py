@@ -10,14 +10,15 @@ from pymongo.collection import Collection
 from src.graph import GraphRepository
 
 # a token for the spotify api. e.g.:
-# https://developer.spotify.com/consoqle/get-current-user-saved-albums/?limit=&offset=&market=
+# https://developer.spotify.com/console/get-current-user-saved-albums/?limit=&offset=&market=
 # may expire relatively quickly
-TOKEN = "BQDtTVLLClk8Lq47CYIM_RmOoyxWBYVUV3Ftu9eMn7Jfb0aPijQ_lYAKsZ7JRucfQfx3XVV-4tnxVLHrAhcouiMXGWwdqgcoK6MpgRQSi7vcCMZo8y0BljnYydWdk-Ka_JVJGn3IPF_j8IZ75L_D0qdpEnRydupWqDpa_c6YV3NntoMe4c9gV9ip"
+TOKEN = ""
 
 # note: hardcoded market
 URL_FMT = "https://api.spotify.com/v1/me/albums?limit={limit}&offset={offset}&market=NZ"
 
 repo = GraphRepository()
+
 
 def parse_and_insert(items):
     for item in items:

@@ -1,4 +1,4 @@
-version: '3'
+version: '3.9'
 services:
   db:
     image: janusgraph/janusgraph
@@ -9,9 +9,6 @@ services:
       - "8182"
     networks:
       - backend
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: exampleuser
-      MONGO_INITDB_ROOT_PASSWORD: wheelbarrow
 
   api:
     build:

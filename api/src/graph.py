@@ -1,23 +1,35 @@
+import os
+from typing import List, Union
 from gremlin_python.process.anonymous_traversal import traversal
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.traversal import T, Cardinality, WithOptions
-from gremlin_python.process.graph_traversal import GraphTraversalSource, __, unfold
-from typing import Dict
-from uuid import uuid4
+from gremlin_python.process.graph_traversal import (
+    GraphTraversalSource,
+    __,
+    unfold,
+    value_map,
+)
 
 
 from src.models import Album, Artist, Topic, Review
 
 single = Cardinality.single
 
+# TODO readonly auth, somehow.
+CONN = "ws://{host}:{port}/gremlin".format(
+    host=os.environ["DB_HOST"], port=os.environ["DB_PORT"]
+)
+
 
 class GraphRepository:
-    g = None
-    _id = T.id
-
     def __init__(self):
         self.g: GraphTraversalSource = traversal().withRemote(
-            DriverRemoteConnection("ws://localhost:8182/gremlin", "g")
+            DriverRemoteConnection(
+                CONN,
+                "g",
+                username=os.environ.get("DB_USER"),
+                password=os.environ.get("DB_PASS"),
+            )
         )
 
     def upsert_artist(self, name):
@@ -63,9 +75,8 @@ class GraphRepository:
         # upsert edge to subject
         subject = self.g.V(subject_v_id).next()
         self.g.V(review).out("reviews").fold().coalesce(
-            unfold(),
-            __.V(review).add_e("reviews").to(subject),
-        ).next()
+            unfold(), __.V(review).add_e("reviews").to(subject)
+        ).iterate()
 
     def upsert_topic(self, name):
         # unique by name
@@ -78,49 +89,75 @@ class GraphRepository:
             .next()
         )
 
-    def get_album(self, title) -> Album:
-        raw = self.g.V().has("album", "name", title).next()
-        artists = self.g.V(raw).in_("wrote").to_list()
-        return Album(
-            id=raw.id,
-            name=self.g.V(raw).values("name").next(),
-            artists=[
-                Artist(id=a.id, name=self.g.V(a).values("name").next())
-                for a in artists
-                if a
-            ],
-        )
+    def get_album(self, title=None, id_=None) -> Album:
 
-    def get_topic(self, id_=None):
+        tvsl = self.g.V().has_label("album")
+        if title:
+            tvsl = tvsl.has("name", title)
+        elif id_:
+            tvsl = tvsl.has_id(id_)
+
+        raw_list = (
+            tvsl.project("album", "artists")
+            .by(value_map().with_(WithOptions.tokens))
+            .by(__.in_("wrote").value_map().with_(WithOptions.tokens).fold())
+            .toList()
+        )
+        retval = []
+        for raw in raw_list:
+            raw_album = raw["album"]
+            raw_artists = raw["artists"]
+            retval.append(
+                Album(
+                    id=raw_album[T.id],
+                    name=raw_album["name"][0],
+                    artists=[
+                        Artist(id=a[T.id], name=a["name"][0]) for a in raw_artists
+                    ],
+                )
+            )
+        if len(retval) == 1:
+            return retval[0]
+        return retval
+
+    def get_topic(self, id_: int = None) -> Topic:
+        """Get a topic from the backend.
+
+        If id_ is not specified, return hollow Topics for all ids
+
+        Args:
+            id_ (int, optional): id to search by. Defaults to None.
+
+        Returns:
+            Topic: requested topic
+        """
         if not id_:
-            # no id given, get a big list of empty topics
+            # no id given, get a big list of id-only, empty topics
             raw_topics = (
                 self.g.V().has_label("topic").valueMap().with_(WithOptions.tokens)
             )
             return [
-                Topic(id_=raw.get(T.id), name=raw.get("name", [None])[0])
+                Topic(id=raw.get(T.id), name=raw.get("name", [None])[0])
                 for raw in raw_topics
             ]
-        else:
-            parsed_topic, parsed_reviews, album_names = (
-                self.g.V(id_)
-                .union(
-                    # re-select the topic
-                    __.V(id_).valueMap().with_(WithOptions.tokens),
-                    # get the review
-                    __.in_("reviews").valueMap().with_(WithOptions.tokens).fold(),
-                    # get all the included albums in a list
-                    __.out("includes").dedup().values("name").fold(),
-                )
-                .toList()
-            )
-            return Topic(
-                id_=parsed_topic[T.id],
-                albums=[self.get_album(name) for name in album_names],
-                reviews=[
-                    Review(r[T.id], body=r.get("content")) for r in parsed_reviews
-                ],
-            )
+        res = (
+            self.g.V(id_)
+            .project("topic", "reviews", "album_names")
+            .by(value_map().with_(WithOptions.tokens))
+            .by(__.in_("reviews").valueMap().with_(WithOptions.tokens).fold())
+            .by(__.out("includes").dedup().values("name").fold())
+            .next()
+        )
+        topic_id = res["topic"][T.id]
+        return Topic(
+            id=topic_id,
+            name=res["topic"]["name"][0],
+            reviews=[
+                Review(id=r[T.id], body=r.get("content", [""])[0])
+                for r in res["reviews"]
+            ],
+            albums=[self.get_album(title=name) for name in res["album_names"]],
+        )
 
 
 class ContentWriter:
@@ -131,7 +168,7 @@ class ContentWriter:
     def write_topic(self, title, review_content, album_names):
         topic = self.repo.upsert_topic(title)
         self.repo.add_review(title, topic.id, review_content)
-        albums = [self.repo.get_album(name) for name in album_names]
+        albums = [self.repo.get_album(title=name) for name in album_names]
         for album in albums:
             album_v = self.repo.g.V(album.id_).next()
-            self.repo.g.V(topic).add_e("includes").to(album_v).next()
+            self.repo.g.V(topic).add_e("includes").to(album_v).iterate()

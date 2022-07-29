@@ -1,5 +1,4 @@
 from typing import List
-from uuid import UUID
 
 from fastapi import APIRouter, Depends
 from src.models import Topic
@@ -14,5 +13,5 @@ def get(repo: GraphRepository = Depends(GraphRepository)) -> List[Topic]:
 
 
 @router.get("/{id_}")
-def get_one(id_: UUID, repo: GraphRepository = Depends(GraphRepository)) -> Topic:
+def get_one(id_: int, repo: GraphRepository = Depends(GraphRepository)) -> Topic:
     return repo.get_topic(id_)
