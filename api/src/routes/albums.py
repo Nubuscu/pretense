@@ -13,11 +13,13 @@ router = APIRouter()
 @router.get("/")
 @inject
 def get(repo: GraphRepository = Depends(Provide[Container.graph_repo])) -> List[Album]:
-    return repo.get_album()
+    with repo as ctx_repo:
+        return ctx_repo.get_album()
 
 
 @router.get("/{id_}")
 def get_one(
     id_: int, repo: GraphRepository = Depends(Provide[Container.graph_repo])
 ) -> Album:
-    return repo.get_album(id_)
+    with repo as ctx_repo:
+        return ctx_repo.get_album(id_)

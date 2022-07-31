@@ -1,5 +1,13 @@
 from dependency_injector import containers, providers
-from src.graph import GraphRepository
+from src.graph import GraphRepository, connection_factory
+
+
+def generate_conn(host, port, username, password):
+    conn = connection_factory(host, port, username, password)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 class Container(containers.DeclarativeContainer):
@@ -14,10 +22,15 @@ class Container(containers.DeclarativeContainer):
     config.graph.username.from_env("DB_USER")
     config.graph.password.from_env("DB_PASS")
 
-    graph_repo = providers.ThreadSafeSingleton(
-        GraphRepository,
+    # TODO manage graph connection here, pass to the repo
+    graph_conn = providers.Resource(
+        generate_conn,
         host=config.graph.host,
         port=config.graph.port,
         username=config.graph.username,
         password=config.graph.password,
+    )
+    graph_repo = providers.ThreadSafeSingleton(
+        GraphRepository,
+        conn=graph_conn,
     )

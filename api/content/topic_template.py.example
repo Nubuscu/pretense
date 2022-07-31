@@ -1,0 +1,12 @@
+from src.graph import ContentWriter
+
+ALBUMS = []
+
+
+TITLE = ""
+
+BODY = """
+"""
+
+
+ContentWriter().write_topic(TITLE, BODY, ALBUMS)

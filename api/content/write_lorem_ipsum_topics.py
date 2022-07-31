@@ -1,4 +1,4 @@
-from graph import ContentWriter
+from src.graph import ContentWriter
 
 title = "My Test Topic"
 

@@ -13,7 +13,8 @@ router = APIRouter()
 @router.get("/")
 @inject
 def get(repo: GraphRepository = Depends(Provide[Container.graph_repo])) -> List[Topic]:
-    return repo.get_topic()
+    with repo as ctx_repo:
+        return ctx_repo.get_topic()
 
 
 @router.get("/{id_}")
@@ -21,4 +22,5 @@ def get(repo: GraphRepository = Depends(Provide[Container.graph_repo])) -> List[
 def get_one(
     id_: int, repo: GraphRepository = Depends(Provide[Container.graph_repo])
 ) -> Topic:
-    return repo.get_topic(id_)
+    with repo as ctx_repo:
+        return ctx_repo.get_topic(id_)

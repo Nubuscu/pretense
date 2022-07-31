@@ -1,5 +1,5 @@
 import os
-from typing import List, Union
+from typing import List, Optional, Union
 from gremlin_python.process.anonymous_traversal import traversal
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.traversal import T, Cardinality, WithOptions
@@ -14,14 +14,34 @@ from src.models import Album, Artist, Topic, Review
 single = Cardinality.single
 
 
+def connection_factory(
+    host=os.environ.get("DB_HOST"),
+    port=os.environ.get("DB_PORT"),
+    username=os.environ.get("DB_USER"),
+    password=os.environ.get("DB_PASS"),
+) -> DriverRemoteConnection:
+    conn_string = f"ws://{host}:{port}/gremlin"
+    conn = DriverRemoteConnection(
+        conn_string, "g", username=username, password=password
+    )
+    return conn
+
+
 class GraphRepository:
-    def __init__(self, host, port, username, password):
-        conn_string = f"ws://{host}:{port}/gremlin"
-        self.g: GraphTraversalSource = traversal().withRemote(
-            DriverRemoteConnection(
-                conn_string, "g", username=username, password=password
-            )
-        )
+    def __init__(self, conn: Optional[DriverRemoteConnection] = None):
+        self.provided_connection = bool(conn)
+        self.g: GraphTraversalSource = traversal().with_remote(conn)
+        self.conn = conn
+
+    def __enter__(self):
+        if not self.provided_connection:
+            self.conn = connection_factory()
+            self.g: GraphTraversalSource = traversal().with_remote(self.conn)
+        return self
+
+    def __exit__(self, *_args):
+        if not self.provided_connection:
+            self.conn.close()
 
     def upsert_artist(self, name):
         # unique by name
@@ -107,6 +127,7 @@ class GraphRepository:
                     ],
                 )
             )
+        assert retval, f"Album(s) not found: {title or id_}"
         if len(retval) == 1:
             return retval[0]
         return retval
@@ -154,12 +175,12 @@ class GraphRepository:
 class ContentWriter:
     def __init__(self, repo=None):
         self.repo = repo or GraphRepository()
-        super().__init__()
 
     def write_topic(self, title, review_content, album_names):
-        topic = self.repo.upsert_topic(title)
-        self.repo.add_review(title, topic.id, review_content)
-        albums = [self.repo.get_album(title=name) for name in album_names]
-        for album in albums:
-            album_v = self.repo.g.V(album.id_).next()
-            self.repo.g.V(topic).add_e("includes").to(album_v).iterate()
+        with self.repo as repo:
+            topic = repo.upsert_topic(title)
+            repo.add_review(title, topic.id, review_content)
+            albums = [repo.get_album(title=name) for name in album_names]
+            for album in albums:
+                album_v = repo.g.V(album.id_).next()
+                repo.g.V(topic).add_e("includes").to(album_v).iterate()
