@@ -1,5 +1,3 @@
-from src.graph import ContentWriter
-
 ALBUMS = [
     "Antipop",
     "Rage Against The Machine",
@@ -10,7 +8,6 @@ ALBUMS = [
     "The Physical World",
     "Royal Blood",
 ]
-
 
 TITLE = "Learning Bass"
 
@@ -36,6 +33,3 @@ The latter two are two-man bands (bass + drums), so there's a lot of distortion 
 Justin Chancellor is the reason I found Tool initially but Maynard is immense in his own right, and I'd soon find his other projects.
 
 """
-
-
-ContentWriter().write_topic(TITLE, BODY, ALBUMS)

@@ -1,5 +1,3 @@
-from src.graph import ContentWriter
-
 ALBUMS = [
     "American Idiot",
     "Fallen",
@@ -27,6 +25,3 @@ So the categories were:
 
 I went back to the couple of Creed albums semi-recently, and they're still good. If nothing else, Tremonti's guitar work holds up.
 """
-
-
-ContentWriter().write_topic(TITLE, BODY, ALBUMS)

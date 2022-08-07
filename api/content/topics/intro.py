@@ -1,5 +1,3 @@
-from src.graph import ContentWriter
-
 ALBUMS = [
     "Sound Awake",
     "One",
@@ -27,7 +25,4 @@ Some grounding opinions and factoids:
 - being exact about subgenres is often silly but sometimes helpful. I don't think lyrical content constitues a genre.
 
 Some things I seem to keep recommending to people are attached here.
-I'll try to leave words on each of them individually, pending some work.
 """
-
-ContentWriter().write_topic(TITLE, BODY, ALBUMS)
