@@ -22,7 +22,6 @@ class Container(containers.DeclarativeContainer):
     config.graph.username.from_env("DB_USER")
     config.graph.password.from_env("DB_PASS")
 
-    # TODO manage graph connection here, pass to the repo
     graph_conn = providers.Resource(
         generate_conn,
         host=config.graph.host,

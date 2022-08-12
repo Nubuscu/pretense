@@ -16,7 +16,7 @@ LOG = logging.getLogger("spotify")
 # a token for the spotify api. e.g.:
 # https://developer.spotify.com/console/get-current-user-saved-albums/?limit=&offset=&market=
 # may expire relatively quickly
-TOKEN = "BQCzuwD3qosN60mk6YHh4kGIamSUm2ykjtiNy_5qMXEvXgVFxqgShdNYKXLM1vP0cleudRkB55JdDjxcMp3fJb302HpygerkL4umcuNyC93Ce9bkOxCp8w0YUWNmgnDvHE5-2irftWUkg4Mdil8wNTmV_5OyDnt6tuL2b6kCtiXzP4HzbhiyKN74"
+TOKEN = ""
 
 # note: hardcoded market
 URL_FMT = "https://api.spotify.com/v1/me/albums?limit={limit}&offset={offset}&market=NZ"
@@ -60,4 +60,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as err:
+        print(
+            "Try a new token: "
+            "https://developer.spotify.com/console/get-current-user-saved-albums/?limit=&offset=&market="
+        )
+        raise
