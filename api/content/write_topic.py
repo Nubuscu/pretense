@@ -15,7 +15,7 @@ def get_args():
         "--file",
         dest="filename",
         required=True,
-        help="file name to write. Leave blank to write all in the /topics directory.",
+        help="file name to write. use `all` to write everything in ./topics",
         choices=KNOWN_TOPICS + ["all"],
     )
     return parser.parse_args()
@@ -36,12 +36,6 @@ def main():
             title = module.TITLE
             body = module.BODY
             ContentWriter(repo).write_topic(title, body, albums)
-        """
-        Expect a file format to be followed for tagging things, somehow.
-        Maybe markdown isn't ideal?
-        the body should be markdown, maybe not all the rest of it too
-        maybe flat python, use importlib or similar
-        """
 
 
 if __name__ == "__main__":
