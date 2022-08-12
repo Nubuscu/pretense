@@ -1,7 +1,7 @@
 <script>
   import { onMount, setContext } from "svelte";
   import cytoscape from "cytoscape";
-  import cise from "cytoscape-cise";
+  import elk from "cytoscape-elk";
   import GraphStyles from "./GraphStyles.js";
   setContext("graphSharedState", {
     getCyInstance: () => cyInstance,
@@ -9,7 +9,7 @@
   let refElement = null;
   let cyInstance = null;
   onMount(() => {
-    cytoscape.use(cise);
+    cytoscape.use(elk);
     cyInstance = cytoscape({
       container: refElement,
       style: GraphStyles,
@@ -17,9 +17,15 @@
     cyInstance.on("add", () => {
       cyInstance
         .makeLayout({
+          name: "elk",
           animate: true,
-          name: "cise",
-          clusters: (node) => node.cluster,
+          nodeDimensionsIncludeLabels: true,
+          elk: {
+            algorithm: "disco",
+            // any of the options here: https://www.eclipse.org/elk/reference.html
+            // are available, just drop the `org.eclipse` prefix.
+            componentLayoutAlgorithm: "stress",
+          },
         })
         .run();
     });
