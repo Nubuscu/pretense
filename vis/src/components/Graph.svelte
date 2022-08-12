@@ -47,6 +47,6 @@
 <style>
   .graph {
     min-height: 100vh;
-    background-color: white;
+    background-color: var(--bg);
   }
 </style>
