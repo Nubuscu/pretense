@@ -1,10 +1,10 @@
 <script>
     import { Nav, NavItem, NavLink } from "sveltestrap";
     import { Styles } from "sveltestrap";
-    export let topics = [];
+    import { topics } from "$lib/stores";
     let options = [{ uri: "/", name: "Home", sort_index: 0 }];
-    $: if (topics) {
-        topics.forEach((t) => {
+    $: if ($topics) {
+        $topics.forEach((t) => {
             let opt = t;
             opt.uri = `/topics/${t.id}`;
             opt.sort_index = t.id;
@@ -20,7 +20,7 @@
 <Nav vertical>
     {#each options as opt}
         <NavItem>
-            <NavLink href={opt.uri}>{opt.name}</NavLink>
+            <NavLink sveltekit:prefetch href={opt.uri}>{opt.name}</NavLink>
         </NavItem>
     {/each}
 </Nav>

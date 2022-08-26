@@ -8,13 +8,25 @@
   });
   let refElement = null;
   let cyInstance = null;
-  onMount(() => {
-    cytoscape.use(elk);
-    cyInstance = cytoscape({
-      container: refElement,
-      style: GraphStyles,
-    });
-    cyInstance.on("add", () => {
+  export let input = null;
+  $: if (input !== null && cyInstance !== null) {
+    // batch process to stop it trying to process too much
+    cyInstance.batch(() => {
+      input.nodes.forEach((node) => {
+        cyInstance.add({
+          group: "nodes",
+          id: node.id,
+          data: { ...node },
+        });
+      });
+      input.edges.forEach((edge) => {
+        cyInstance.add({
+          group: "edges",
+          id: edge.id,
+          data: { ...edge },
+        });
+      });
+      // apply layout after everything's been added
       cyInstance
         .makeLayout({
           name: "elk",
@@ -29,6 +41,14 @@
         })
         .run();
     });
+  }
+  onMount(() => {
+    cytoscape.use(elk);
+    cyInstance = cytoscape({
+      container: refElement,
+      style: GraphStyles,
+    });
+    cyInstance.on("add", () => {});
     cyInstance.on("tap", "node[isTopic]", (event) => {
       let data = event.target.data();
       // id ~= topic_N
@@ -40,7 +60,7 @@
 
 <div class="graph" bind:this={refElement}>
   {#if cyInstance}
-    <slot />
+    <!-- <slot /> -->
   {/if}
 </div>
 

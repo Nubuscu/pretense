@@ -1,61 +1,24 @@
 <script>
   import Graph from "$lib/Graph.svelte";
-  import GraphNode from "$lib/GraphNode.svelte";
-  import GraphEdge from "$lib/GraphEdge.svelte";
-  import { multiTopic } from "$lib/topicProcessing";
-  import { onMount } from "svelte";
   import { Container, Row, Col } from "sveltestrap";
   import Navigation from "$lib/Navigation.svelte";
+  import { topics } from "$lib/stores";
 
-  let root = `${import.meta.env.VITE_BACKEND_HOST}:${
-    import.meta.env.VITE_BACKEND_PORT
-  }`;
-  let processed = null;
-  let topics = [];
+  export let data;
 
-  async function fetchTopic(id) {
-    let resp = await fetch(`${root}/v1/topics/${id}`);
-    return await resp.json();
-  }
-  async function fetchTopicIds() {
-    return await fetch(`${root}/v1/topics`)
-      .then((response) => response.json())
-      .then((data) => {
-        return data.map((val) => val.id);
-      })
-      .catch((err) => {
-        console.error("it went bad", err.code);
-        return [];
-      });
-  }
-  onMount(async () => {
-    fetchTopicIds()
-      .then(async (ids) => {
-        topics = await Promise.all(ids.map(async (id) => await fetchTopic(id)));
-        processed = multiTopic(topics);
-      })
-      .catch((err) => {
-        console.error("it went bad", err.code);
-      });
-  });
+  topics.set(data.topics);
+  let processed = data.processed;
 </script>
 
 <html lang="en">
   <Container class="main">
     <Row class="fullheight">
       <Col xs="2">
-        <Navigation {topics} />
+        <Navigation />
       </Col>
       <Col xs="10">
         {#if processed !== null}
-          <Graph>
-            {#each processed.nodes as node}
-              <GraphNode {node} />
-            {/each}
-            {#each processed.edges as edge}
-              <GraphEdge {edge} />
-            {/each}
-          </Graph>
+          <Graph input={processed} />
         {/if}
       </Col>
     </Row>
