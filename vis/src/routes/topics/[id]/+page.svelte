@@ -1,8 +1,8 @@
 <script>
-  import Topic from "../../components/Topic.svelte";
-  import Navigation from "../../components/Navigation.svelte";
+  import Topic from "$lib/Topic.svelte";
+  import Navigation from "$lib/Navigation.svelte";
   import { Container, Row, Col, Styles } from "sveltestrap";
-  export let id;
+  export let data;
   export let topics;
 </script>
 
@@ -13,7 +13,7 @@
         <Navigation {topics} />
       </Col>
       <Col xs="10">
-        <Topic topic_id={id} />
+        <Topic topic_id={data.id} />
       </Col>
     </Row>
   </Container>

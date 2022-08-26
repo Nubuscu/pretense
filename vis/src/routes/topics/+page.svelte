@@ -1,5 +1,5 @@
 <script>
-  import Topic from "../../components/Topic.svelte";
+  import Topic from "$lib/Topic.svelte";
 
   let root = `${import.meta.env.VITE_BACKEND_HOST}:${
     import.meta.env.VITE_BACKEND_PORT

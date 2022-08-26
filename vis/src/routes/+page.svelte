@@ -1,11 +1,11 @@
 <script>
-  import Graph from "../components/Graph.svelte";
-  import GraphNode from "../components/GraphNode.svelte";
-  import GraphEdge from "../components/GraphEdge.svelte";
-  import { multiTopic } from "../components/topicProcessing";
+  import Graph from "$lib/Graph.svelte";
+  import GraphNode from "$lib/GraphNode.svelte";
+  import GraphEdge from "$lib/GraphEdge.svelte";
+  import { multiTopic } from "$lib/topicProcessing";
   import { onMount } from "svelte";
-  import { Container, Row, Col, Styles } from "sveltestrap";
-  import Navigation from "../components/Navigation.svelte";
+  import { Container, Row, Col } from "sveltestrap";
+  import Navigation from "$lib/Navigation.svelte";
 
   let root = `${import.meta.env.VITE_BACKEND_HOST}:${
     import.meta.env.VITE_BACKEND_PORT
@@ -39,8 +39,6 @@
       });
   });
 </script>
-
-<!-- <Styles /> -->
 
 <html lang="en">
   <Container class="main">

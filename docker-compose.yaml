@@ -31,6 +31,7 @@ services:
 
   vis:
     build:
+      target: prod
       context: ./vis
       dockerfile: Dockerfile
     depends_on:

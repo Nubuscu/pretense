@@ -1,33 +1,33 @@
 {
-  "name": "vis",
-  "version": "0.0.1",
-  "scripts": {
-    "dev": "svelte-kit dev --host=0.0.0.0",
-    "build": "svelte-kit build",
-    "package": "svelte-kit package",
-    "preview": "svelte-kit preview",
-    "prepare": "svelte-kit sync"
-  },
-  "devDependencies": {
-    "@sveltejs/adapter-auto": "next",
-    "@sveltejs/kit": "next",
-    "@sveltejs/vite-plugin-svelte": "^1.0.0-next.41",
-    "svelte": "^3.44.0"
-  },
-  "type": "module",
-  "dependencies": {
-    "cytoscape": "^3.21.0",
-    "cytoscape-cise": "^1.0.0",
-    "cytoscape-cola": "^2.5.1",
-    "cytoscape-cxtmenu": "^3.4.0",
-    "cytoscape-elk": "^2.0.2",
-    "svelte-markdown": "^0.2.2",
-    "sveltestrap": "^5.9.0",
-    "web-worker": "^1.2.0"
-  },
-  "overrides": {
-    "cytoscape-elk": {
-      "elkjs": "^0.8.1"
-    }
-  }
+	"name": "vis",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev --port=3000",
+		"build": "vite build",
+		"preview": "vite preview"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "next",
+		"@sveltejs/adapter-node": "^1.0.0-next.87",
+		"@sveltejs/kit": "next",
+		"svelte": "^3.46.0",
+		"sveltestrap": "github:ClapClap-app/sveltestrap",
+		"vite": "^3.0.8"
+	},
+	"type": "module",
+	"dependencies": {
+		"cytoscape": "^3.21.0",
+		"cytoscape-cise": "^1.0.0",
+		"cytoscape-cola": "^2.5.1",
+		"cytoscape-cxtmenu": "^3.4.0",
+		"cytoscape-elk": "^2.0.2",
+		"svelte-markdown": "^0.2.2",
+		"web-worker": "^1.2.0"
+	},
+	"overrides": {
+		"cytoscape-elk": {
+			"elkjs": "^0.8.1"
+		}
+	}
 }

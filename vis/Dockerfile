@@ -1,7 +1,13 @@
-FROM node:16-slim
+FROM node:16-slim as base
 WORKDIR /app
 COPY package-lock.json /app/package-lock.json
 COPY package.json /app/package.json
 RUN npm i
 COPY . /app/
-CMD ["npm", "run", "dev"]
+# ---
+FROM base as dev
+CMD ["npm", "run", "dev", "--port=3000"]
+# ---
+FROM base as prod
+RUN npm run build
+CMD ["node", "build/index.js"]
