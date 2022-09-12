@@ -2,12 +2,12 @@
   import Graph from "$lib/Graph.svelte";
   import { Container, Row, Col } from "sveltestrap";
   import Navigation from "$lib/Navigation.svelte";
-  import { topics } from "$lib/stores";
+  import { topics, processed } from "$lib/stores";
 
   export let data;
 
   topics.set(data.topics);
-  let processed = data.processed;
+  processed.set(data.singles);
 </script>
 
 <html lang="en">
@@ -17,8 +17,8 @@
         <Navigation />
       </Col>
       <Col xs="10">
-        {#if processed !== null}
-          <Graph input={processed} />
+        {#if data.multi !== null}
+          <Graph input={data.multi} />
         {/if}
       </Col>
     </Row>

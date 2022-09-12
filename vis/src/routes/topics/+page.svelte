@@ -1,16 +1,6 @@
 <script>
   import Topic from "$lib/Topic.svelte";
-
-  let root = `${import.meta.env.VITE_BACKEND_HOST}:${
-    import.meta.env.VITE_BACKEND_PORT
-  }`;
-  let topics = [];
-  $: fetch(`${root}/v1/topics`)
-    .then((response) => response.json())
-    .then((data) => {
-      topics = data.map((val) => val.id);
-    })
-    .catch((err) => console.error(err.code));
+  import { topics } from "$lib/stores";
 </script>
 
 <html lang="en">

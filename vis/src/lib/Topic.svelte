@@ -1,34 +1,21 @@
 <script>
   import Graph from "./Graph.svelte";
   import SvelteMarkdown from "svelte-markdown";
-  import { singleTopic } from "./topicProcessing.js";
+  import { processed } from "$lib/stores";
 
   export let topic_id;
-  let root = `${import.meta.env.VITE_BACKEND_HOST}:${
-    import.meta.env.VITE_BACKEND_PORT
-  }`;
+  let topic_p = $processed[topic_id];
   let graphInput = {
-    nodes: [],
-    edges: []
+    nodes: topic_p?.nodes,
+    edges: topic_p?.edges,
   };
-  let content = {};
-  $: fetch(`${root}/v1/topics/${topic_id}`)
-    .then((response) => response.json())
-    .then((data) => {
-      let res = singleTopic(data);
-      graphInput = {
-        nodes: res.nodes,
-        edges: res.edges,
-      };
-      content = res.content;
-    })
-    .catch((err) => console.error(err.code));
+  let content = topic_p?.content;
 </script>
 
 <div>
   <div class="content">
-    <h2>{content.title}</h2>
-    <SvelteMarkdown source={content.body} />
+    <h2>{content?.title}</h2>
+    <SvelteMarkdown source={content?.body} />
   </div>
   {#if graphInput !== {}}
     <Graph input={graphInput} />
