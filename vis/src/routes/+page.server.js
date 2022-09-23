@@ -22,13 +22,15 @@ async function fetchTopicIds() {
 export async function load({ params }) {
     const ids = await fetchTopicIds()
     const topics = await Promise.all(ids.map(async (id) => await fetchTopic(id)));
-    const individual = topics.map(t => [t.id, singleTopic(t)])
-        .reduce((acc, [id, p]) => ({ ...acc, [id]: p }, {}))
+    const singles = {}
+    topics.map(t => [t.id, singleTopic(t)]).forEach(x => {
+        let [id, graphData] = x
+        singles[id] = graphData
+    })
     const all_processed = multiTopic(topics);
-    console.log(individual)
     return {
         topics: topics,
-        singles: individual,
+        singles: singles,
         multi: all_processed,
     }
 }
