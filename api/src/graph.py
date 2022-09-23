@@ -8,6 +8,8 @@ from gremlin_python.process.graph_traversal import (
     __,
     unfold,
     value_map,
+    in_,
+    out,
 )
 from src.models import Album, Artist, Topic, Review
 
@@ -100,7 +102,7 @@ class GraphRepository:
             .next()
         )
 
-    def get_album(self, title=None, id_=None) -> Album:
+    def get_album(self, title=None, id_=None) -> List[Album]:
 
         tvsl = self.g.V().has_label("album")
         if title:
@@ -170,6 +172,11 @@ class GraphRepository:
             ],
             albums=[self.get_album(title=name) for name in res["album_names"]],
         )
+
+    def get_unrelated_albums(self) -> List[Album]:
+        """Find all the albums that aren't associated with a Topic (yet)"""
+        ids = self.g.V().has_label("album").not_(in_("reviews")).id_().toList()
+        return [self.get_album(id_=id_) for id_ in ids]
 
 
 class ContentWriter:

@@ -17,7 +17,17 @@ def get(repo: GraphRepository = Depends(Provide[Container.graph_repo])) -> List[
         return ctx_repo.get_album()
 
 
+@router.get("/unrelated")
+@inject
+def get_unrelated(
+    repo: GraphRepository = Depends(Provide[Container.graph_repo]),
+) -> List[Album]:
+    with repo as ctx_repo:
+        return ctx_repo.get_unrelated_albums()
+
+
 @router.get("/{id_}")
+@inject
 def get_one(
     id_: int, repo: GraphRepository = Depends(Provide[Container.graph_repo])
 ) -> Album:
