@@ -15,7 +15,7 @@ LOG = logging.getLogger("spotify")
 # a token for the spotify api. e.g.:
 # https://developer.spotify.com/console/get-current-user-saved-albums/?limit=&offset=&market=
 # may expire relatively quickly
-TOKEN = "BQAAU23zTI5CU4xETuVu04c5ff50NmbHTtwzC7j_q1FECqAkPOfyqUm8c7LyIbJVtxFJbLKxjSrrA7UyIqC1H154lbxsXq2F9In9md2WYn5fd1_wOpwgdKHdzsSQk5VzMoQ-qjVlNUFfrZfqdUT5oqc79yL8eWGDUJKbLylN4VzWwZoSQnXfbzwI"
+TOKEN = "BQCRSTpgaXR4vhDWofmECd7XZqeLRpR2XFPHMiBUDftxOgFO5SV3oUUIyrjkUGH38DjAbULZS8mLe26IGKtdL2sbMJK4DbD_bBFmqG2U6KsV1768EGCagtX2g3IxacYY_H-eBjb1TzP-4wzDMEmGpBm6FAzBdVaKKTEJ8vT0TYSJwsm4ciBOUOXm"
 
 # note: hardcoded market
 URL_FMT = "https://api.spotify.com/v1/me/albums?limit={limit}&offset={offset}&market=NZ"

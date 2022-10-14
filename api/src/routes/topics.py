@@ -23,4 +23,7 @@ def get_one(
     id_: int, repo: GraphRepository = Depends(Provide[Container.graph_repo])
 ) -> Topic:
     with repo as ctx_repo:
-        return ctx_repo.get_topic(id_)
+        res = ctx_repo.get_topic(id_)
+        if res:
+            return res[0]
+        return None

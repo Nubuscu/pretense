@@ -1,6 +1,8 @@
+import asyncio
 import os
 from typing import List, Optional, Union
 from gremlin_python.process.anonymous_traversal import traversal
+from gremlin_python.driver.aiohttp.transport import AiohttpTransport
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
 from gremlin_python.process.traversal import T, Cardinality, WithOptions
 from gremlin_python.process.graph_traversal import (
@@ -21,10 +23,17 @@ def connection_factory(
     port=os.environ.get("DB_PORT"),
     username=os.environ.get("DB_USER"),
     password=os.environ.get("DB_PASS"),
+    call_from_event_loop=None,
 ) -> DriverRemoteConnection:
     conn_string = f"ws://{host}:{port}/gremlin"
     conn = DriverRemoteConnection(
-        conn_string, "g", username=username, password=password
+        conn_string,
+        "g",
+        username=username,
+        password=password,
+        transport_factory=lambda: AiohttpTransport(
+            call_from_event_loop=call_from_event_loop
+        ),
     )
     return conn
 
@@ -130,11 +139,9 @@ class GraphRepository:
                 )
             )
         assert retval, f"Album(s) not found: {title or id_}"
-        if len(retval) == 1:
-            return retval[0]
         return retval
 
-    def get_topic(self, id_: int = None) -> Topic:
+    def get_topic(self, id_: int = None) -> List[Topic]:
         """Get a topic from the backend.
 
         If id_ is not specified, return hollow Topics for all ids
@@ -163,7 +170,7 @@ class GraphRepository:
             .next()
         )
         topic_id = res["topic"][T.id]
-        return Topic(
+        return [Topic(
             id=topic_id,
             name=res["topic"]["name"][0],
             reviews=[
@@ -171,7 +178,7 @@ class GraphRepository:
                 for r in res["reviews"]
             ],
             albums=[self.get_album(title=name) for name in res["album_names"]],
-        )
+        )]
 
     def get_unrelated_albums(self) -> List[Album]:
         """Find all the albums that aren't associated with a Topic (yet)"""

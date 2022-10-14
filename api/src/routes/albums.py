@@ -32,4 +32,4 @@ def get_one(
     id_: int, repo: GraphRepository = Depends(Provide[Container.graph_repo])
 ) -> Album:
     with repo as ctx_repo:
-        return ctx_repo.get_album(id_)
+        return (res := ctx_repo.get_album(id_))[0] if res else None

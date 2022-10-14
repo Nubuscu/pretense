@@ -4,7 +4,8 @@ import os
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.di import Container
-from src.routes import health, topic_router, album_router
+from src.routes import health, topic_router, album_router, graph_router
+
 
 from fastapi.logger import logger as fastapi_logger
 
@@ -30,6 +31,7 @@ def list_from_env_var(raw):
 
 
 def create_app():
+    # initialize the container
     container = Container()
     app = FastAPI()
     origins = ["*"]
@@ -46,6 +48,7 @@ def create_app():
     v1_router.include_router(topic_router, prefix="/topics")
     v1_router.include_router(album_router, prefix="/albums")
     v1_router.include_router(health, prefix="/health")
+    v1_router.include_router(graph_router, prefix="/graphql")
 
     app.include_router(v1_router)
     return app
