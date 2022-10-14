@@ -111,74 +111,151 @@ class GraphRepository:
             .next()
         )
 
-    def get_album(self, title=None, id_=None) -> List[Album]:
+    def get_album(self, name=None, id_=None) -> List[Album]:
 
         tvsl = self.g.V().has_label("album")
-        if title:
-            tvsl = tvsl.has("name", title)
+        if name:
+            tvsl = tvsl.has("name", name)
         elif id_:
             tvsl = tvsl.has_id(id_)
 
         raw_list = (
-            tvsl.project("album", "artists")
+            tvsl.project("album").by(value_map().with_(WithOptions.tokens)).toList()
+        )
+        retval = []
+        for raw in raw_list:
+            raw_album = raw["album"]
+            retval.append(
+                Album(
+                    id=raw_album[T.id],
+                    name=raw_album["name"][0],
+                )
+            )
+        return retval
+
+    def get_albums_for_topic(self, topic_id) -> List[Album]:
+        raw_list = (
+            self.g.V(topic_id)
+            .out("includes")
+            .dedup()
+            .project("album")
             .by(value_map().with_(WithOptions.tokens))
-            .by(__.in_("wrote").value_map().with_(WithOptions.tokens).fold())
             .toList()
         )
         retval = []
         for raw in raw_list:
             raw_album = raw["album"]
-            raw_artists = raw["artists"]
             retval.append(
                 Album(
                     id=raw_album[T.id],
                     name=raw_album["name"][0],
-                    artists=[
-                        Artist(id=a[T.id], name=a["name"][0]) for a in raw_artists
-                    ],
                 )
             )
-        assert retval, f"Album(s) not found: {title or id_}"
+        return retval
+
+    def get_artist(self, name=None, id_=None) -> List[Artist]:
+        tvsl = self.g.V().has_label("artist")
+        if name:
+            tvsl = tvsl.has("name", name)
+        elif id_:
+            tvsl = tvsl.has_id(id_)
+
+        raw_list = (
+            tvsl.project("artist").by(value_map().with_(WithOptions.tokens)).toList()
+        )
+        retval = []
+        for raw in raw_list:
+            raw_artist = raw["artist"]
+            retval.append(
+                Artist(
+                    id=raw_artist[T.id],
+                    name=raw_artist["name"][0],
+                )
+            )
+        return retval
+
+    def get_artists_for_album(self, album_id) -> List[Artist]:
+        raw_list = (
+            self.g.V(album_id)
+            .in_("wrote")
+            .dedup()
+            .project("artist")
+            .by(value_map().with_(WithOptions.tokens))
+            .toList()
+        )
+        retval = []
+        for raw in raw_list:
+            raw_artist = raw["artist"]
+            retval.append(
+                Artist(
+                    id=raw_artist[T.id],
+                    name=raw_artist["name"][0],
+                )
+            )
         return retval
 
     def get_topic(self, id_: int = None) -> List[Topic]:
-        """Get a topic from the backend.
+        tvsl = self.g.V().has_label("topic")
+        if id_:
+            tvsl = tvsl.has_id(id_)
 
-        If id_ is not specified, return hollow Topics for all ids
-
-        Args:
-            id_ (int, optional): id to search by. Defaults to None.
-
-        Returns:
-            Topic: requested topic
-        """
-        if not id_:
-            # no id given, get a big list of id-only, empty topics
-            raw_topics = (
-                self.g.V().has_label("topic").valueMap().with_(WithOptions.tokens)
-            )
-            return [
-                Topic(id=raw.get(T.id), name=raw.get("name", [None])[0])
-                for raw in raw_topics
-            ]
-        res = (
-            self.g.V(id_)
-            .project("topic", "reviews", "album_names")
-            .by(value_map().with_(WithOptions.tokens))
-            .by(__.in_("reviews").valueMap().with_(WithOptions.tokens).fold())
-            .by(__.out("includes").dedup().values("name").fold())
-            .next()
+        raw_list = (
+            tvsl.project("topic").by(value_map().with_(WithOptions.tokens)).toList()
         )
-        topic_id = res["topic"][T.id]
-        return [Topic(
-            id=topic_id,
-            name=res["topic"]["name"][0],
-            reviews=[
-                Review(id=r[T.id], body=r.get("content", [""])[0])
-                for r in res["reviews"]
-            ],
-            albums=[self.get_album(title=name) for name in res["album_names"]],
-        )]
+        retval = []
+        for raw in raw_list:
+            raw_topic = raw["topic"]
+            names = raw_topic["name"]
+            retval.append(
+                Topic(
+                    id=raw_topic[T.id],
+                    name=names[0] if names else None,
+                )
+            )
+        return retval
+
+    def get_review(self, id_: int = None) -> List[Review]:
+        tvsl = self.g.V().has_label("review")
+        if id_:
+            tvsl = tvsl.has_id(id_)
+
+        raw_list = (
+            tvsl.project("review").by(value_map().with_(WithOptions.tokens)).toList()
+        )
+        retval = []
+        for raw in raw_list:
+            raw_review = raw["review"]
+            titles = raw_review.get("title")
+            retval.append(
+                Review(
+                    id=raw_review[T.id],
+                    name=titles[0] if titles else None,
+                    body=raw_review["content"][0],
+                )
+            )
+        return retval
+
+    def get_reviews_for_topic(self, topic_id: int) -> List[Review]:
+        raw_list = (
+            self.g.V(topic_id)
+            .in_("reviews")
+            .dedup()
+            .project("review")
+            .by(value_map().with_(WithOptions.tokens))
+            .toList()
+        )
+        retval = []
+        for raw in raw_list:
+            raw_review = raw["review"]
+            titles = raw_review.get("title")
+            retval.append(
+                Review(
+                    id=raw_review[T.id],
+                    name=titles[0] if titles else None,
+                    body=raw_review["content"][0],
+                )
+            )
+        return retval
 
     def get_unrelated_albums(self) -> List[Album]:
         """Find all the albums that aren't associated with a Topic (yet)"""
