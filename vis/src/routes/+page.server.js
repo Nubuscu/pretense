@@ -1,36 +1,47 @@
 import { multiTopic, singleTopic } from "$lib/topicProcessing";
+import { createClient, gql } from '@urql/svelte';
+
 
 let root = `${process.env.BACKEND}`;
 
-async function fetchTopic(id) {
-    let resp = await fetch(`${root}/v1/topics/${id}`);
-    return await resp.json();
-}
-async function fetchTopicIds() {
-    let url = `${root}/v1/topics`
-    return await fetch(url)
-        .then((response) => response.json())
-        .then((data) => {
-            return data.map((val) => val.id);
-        })
-        .catch((err) => {
-            console.error("it went bad", url, err);
-            return [];
-        });
-}
+const client = createClient({
+  url: `${root}/v1/graphql`
+})
+
+const ALL_TOPICS_QUERY = gql`
+  query allTopics {
+    topics {
+      id
+      name
+      albums {
+        id
+        name
+        artists {
+          id
+          name
+        }
+      }
+    }
+  }`
+
 
 export async function load({ params }) {
-    const ids = await fetchTopicIds()
-    const topics = await Promise.all(ids.map(async (id) => await fetchTopic(id)));
-    const singles = {}
-    topics.map(t => [t.id, singleTopic(t)]).forEach(x => {
-        let [id, graphData] = x
-        singles[id] = graphData
-    })
-    const all_processed = multiTopic(topics);
-    return {
-        topics: topics,
-        singles: singles,
-        multi: all_processed,
-    }
+  const resp = await client.query(ALL_TOPICS_QUERY).toPromise();
+  if (resp.error) {
+    console.error(resp.error)
+    return;
+  }
+  const topics = resp.data.topics
+
+  const singles = {}
+  topics.map(t => [t.id, singleTopic(t)]).forEach(x => {
+    let [id, graphData] = x
+    singles[id] = graphData
+  })
+  const all_processed = multiTopic(topics);
+  return {
+    topics: topics,
+    singles: singles,
+    multi: all_processed,
+  }
 }

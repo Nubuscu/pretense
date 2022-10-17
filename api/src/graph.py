@@ -271,7 +271,7 @@ class ContentWriter:
         with self.repo as repo:
             topic = repo.upsert_topic(title)
             repo.add_review(title, topic.id, review_content)
-            albums = [repo.get_album(title=name) for name in album_names]
+            albums = [repo.get_album(name=name)[0] for name in album_names]
             for album in albums:
                 album_v = repo.g.V(album.id_).next()
                 repo.g.V(topic).add_e("includes").to(album_v).iterate()
