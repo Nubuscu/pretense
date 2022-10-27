@@ -13,6 +13,11 @@ const ALL_TOPICS_QUERY = gql`
     topics {
       id
       name
+      reviews {
+        id
+        title
+        body
+      }
       albums {
         id
         name
