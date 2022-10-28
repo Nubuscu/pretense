@@ -1,6 +1,4 @@
-import asyncio
 import os
-from typing import List, Optional, Union
 from gremlin_python.process.anonymous_traversal import traversal
 from gremlin_python.driver.aiohttp.transport import AiohttpTransport
 from gremlin_python.driver.driver_remote_connection import DriverRemoteConnection
@@ -13,7 +11,7 @@ from gremlin_python.process.graph_traversal import (
     in_,
     out,
 )
-from src.models import Album, Artist, Topic, Review
+from src.models import Album, Artist, Base, Topic, Review
 
 single = Cardinality.single
 
@@ -133,26 +131,6 @@ class GraphRepository:
             )
         return retval
 
-    def get_albums_for_topic(self, topic_id) -> list[Album]:
-        raw_list = (
-            self.g.V(topic_id)
-            .out("includes")
-            .dedup()
-            .project("album")
-            .by(value_map().with_(WithOptions.tokens))
-            .toList()
-        )
-        retval = []
-        for raw in raw_list:
-            raw_album = raw["album"]
-            retval.append(
-                Album(
-                    id=raw_album[T.id],
-                    name=raw_album["name"][0],
-                )
-            )
-        return retval
-
     def get_artist(self, name=None, id_=None) -> list[Artist]:
         tvsl = self.g.V().has_label("artist")
         if name:
@@ -162,26 +140,6 @@ class GraphRepository:
 
         raw_list = (
             tvsl.project("artist").by(value_map().with_(WithOptions.tokens)).toList()
-        )
-        retval = []
-        for raw in raw_list:
-            raw_artist = raw["artist"]
-            retval.append(
-                Artist(
-                    id=raw_artist[T.id],
-                    name=raw_artist["name"][0],
-                )
-            )
-        return retval
-
-    def get_artists_for_album(self, album_id) -> list[Artist]:
-        raw_list = (
-            self.g.V(album_id)
-            .in_("wrote")
-            .dedup()
-            .project("artist")
-            .by(value_map().with_(WithOptions.tokens))
-            .toList()
         )
         retval = []
         for raw in raw_list:
@@ -235,32 +193,98 @@ class GraphRepository:
             )
         return retval
 
-    def get_reviews_for_topic(self, topic_id: int) -> list[Review]:
-        raw_list = (
-            self.g.V(topic_id)
-            .in_("reviews")
-            .dedup()
-            .project("review")
-            .by(value_map().with_(WithOptions.tokens))
-            .toList()
-        )
-        retval = []
-        for raw in raw_list:
-            raw_review = raw["review"]
-            titles = raw_review.get("title")
-            retval.append(
-                Review(
-                    id=raw_review[T.id],
-                    name=titles[0] if titles else None,
-                    body=raw_review["content"][0],
-                )
-            )
-        return retval
-
     def get_unrelated_albums(self) -> list[Album]:
         """Find all the albums that aren't associated with a Topic (yet)"""
         ids = self.g.V().has_label("album").not_(in_("reviews")).id_().toList()
         return [self.get_album(id_=id_) for id_ in ids]
+
+    def get_related_for(
+        self, source_id, source_type: str, target_type: str
+    ) -> list[Base]:
+        # start at source
+        tvsl = self.g.V(source_id)
+
+        # build traversal based on types
+        match (source_type, target_type):
+            case ("album", "artist"):
+                tvsl = tvsl.in_("wrote").dedup()
+            case ("album", "topic"):
+                tvsl = tvsl.in_("includes").dedup()
+            case ("artist", "album"):
+                tvsl = tvsl.out("wrote").dedup()
+            case ("topic", "review"):
+                tvsl = tvsl.in_("reviews").dedup()
+            case ("topic", "album"):
+                tvsl = tvsl.out("includes").dedup()
+            case (x, y) if x == y:
+                # no traversing required
+                pass
+            case _:
+                return []
+        # project and build an object
+        retval = []
+        match (target_type):
+            case "album":
+                raw_list = (
+                    tvsl.project("album")
+                    .by(value_map().with_(WithOptions.tokens))
+                    .toList()
+                )
+                for raw in raw_list:
+                    raw_album = raw["album"]
+                    retval.append(
+                        Album(
+                            id=raw_album[T.id],
+                            name=raw_album["name"][0],
+                        )
+                    )
+            case "artist":
+                raw_list = (
+                    tvsl.project("artist")
+                    .by(value_map().with_(WithOptions.tokens))
+                    .toList()
+                )
+                for raw in raw_list:
+                    raw_artist = raw["artist"]
+                    retval.append(
+                        Artist(
+                            id=raw_artist[T.id],
+                            name=raw_artist["name"][0],
+                        )
+                    )
+            case "review":
+                raw_list = (
+                    tvsl.project("review")
+                    .by(value_map().with_(WithOptions.tokens))
+                    .toList()
+                )
+                for raw in raw_list:
+                    raw_review = raw["review"]
+                    titles = raw_review.get("title")
+                    retval.append(
+                        Review(
+                            id=raw_review[T.id],
+                            name=titles[0] if titles else None,
+                            body=raw_review["content"][0],
+                        )
+                    )
+            case "topic":
+                raw_list = (
+                    tvsl.project("topic")
+                    .by(value_map().with_(WithOptions.tokens))
+                    .toList()
+                )
+                retval = []
+                for raw in raw_list:
+                    raw_topic = raw["topic"]
+                    names = raw_topic["name"]
+                    retval.append(
+                        Topic(
+                            id=raw_topic[T.id],
+                            name=names[0] if names else None,
+                        )
+                    )
+        return retval
 
 
 class ContentWriter:
