@@ -14,7 +14,7 @@ class Review(BaseModel):
     """Long(er) form text about another object."""
 
     id_: int = Field(alias="id")
-    title: Optional[str]
+    title: str | None
     body: str
 
 
@@ -22,8 +22,8 @@ class Base(BaseModel):
     """Base model from which reviewable/taggable objects are created."""
 
     id_: int = Field(alias="id")
-    tags: Optional[List[Tag]]
-    reviews: Optional[List[Review]]
+    tags: list[Tag] | None
+    reviews: list[Review] | None
 
 
 class Artist(Base):
@@ -36,7 +36,7 @@ class Album(Base):
     """Represents an album."""
 
     name: str
-    artists: Optional[List[Artist]]
+    artists: list[Artist] | None
 
 
 class Topic(Base):
@@ -51,5 +51,5 @@ class Topic(Base):
     """
 
     name: str
-    albums: Optional[List[Album]]
-    artists: Optional[List[Artist]]
+    albums: list[Album] | None
+    artists: list[Artist] | None

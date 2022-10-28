@@ -39,7 +39,7 @@ def connection_factory(
 
 
 class GraphRepository:
-    def __init__(self, conn: Optional[DriverRemoteConnection] = None):
+    def __init__(self, conn: DriverRemoteConnection | None = None):
         self.provided_connection = bool(conn)
         self.g: GraphTraversalSource = traversal().with_remote(conn)
         self.conn = conn
@@ -111,7 +111,7 @@ class GraphRepository:
             .next()
         )
 
-    def get_album(self, name=None, id_=None) -> List[Album]:
+    def get_album(self, name=None, id_=None) -> list[Album]:
 
         tvsl = self.g.V().has_label("album")
         if name:
@@ -133,7 +133,7 @@ class GraphRepository:
             )
         return retval
 
-    def get_albums_for_topic(self, topic_id) -> List[Album]:
+    def get_albums_for_topic(self, topic_id) -> list[Album]:
         raw_list = (
             self.g.V(topic_id)
             .out("includes")
@@ -153,7 +153,7 @@ class GraphRepository:
             )
         return retval
 
-    def get_artist(self, name=None, id_=None) -> List[Artist]:
+    def get_artist(self, name=None, id_=None) -> list[Artist]:
         tvsl = self.g.V().has_label("artist")
         if name:
             tvsl = tvsl.has("name", name)
@@ -174,7 +174,7 @@ class GraphRepository:
             )
         return retval
 
-    def get_artists_for_album(self, album_id) -> List[Artist]:
+    def get_artists_for_album(self, album_id) -> list[Artist]:
         raw_list = (
             self.g.V(album_id)
             .in_("wrote")
@@ -194,7 +194,7 @@ class GraphRepository:
             )
         return retval
 
-    def get_topic(self, id_: int = None) -> List[Topic]:
+    def get_topic(self, id_: int = None) -> list[Topic]:
         tvsl = self.g.V().has_label("topic")
         if id_:
             tvsl = tvsl.has_id(id_)
@@ -214,7 +214,7 @@ class GraphRepository:
             )
         return retval
 
-    def get_review(self, id_: int = None) -> List[Review]:
+    def get_review(self, id_: int = None) -> list[Review]:
         tvsl = self.g.V().has_label("review")
         if id_:
             tvsl = tvsl.has_id(id_)
@@ -235,7 +235,7 @@ class GraphRepository:
             )
         return retval
 
-    def get_reviews_for_topic(self, topic_id: int) -> List[Review]:
+    def get_reviews_for_topic(self, topic_id: int) -> list[Review]:
         raw_list = (
             self.g.V(topic_id)
             .in_("reviews")
@@ -257,7 +257,7 @@ class GraphRepository:
             )
         return retval
 
-    def get_unrelated_albums(self) -> List[Album]:
+    def get_unrelated_albums(self) -> list[Album]:
         """Find all the albums that aren't associated with a Topic (yet)"""
         ids = self.g.V().has_label("album").not_(in_("reviews")).id_().toList()
         return [self.get_album(id_=id_) for id_ in ids]

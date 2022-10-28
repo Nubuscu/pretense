@@ -1,4 +1,4 @@
-FROM python:3.8-slim-buster as base
+FROM python:3.10-slim-buster as base
 
 COPY requirements.in /requirements.in
 RUN pip install --no-cache-dir --upgrade -r requirements.in
