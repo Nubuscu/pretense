@@ -8,11 +8,16 @@ const client = createClient({
   url: `${root}/v1/graphql`
 })
 
-const ALL_TOPICS_QUERY = gql`
-  query allTopics {
-    topics {
+const TOPIC_QUERY = gql`
+  query singleTopic($id: Int) {
+    topics(id: $id) {
       id
       name
+      reviews {
+        id
+        title
+        body
+      }
       albums {
         id
         name
@@ -24,22 +29,20 @@ const ALL_TOPICS_QUERY = gql`
     }
   }`
 
-
 export async function load({ params }) {
-  const resp = await client.query(ALL_TOPICS_QUERY).toPromise();
+  const resp = await client.query(TOPIC_QUERY, { id: parseInt(params.id) }).toPromise();
   if (resp.error) {
     console.error(resp.error)
     return;
   }
-  const topics = resp.data.topics
+  const content = resp.data.topics[0]
 
-  const singles = {}
-  topics.map(t => [t.id, singleTopic(t)]).forEach(x => {
-    let [id, graphData] = x
-    singles[id] = graphData
-  })
-  const all_processed = multiTopic(topics);
   return {
-    multi: all_processed,
+    id: params.id,
+    title: content.name,
+    reviews: content.reviews.map(r => {
+      return { id: r.id, title: r.title ?? "", body: r.body ?? "" }
+    }),
+    graphInput: singleTopic(content),
   }
 }

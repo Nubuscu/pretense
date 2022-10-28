@@ -22,7 +22,6 @@ export function singleTopic(topicData, topicId = null) {
       cluster: topicNodeId,
     });
   }
-  const content = topicData?.reviews?.[0];
   topicData.albums.forEach((album) => {
     let albumNodeId = `album_${album.id}`;
 
@@ -44,7 +43,6 @@ export function singleTopic(topicData, topicId = null) {
   return {
     nodes: nodes,
     edges: edges,
-    content: content,
   };
 }
 
