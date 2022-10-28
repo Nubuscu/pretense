@@ -4,10 +4,7 @@ COPY package-lock.json /app/package-lock.json
 COPY package.json /app/package.json
 RUN npm i
 COPY . /app/
-# ---
-FROM base as dev
-CMD ["npm", "run", "dev", "--port=3000"]
-# ---
+
 FROM base as prod
 RUN npm run build
 CMD ["node", "build/index.js"]
