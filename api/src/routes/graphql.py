@@ -60,9 +60,9 @@ class Base:
 class Artist(Base):
     name: str
 
-    @strawberry.field()
-    def albums(root, info) -> List["Album"]:
-        return get_related_for_single(root, info, "artist", "album")
+    # @strawberry.field()
+    # def albums(root, info) -> List["Album"]:
+    #     return get_related_for_single(root, info, "artist", "album")
 
 
 @strawberry.experimental.pydantic.type(model=models.Album)
@@ -73,9 +73,9 @@ class Album(Base):
     def artists(root, info) -> List[Artist]:
         return get_related_for_single(root, info, "album", "artist")
 
-    @strawberry.field()
-    def topics(root, info) -> List["Topic"]:
-        return get_related_for_single(root, info, "album", "topic")
+    # @strawberry.field()
+    # def topics(root, info) -> List["Topic"]:
+    #     return get_related_for_single(root, info, "album", "topic")
 
 
 @strawberry.experimental.pydantic.type(model=models.Topic)
