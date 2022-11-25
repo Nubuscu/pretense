@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/artist"
 	"strings"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 )
@@ -15,6 +16,10 @@ type Artist struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -53,6 +58,8 @@ func (*Artist) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case artist.FieldName:
 			values[i] = new(sql.NullString)
+		case artist.FieldCreatedAt, artist.FieldUpdatedAt:
+			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Artist", columns[i])
 		}
@@ -74,6 +81,18 @@ func (a *Artist) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			a.ID = int(value.Int64)
+		case artist.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				a.CreatedAt = value.Time
+			}
+		case artist.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				a.UpdatedAt = value.Time
+			}
 		case artist.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -113,6 +132,12 @@ func (a *Artist) String() string {
 	var builder strings.Builder
 	builder.WriteString("Artist(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", a.ID))
+	builder.WriteString("created_at=")
+	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("updated_at=")
+	builder.WriteString(a.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(a.Name)
 	builder.WriteByte(')')

@@ -3,4 +3,6 @@
 type Mutation {
     createAlbum(input: CreateAlbumInput!): Album
     createArtist(input: CreateArtistInput!): Artist
+    CreateReview(input: CreateReviewInput!): Review
+    CreateTopic(input: CreateTopicInput!): Topic
 }

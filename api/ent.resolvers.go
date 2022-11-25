@@ -29,6 +29,16 @@ func (r *queryResolver) Artists(ctx context.Context) ([]*ent.Artist, error) {
 	return r.client.Artist.Query().All(ctx)
 }
 
+// Reviews is the resolver for the reviews field.
+func (r *queryResolver) Reviews(ctx context.Context) ([]*ent.Review, error) {
+	return r.client.Review.Query().All(ctx)
+}
+
+// Topics is the resolver for the topics field.
+func (r *queryResolver) Topics(ctx context.Context) ([]*ent.Topic, error) {
+	return r.client.Topic.Query().All(ctx)
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 

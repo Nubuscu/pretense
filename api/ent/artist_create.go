@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
+	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -18,6 +19,34 @@ type ArtistCreate struct {
 	config
 	mutation *ArtistMutation
 	hooks    []Hook
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (ac *ArtistCreate) SetCreatedAt(t time.Time) *ArtistCreate {
+	ac.mutation.SetCreatedAt(t)
+	return ac
+}
+
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
+func (ac *ArtistCreate) SetNillableCreatedAt(t *time.Time) *ArtistCreate {
+	if t != nil {
+		ac.SetCreatedAt(*t)
+	}
+	return ac
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (ac *ArtistCreate) SetUpdatedAt(t time.Time) *ArtistCreate {
+	ac.mutation.SetUpdatedAt(t)
+	return ac
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (ac *ArtistCreate) SetNillableUpdatedAt(t *time.Time) *ArtistCreate {
+	if t != nil {
+		ac.SetUpdatedAt(*t)
+	}
+	return ac
 }
 
 // SetName sets the "name" field.
@@ -52,6 +81,7 @@ func (ac *ArtistCreate) Save(ctx context.Context) (*Artist, error) {
 		err  error
 		node *Artist
 	)
+	ac.defaults()
 	if len(ac.hooks) == 0 {
 		if err = ac.check(); err != nil {
 			return nil, err
@@ -115,8 +145,26 @@ func (ac *ArtistCreate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (ac *ArtistCreate) defaults() {
+	if _, ok := ac.mutation.CreatedAt(); !ok {
+		v := artist.DefaultCreatedAt()
+		ac.mutation.SetCreatedAt(v)
+	}
+	if _, ok := ac.mutation.UpdatedAt(); !ok {
+		v := artist.DefaultUpdatedAt()
+		ac.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (ac *ArtistCreate) check() error {
+	if _, ok := ac.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Artist.created_at"`)}
+	}
+	if _, ok := ac.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Artist.updated_at"`)}
+	}
 	if _, ok := ac.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Artist.name"`)}
 	}
@@ -147,6 +195,14 @@ func (ac *ArtistCreate) createSpec() (*Artist, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := ac.mutation.CreatedAt(); ok {
+		_spec.SetField(artist.FieldCreatedAt, field.TypeTime, value)
+		_node.CreatedAt = value
+	}
+	if value, ok := ac.mutation.UpdatedAt(); ok {
+		_spec.SetField(artist.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
+	}
 	if value, ok := ac.mutation.Name(); ok {
 		_spec.SetField(artist.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -187,6 +243,7 @@ func (acb *ArtistCreateBulk) Save(ctx context.Context) ([]*Artist, error) {
 	for i := range acb.builders {
 		func(i int, root context.Context) {
 			builder := acb.builders[i]
+			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*ArtistMutation)
 				if !ok {

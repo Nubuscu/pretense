@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
+	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/topic"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
@@ -34,6 +36,8 @@ func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
 		album.Table:  album.ValidColumn,
 		artist.Table: artist.ValidColumn,
+		review.Table: review.ValidColumn,
+		topic.Table:  topic.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

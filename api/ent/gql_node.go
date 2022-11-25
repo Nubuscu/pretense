@@ -8,6 +8,8 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
+	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/topic"
 	"sync"
 	"sync/atomic"
 
@@ -51,24 +53,32 @@ func (a *Album) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     a.ID,
 		Type:   "Album",
-		Fields: make([]*Field, 2),
-		Edges:  make([]*Edge, 1),
+		Fields: make([]*Field, 3),
+		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
-	if buf, err = json.Marshal(a.Name); err != nil {
+	if buf, err = json.Marshal(a.CreatedAt); err != nil {
 		return nil, err
 	}
 	node.Fields[0] = &Field{
-		Type:  "string",
-		Name:  "name",
+		Type:  "time.Time",
+		Name:  "created_at",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(a.CreatedAt); err != nil {
+	if buf, err = json.Marshal(a.UpdatedAt); err != nil {
 		return nil, err
 	}
 	node.Fields[1] = &Field{
 		Type:  "time.Time",
-		Name:  "created_at",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(a.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "name",
 		Value: string(buf),
 	}
 	node.Edges[0] = &Edge{
@@ -81,6 +91,16 @@ func (a *Album) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[1] = &Edge{
+		Type: "Topic",
+		Name: "included_in",
+	}
+	err = a.QueryIncludedIn().
+		Select(topic.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -88,14 +108,30 @@ func (a *Artist) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     a.ID,
 		Type:   "Artist",
-		Fields: make([]*Field, 1),
+		Fields: make([]*Field, 3),
 		Edges:  make([]*Edge, 1),
 	}
 	var buf []byte
-	if buf, err = json.Marshal(a.Name); err != nil {
+	if buf, err = json.Marshal(a.CreatedAt); err != nil {
 		return nil, err
 	}
 	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(a.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(a.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
 		Type:  "string",
 		Name:  "name",
 		Value: string(buf),
@@ -107,6 +143,106 @@ func (a *Artist) Node(ctx context.Context) (node *Node, err error) {
 	err = a.QueryWrote().
 		Select(album.FieldID).
 		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+func (r *Review) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     r.ID,
+		Type:   "Review",
+		Fields: make([]*Field, 3),
+		Edges:  make([]*Edge, 1),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(r.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(r.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(r.Body); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "body",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Topic",
+		Name: "reviews",
+	}
+	err = r.QueryReviews().
+		Select(topic.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+func (t *Topic) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     t.ID,
+		Type:   "Topic",
+		Fields: make([]*Field, 3),
+		Edges:  make([]*Edge, 2),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(t.CreatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "time.Time",
+		Name:  "created_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(t.UpdatedAt); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "time.Time",
+		Name:  "updated_at",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(t.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[2] = &Field{
+		Type:  "string",
+		Name:  "name",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Review",
+		Name: "reviewed_by",
+	}
+	err = t.QueryReviewedBy().
+		Select(review.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "Album",
+		Name: "includes",
+	}
+	err = t.QueryIncludes().
+		Select(album.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -195,6 +331,30 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 		query := c.Artist.Query().
 			Where(artist.ID(id))
 		query, err := query.CollectFields(ctx, "Artist")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case review.Table:
+		query := c.Review.Query().
+			Where(review.ID(id))
+		query, err := query.CollectFields(ctx, "Review")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case topic.Table:
+		query := c.Topic.Query().
+			Where(topic.ID(id))
+		query, err := query.CollectFields(ctx, "Topic")
 		if err != nil {
 			return nil, err
 		}
@@ -296,6 +456,38 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.Artist.Query().
 			Where(artist.IDIn(ids...))
 		query, err := query.CollectFields(ctx, "Artist")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case review.Table:
+		query := c.Review.Query().
+			Where(review.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Review")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case topic.Table:
+		query := c.Topic.Query().
+			Where(topic.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Topic")
 		if err != nil {
 			return nil, err
 		}

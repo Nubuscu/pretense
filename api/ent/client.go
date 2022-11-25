@@ -12,6 +12,8 @@ import (
 
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
+	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/topic"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -27,6 +29,10 @@ type Client struct {
 	Album *AlbumClient
 	// Artist is the client for interacting with the Artist builders.
 	Artist *ArtistClient
+	// Review is the client for interacting with the Review builders.
+	Review *ReviewClient
+	// Topic is the client for interacting with the Topic builders.
+	Topic *TopicClient
 	// additional fields for node api
 	tables tables
 }
@@ -44,6 +50,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Album = NewAlbumClient(c.config)
 	c.Artist = NewArtistClient(c.config)
+	c.Review = NewReviewClient(c.config)
+	c.Topic = NewTopicClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -79,6 +87,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config: cfg,
 		Album:  NewAlbumClient(cfg),
 		Artist: NewArtistClient(cfg),
+		Review: NewReviewClient(cfg),
+		Topic:  NewTopicClient(cfg),
 	}, nil
 }
 
@@ -100,6 +110,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config: cfg,
 		Album:  NewAlbumClient(cfg),
 		Artist: NewArtistClient(cfg),
+		Review: NewReviewClient(cfg),
+		Topic:  NewTopicClient(cfg),
 	}, nil
 }
 
@@ -130,6 +142,8 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Album.Use(hooks...)
 	c.Artist.Use(hooks...)
+	c.Review.Use(hooks...)
+	c.Topic.Use(hooks...)
 }
 
 // AlbumClient is a client for the Album schema.
@@ -226,6 +240,22 @@ func (c *AlbumClient) QueryBy(a *Album) *ArtistQuery {
 			sqlgraph.From(album.Table, album.FieldID, id),
 			sqlgraph.To(artist.Table, artist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, album.ByTable, album.ByPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryIncludedIn queries the included_in edge of a Album.
+func (c *AlbumClient) QueryIncludedIn(a *Album) *TopicQuery {
+	query := &TopicQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(album.Table, album.FieldID, id),
+			sqlgraph.To(topic.Table, topic.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, album.IncludedInTable, album.IncludedInPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -342,4 +372,232 @@ func (c *ArtistClient) QueryWrote(a *Artist) *AlbumQuery {
 // Hooks returns the client hooks.
 func (c *ArtistClient) Hooks() []Hook {
 	return c.hooks.Artist
+}
+
+// ReviewClient is a client for the Review schema.
+type ReviewClient struct {
+	config
+}
+
+// NewReviewClient returns a client for the Review from the given config.
+func NewReviewClient(c config) *ReviewClient {
+	return &ReviewClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `review.Hooks(f(g(h())))`.
+func (c *ReviewClient) Use(hooks ...Hook) {
+	c.hooks.Review = append(c.hooks.Review, hooks...)
+}
+
+// Create returns a builder for creating a Review entity.
+func (c *ReviewClient) Create() *ReviewCreate {
+	mutation := newReviewMutation(c.config, OpCreate)
+	return &ReviewCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Review entities.
+func (c *ReviewClient) CreateBulk(builders ...*ReviewCreate) *ReviewCreateBulk {
+	return &ReviewCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Review.
+func (c *ReviewClient) Update() *ReviewUpdate {
+	mutation := newReviewMutation(c.config, OpUpdate)
+	return &ReviewUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReviewClient) UpdateOne(r *Review) *ReviewUpdateOne {
+	mutation := newReviewMutation(c.config, OpUpdateOne, withReview(r))
+	return &ReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ReviewClient) UpdateOneID(id int) *ReviewUpdateOne {
+	mutation := newReviewMutation(c.config, OpUpdateOne, withReviewID(id))
+	return &ReviewUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Review.
+func (c *ReviewClient) Delete() *ReviewDelete {
+	mutation := newReviewMutation(c.config, OpDelete)
+	return &ReviewDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ReviewClient) DeleteOne(r *Review) *ReviewDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ReviewClient) DeleteOneID(id int) *ReviewDeleteOne {
+	builder := c.Delete().Where(review.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ReviewDeleteOne{builder}
+}
+
+// Query returns a query builder for Review.
+func (c *ReviewClient) Query() *ReviewQuery {
+	return &ReviewQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Review entity by its id.
+func (c *ReviewClient) Get(ctx context.Context, id int) (*Review, error) {
+	return c.Query().Where(review.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ReviewClient) GetX(ctx context.Context, id int) *Review {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryReviews queries the reviews edge of a Review.
+func (c *ReviewClient) QueryReviews(r *Review) *TopicQuery {
+	query := &TopicQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(review.Table, review.FieldID, id),
+			sqlgraph.To(topic.Table, topic.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, review.ReviewsTable, review.ReviewsPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ReviewClient) Hooks() []Hook {
+	return c.hooks.Review
+}
+
+// TopicClient is a client for the Topic schema.
+type TopicClient struct {
+	config
+}
+
+// NewTopicClient returns a client for the Topic from the given config.
+func NewTopicClient(c config) *TopicClient {
+	return &TopicClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `topic.Hooks(f(g(h())))`.
+func (c *TopicClient) Use(hooks ...Hook) {
+	c.hooks.Topic = append(c.hooks.Topic, hooks...)
+}
+
+// Create returns a builder for creating a Topic entity.
+func (c *TopicClient) Create() *TopicCreate {
+	mutation := newTopicMutation(c.config, OpCreate)
+	return &TopicCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Topic entities.
+func (c *TopicClient) CreateBulk(builders ...*TopicCreate) *TopicCreateBulk {
+	return &TopicCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Topic.
+func (c *TopicClient) Update() *TopicUpdate {
+	mutation := newTopicMutation(c.config, OpUpdate)
+	return &TopicUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TopicClient) UpdateOne(t *Topic) *TopicUpdateOne {
+	mutation := newTopicMutation(c.config, OpUpdateOne, withTopic(t))
+	return &TopicUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TopicClient) UpdateOneID(id int) *TopicUpdateOne {
+	mutation := newTopicMutation(c.config, OpUpdateOne, withTopicID(id))
+	return &TopicUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Topic.
+func (c *TopicClient) Delete() *TopicDelete {
+	mutation := newTopicMutation(c.config, OpDelete)
+	return &TopicDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TopicClient) DeleteOne(t *Topic) *TopicDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TopicClient) DeleteOneID(id int) *TopicDeleteOne {
+	builder := c.Delete().Where(topic.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TopicDeleteOne{builder}
+}
+
+// Query returns a query builder for Topic.
+func (c *TopicClient) Query() *TopicQuery {
+	return &TopicQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Topic entity by its id.
+func (c *TopicClient) Get(ctx context.Context, id int) (*Topic, error) {
+	return c.Query().Where(topic.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TopicClient) GetX(ctx context.Context, id int) *Topic {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryReviewedBy queries the reviewed_by edge of a Topic.
+func (c *TopicClient) QueryReviewedBy(t *Topic) *ReviewQuery {
+	query := &ReviewQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(topic.Table, topic.FieldID, id),
+			sqlgraph.To(review.Table, review.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, topic.ReviewedByTable, topic.ReviewedByPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryIncludes queries the includes edge of a Topic.
+func (c *TopicClient) QueryIncludes(t *Topic) *AlbumQuery {
+	query := &AlbumQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(topic.Table, topic.FieldID, id),
+			sqlgraph.To(album.Table, album.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, topic.IncludesTable, topic.IncludesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TopicClient) Hooks() []Hook {
+	return c.hooks.Topic
 }

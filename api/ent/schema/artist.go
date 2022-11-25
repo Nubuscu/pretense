@@ -1,9 +1,7 @@
 package schema
 
 import (
-	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
-	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -11,6 +9,12 @@ import (
 // Artist holds the schema definition for the Artist entity.
 type Artist struct {
 	ent.Schema
+}
+
+func (Artist) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		DefaultsMixin{},
+	}
 }
 
 // Fields of the Artist.
@@ -24,12 +28,5 @@ func (Artist) Fields() []ent.Field {
 func (Artist) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("wrote", Album.Type),
-	}
-}
-
-func (Artist) Annotations() []schema.Annotation {
-	return []schema.Annotation{
-		entgql.QueryField(),
-		entgql.Mutations(entgql.MutationCreate()),
 	}
 }

@@ -26,6 +26,8 @@ type config struct {
 type hooks struct {
 	Album  []ent.Hook
 	Artist []ent.Hook
+	Review []ent.Hook
+	Topic  []ent.Hook
 }
 
 // Options applies the options on the config object.

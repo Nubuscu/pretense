@@ -11,8 +11,9 @@ var (
 	// AlbumsColumns holds the columns for the "albums" table.
 	AlbumsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
 	}
 	// AlbumsTable holds the schema information for the "albums" table.
 	AlbumsTable = &schema.Table{
@@ -23,6 +24,8 @@ var (
 	// ArtistsColumns holds the columns for the "artists" table.
 	ArtistsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Unique: true},
 	}
 	// ArtistsTable holds the schema information for the "artists" table.
@@ -30,6 +33,32 @@ var (
 		Name:       "artists",
 		Columns:    ArtistsColumns,
 		PrimaryKey: []*schema.Column{ArtistsColumns[0]},
+	}
+	// ReviewsColumns holds the columns for the "reviews" table.
+	ReviewsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "body", Type: field.TypeString, Size: 2147483647},
+	}
+	// ReviewsTable holds the schema information for the "reviews" table.
+	ReviewsTable = &schema.Table{
+		Name:       "reviews",
+		Columns:    ReviewsColumns,
+		PrimaryKey: []*schema.Column{ReviewsColumns[0]},
+	}
+	// TopicsColumns holds the columns for the "topics" table.
+	TopicsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
+	}
+	// TopicsTable holds the schema information for the "topics" table.
+	TopicsTable = &schema.Table{
+		Name:       "topics",
+		Columns:    TopicsColumns,
+		PrimaryKey: []*schema.Column{TopicsColumns[0]},
 	}
 	// ArtistWroteColumns holds the columns for the "artist_wrote" table.
 	ArtistWroteColumns = []*schema.Column{
@@ -56,15 +85,73 @@ var (
 			},
 		},
 	}
+	// ReviewReviewsColumns holds the columns for the "review_reviews" table.
+	ReviewReviewsColumns = []*schema.Column{
+		{Name: "review_id", Type: field.TypeInt},
+		{Name: "topic_id", Type: field.TypeInt},
+	}
+	// ReviewReviewsTable holds the schema information for the "review_reviews" table.
+	ReviewReviewsTable = &schema.Table{
+		Name:       "review_reviews",
+		Columns:    ReviewReviewsColumns,
+		PrimaryKey: []*schema.Column{ReviewReviewsColumns[0], ReviewReviewsColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "review_reviews_review_id",
+				Columns:    []*schema.Column{ReviewReviewsColumns[0]},
+				RefColumns: []*schema.Column{ReviewsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "review_reviews_topic_id",
+				Columns:    []*schema.Column{ReviewReviewsColumns[1]},
+				RefColumns: []*schema.Column{TopicsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
+	// TopicIncludesColumns holds the columns for the "topic_includes" table.
+	TopicIncludesColumns = []*schema.Column{
+		{Name: "topic_id", Type: field.TypeInt},
+		{Name: "album_id", Type: field.TypeInt},
+	}
+	// TopicIncludesTable holds the schema information for the "topic_includes" table.
+	TopicIncludesTable = &schema.Table{
+		Name:       "topic_includes",
+		Columns:    TopicIncludesColumns,
+		PrimaryKey: []*schema.Column{TopicIncludesColumns[0], TopicIncludesColumns[1]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "topic_includes_topic_id",
+				Columns:    []*schema.Column{TopicIncludesColumns[0]},
+				RefColumns: []*schema.Column{TopicsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+			{
+				Symbol:     "topic_includes_album_id",
+				Columns:    []*schema.Column{TopicIncludesColumns[1]},
+				RefColumns: []*schema.Column{AlbumsColumns[0]},
+				OnDelete:   schema.Cascade,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AlbumsTable,
 		ArtistsTable,
+		ReviewsTable,
+		TopicsTable,
 		ArtistWroteTable,
+		ReviewReviewsTable,
+		TopicIncludesTable,
 	}
 )
 
 func init() {
 	ArtistWroteTable.ForeignKeys[0].RefTable = ArtistsTable
 	ArtistWroteTable.ForeignKeys[1].RefTable = AlbumsTable
+	ReviewReviewsTable.ForeignKeys[0].RefTable = ReviewsTable
+	ReviewReviewsTable.ForeignKeys[1].RefTable = TopicsTable
+	TopicIncludesTable.ForeignKeys[0].RefTable = TopicsTable
+	TopicIncludesTable.ForeignKeys[1].RefTable = AlbumsTable
 }

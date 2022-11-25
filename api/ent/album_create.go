@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
+	"nubuscu/pretense/ent/topic"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -19,12 +20,6 @@ type AlbumCreate struct {
 	config
 	mutation *AlbumMutation
 	hooks    []Hook
-}
-
-// SetName sets the "name" field.
-func (ac *AlbumCreate) SetName(s string) *AlbumCreate {
-	ac.mutation.SetName(s)
-	return ac
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -41,6 +36,26 @@ func (ac *AlbumCreate) SetNillableCreatedAt(t *time.Time) *AlbumCreate {
 	return ac
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (ac *AlbumCreate) SetUpdatedAt(t time.Time) *AlbumCreate {
+	ac.mutation.SetUpdatedAt(t)
+	return ac
+}
+
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
+func (ac *AlbumCreate) SetNillableUpdatedAt(t *time.Time) *AlbumCreate {
+	if t != nil {
+		ac.SetUpdatedAt(*t)
+	}
+	return ac
+}
+
+// SetName sets the "name" field.
+func (ac *AlbumCreate) SetName(s string) *AlbumCreate {
+	ac.mutation.SetName(s)
+	return ac
+}
+
 // AddByIDs adds the "by" edge to the Artist entity by IDs.
 func (ac *AlbumCreate) AddByIDs(ids ...int) *AlbumCreate {
 	ac.mutation.AddByIDs(ids...)
@@ -54,6 +69,21 @@ func (ac *AlbumCreate) AddBy(a ...*Artist) *AlbumCreate {
 		ids[i] = a[i].ID
 	}
 	return ac.AddByIDs(ids...)
+}
+
+// AddIncludedInIDs adds the "included_in" edge to the Topic entity by IDs.
+func (ac *AlbumCreate) AddIncludedInIDs(ids ...int) *AlbumCreate {
+	ac.mutation.AddIncludedInIDs(ids...)
+	return ac
+}
+
+// AddIncludedIn adds the "included_in" edges to the Topic entity.
+func (ac *AlbumCreate) AddIncludedIn(t ...*Topic) *AlbumCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ac.AddIncludedInIDs(ids...)
 }
 
 // Mutation returns the AlbumMutation object of the builder.
@@ -137,10 +167,20 @@ func (ac *AlbumCreate) defaults() {
 		v := album.DefaultCreatedAt()
 		ac.mutation.SetCreatedAt(v)
 	}
+	if _, ok := ac.mutation.UpdatedAt(); !ok {
+		v := album.DefaultUpdatedAt()
+		ac.mutation.SetUpdatedAt(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
 func (ac *AlbumCreate) check() error {
+	if _, ok := ac.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Album.created_at"`)}
+	}
+	if _, ok := ac.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Album.updated_at"`)}
+	}
 	if _, ok := ac.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Album.name"`)}
 	}
@@ -148,9 +188,6 @@ func (ac *AlbumCreate) check() error {
 		if err := album.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Album.name": %w`, err)}
 		}
-	}
-	if _, ok := ac.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Album.created_at"`)}
 	}
 	return nil
 }
@@ -179,13 +216,17 @@ func (ac *AlbumCreate) createSpec() (*Album, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := ac.mutation.Name(); ok {
-		_spec.SetField(album.FieldName, field.TypeString, value)
-		_node.Name = value
-	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
 		_spec.SetField(album.FieldCreatedAt, field.TypeTime, value)
 		_node.CreatedAt = value
+	}
+	if value, ok := ac.mutation.UpdatedAt(); ok {
+		_spec.SetField(album.FieldUpdatedAt, field.TypeTime, value)
+		_node.UpdatedAt = value
+	}
+	if value, ok := ac.mutation.Name(); ok {
+		_spec.SetField(album.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if nodes := ac.mutation.ByIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -198,6 +239,25 @@ func (ac *AlbumCreate) createSpec() (*Album, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: artist.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.IncludedInIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   album.IncludedInTable,
+			Columns: album.IncludedInPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: topic.FieldID,
 				},
 			},
 		}

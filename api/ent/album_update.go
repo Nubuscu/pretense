@@ -9,6 +9,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
+	"nubuscu/pretense/ent/topic"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
@@ -29,23 +30,15 @@ func (au *AlbumUpdate) Where(ps ...predicate.Album) *AlbumUpdate {
 	return au
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (au *AlbumUpdate) SetUpdatedAt(t time.Time) *AlbumUpdate {
+	au.mutation.SetUpdatedAt(t)
+	return au
+}
+
 // SetName sets the "name" field.
 func (au *AlbumUpdate) SetName(s string) *AlbumUpdate {
 	au.mutation.SetName(s)
-	return au
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (au *AlbumUpdate) SetCreatedAt(t time.Time) *AlbumUpdate {
-	au.mutation.SetCreatedAt(t)
-	return au
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (au *AlbumUpdate) SetNillableCreatedAt(t *time.Time) *AlbumUpdate {
-	if t != nil {
-		au.SetCreatedAt(*t)
-	}
 	return au
 }
 
@@ -62,6 +55,21 @@ func (au *AlbumUpdate) AddBy(a ...*Artist) *AlbumUpdate {
 		ids[i] = a[i].ID
 	}
 	return au.AddByIDs(ids...)
+}
+
+// AddIncludedInIDs adds the "included_in" edge to the Topic entity by IDs.
+func (au *AlbumUpdate) AddIncludedInIDs(ids ...int) *AlbumUpdate {
+	au.mutation.AddIncludedInIDs(ids...)
+	return au
+}
+
+// AddIncludedIn adds the "included_in" edges to the Topic entity.
+func (au *AlbumUpdate) AddIncludedIn(t ...*Topic) *AlbumUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.AddIncludedInIDs(ids...)
 }
 
 // Mutation returns the AlbumMutation object of the builder.
@@ -90,12 +98,34 @@ func (au *AlbumUpdate) RemoveBy(a ...*Artist) *AlbumUpdate {
 	return au.RemoveByIDs(ids...)
 }
 
+// ClearIncludedIn clears all "included_in" edges to the Topic entity.
+func (au *AlbumUpdate) ClearIncludedIn() *AlbumUpdate {
+	au.mutation.ClearIncludedIn()
+	return au
+}
+
+// RemoveIncludedInIDs removes the "included_in" edge to Topic entities by IDs.
+func (au *AlbumUpdate) RemoveIncludedInIDs(ids ...int) *AlbumUpdate {
+	au.mutation.RemoveIncludedInIDs(ids...)
+	return au
+}
+
+// RemoveIncludedIn removes "included_in" edges to Topic entities.
+func (au *AlbumUpdate) RemoveIncludedIn(t ...*Topic) *AlbumUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.RemoveIncludedInIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (au *AlbumUpdate) Save(ctx context.Context) (int, error) {
 	var (
 		err      error
 		affected int
 	)
+	au.defaults()
 	if len(au.hooks) == 0 {
 		if err = au.check(); err != nil {
 			return 0, err
@@ -150,6 +180,14 @@ func (au *AlbumUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (au *AlbumUpdate) defaults() {
+	if _, ok := au.mutation.UpdatedAt(); !ok {
+		v := album.UpdateDefaultUpdatedAt()
+		au.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (au *AlbumUpdate) check() error {
 	if v, ok := au.mutation.Name(); ok {
@@ -178,11 +216,11 @@ func (au *AlbumUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := au.mutation.UpdatedAt(); ok {
+		_spec.SetField(album.FieldUpdatedAt, field.TypeTime, value)
+	}
 	if value, ok := au.mutation.Name(); ok {
 		_spec.SetField(album.FieldName, field.TypeString, value)
-	}
-	if value, ok := au.mutation.CreatedAt(); ok {
-		_spec.SetField(album.FieldCreatedAt, field.TypeTime, value)
 	}
 	if au.mutation.ByCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -238,6 +276,60 @@ func (au *AlbumUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if au.mutation.IncludedInCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   album.IncludedInTable,
+			Columns: album.IncludedInPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: topic.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedIncludedInIDs(); len(nodes) > 0 && !au.mutation.IncludedInCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   album.IncludedInTable,
+			Columns: album.IncludedInPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: topic.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.IncludedInIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   album.IncludedInTable,
+			Columns: album.IncludedInPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: topic.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{album.Label}
@@ -257,23 +349,15 @@ type AlbumUpdateOne struct {
 	mutation *AlbumMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (auo *AlbumUpdateOne) SetUpdatedAt(t time.Time) *AlbumUpdateOne {
+	auo.mutation.SetUpdatedAt(t)
+	return auo
+}
+
 // SetName sets the "name" field.
 func (auo *AlbumUpdateOne) SetName(s string) *AlbumUpdateOne {
 	auo.mutation.SetName(s)
-	return auo
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (auo *AlbumUpdateOne) SetCreatedAt(t time.Time) *AlbumUpdateOne {
-	auo.mutation.SetCreatedAt(t)
-	return auo
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (auo *AlbumUpdateOne) SetNillableCreatedAt(t *time.Time) *AlbumUpdateOne {
-	if t != nil {
-		auo.SetCreatedAt(*t)
-	}
 	return auo
 }
 
@@ -290,6 +374,21 @@ func (auo *AlbumUpdateOne) AddBy(a ...*Artist) *AlbumUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return auo.AddByIDs(ids...)
+}
+
+// AddIncludedInIDs adds the "included_in" edge to the Topic entity by IDs.
+func (auo *AlbumUpdateOne) AddIncludedInIDs(ids ...int) *AlbumUpdateOne {
+	auo.mutation.AddIncludedInIDs(ids...)
+	return auo
+}
+
+// AddIncludedIn adds the "included_in" edges to the Topic entity.
+func (auo *AlbumUpdateOne) AddIncludedIn(t ...*Topic) *AlbumUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.AddIncludedInIDs(ids...)
 }
 
 // Mutation returns the AlbumMutation object of the builder.
@@ -318,6 +417,27 @@ func (auo *AlbumUpdateOne) RemoveBy(a ...*Artist) *AlbumUpdateOne {
 	return auo.RemoveByIDs(ids...)
 }
 
+// ClearIncludedIn clears all "included_in" edges to the Topic entity.
+func (auo *AlbumUpdateOne) ClearIncludedIn() *AlbumUpdateOne {
+	auo.mutation.ClearIncludedIn()
+	return auo
+}
+
+// RemoveIncludedInIDs removes the "included_in" edge to Topic entities by IDs.
+func (auo *AlbumUpdateOne) RemoveIncludedInIDs(ids ...int) *AlbumUpdateOne {
+	auo.mutation.RemoveIncludedInIDs(ids...)
+	return auo
+}
+
+// RemoveIncludedIn removes "included_in" edges to Topic entities.
+func (auo *AlbumUpdateOne) RemoveIncludedIn(t ...*Topic) *AlbumUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.RemoveIncludedInIDs(ids...)
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (auo *AlbumUpdateOne) Select(field string, fields ...string) *AlbumUpdateOne {
@@ -331,6 +451,7 @@ func (auo *AlbumUpdateOne) Save(ctx context.Context) (*Album, error) {
 		err  error
 		node *Album
 	)
+	auo.defaults()
 	if len(auo.hooks) == 0 {
 		if err = auo.check(); err != nil {
 			return nil, err
@@ -391,6 +512,14 @@ func (auo *AlbumUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (auo *AlbumUpdateOne) defaults() {
+	if _, ok := auo.mutation.UpdatedAt(); !ok {
+		v := album.UpdateDefaultUpdatedAt()
+		auo.mutation.SetUpdatedAt(v)
+	}
+}
+
 // check runs all checks and user-defined validators on the builder.
 func (auo *AlbumUpdateOne) check() error {
 	if v, ok := auo.mutation.Name(); ok {
@@ -436,11 +565,11 @@ func (auo *AlbumUpdateOne) sqlSave(ctx context.Context) (_node *Album, err error
 			}
 		}
 	}
+	if value, ok := auo.mutation.UpdatedAt(); ok {
+		_spec.SetField(album.FieldUpdatedAt, field.TypeTime, value)
+	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.SetField(album.FieldName, field.TypeString, value)
-	}
-	if value, ok := auo.mutation.CreatedAt(); ok {
-		_spec.SetField(album.FieldCreatedAt, field.TypeTime, value)
 	}
 	if auo.mutation.ByCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -488,6 +617,60 @@ func (auo *AlbumUpdateOne) sqlSave(ctx context.Context) (_node *Album, err error
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: artist.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.IncludedInCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   album.IncludedInTable,
+			Columns: album.IncludedInPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: topic.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedIncludedInIDs(); len(nodes) > 0 && !auo.mutation.IncludedInCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   album.IncludedInTable,
+			Columns: album.IncludedInPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: topic.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.IncludedInIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: true,
+			Table:   album.IncludedInTable,
+			Columns: album.IncludedInPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: topic.FieldID,
 				},
 			},
 		}

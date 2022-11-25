@@ -1,11 +1,7 @@
 package schema
 
 import (
-	"time"
-
-	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
-	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -15,11 +11,16 @@ type Album struct {
 	ent.Schema
 }
 
+func (Album) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		DefaultsMixin{},
+	}
+}
+
 // Fields of the Album.
 func (Album) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").NotEmpty().Unique(),
-		field.Time("created_at").Default(time.Now),
 	}
 }
 
@@ -27,12 +28,6 @@ func (Album) Fields() []ent.Field {
 func (Album) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("by", Artist.Type).Ref("wrote"),
-	}
-}
-
-func (Album) Annotations() []schema.Annotation {
-	return []schema.Annotation{
-		entgql.QueryField(),
-		entgql.Mutations(entgql.MutationCreate()),
+		edge.From("included_in", Topic.Type).Ref("includes"),
 	}
 }

@@ -37,6 +37,18 @@ func (a *AlbumQuery) collectField(ctx context.Context, op *graphql.OperationCont
 			a.WithNamedBy(alias, func(wq *ArtistQuery) {
 				*wq = *query
 			})
+		case "includedIn":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &TopicQuery{config: a.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			a.WithNamedIncludedIn(alias, func(wq *TopicQuery) {
+				*wq = *query
+			})
 		}
 	}
 	return nil
@@ -109,6 +121,136 @@ type artistPaginateArgs struct {
 
 func newArtistPaginateArgs(rv map[string]interface{}) *artistPaginateArgs {
 	args := &artistPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (r *ReviewQuery) CollectFields(ctx context.Context, satisfies ...string) (*ReviewQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return r, nil
+	}
+	if err := r.collectField(ctx, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return r, nil
+}
+
+func (r *ReviewQuery) collectField(ctx context.Context, op *graphql.OperationContext, field graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	for _, field := range graphql.CollectFields(op, field.Selections, satisfies) {
+		switch field.Name {
+		case "reviews":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &TopicQuery{config: r.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			r.WithNamedReviews(alias, func(wq *TopicQuery) {
+				*wq = *query
+			})
+		}
+	}
+	return nil
+}
+
+type reviewPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []ReviewPaginateOption
+}
+
+func newReviewPaginateArgs(rv map[string]interface{}) *reviewPaginateArgs {
+	args := &reviewPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (t *TopicQuery) CollectFields(ctx context.Context, satisfies ...string) (*TopicQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return t, nil
+	}
+	if err := t.collectField(ctx, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func (t *TopicQuery) collectField(ctx context.Context, op *graphql.OperationContext, field graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	for _, field := range graphql.CollectFields(op, field.Selections, satisfies) {
+		switch field.Name {
+		case "reviewedBy":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &ReviewQuery{config: t.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			t.WithNamedReviewedBy(alias, func(wq *ReviewQuery) {
+				*wq = *query
+			})
+		case "includes":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &AlbumQuery{config: t.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			t.WithNamedIncludes(alias, func(wq *AlbumQuery) {
+				*wq = *query
+			})
+		}
+	}
+	return nil
+}
+
+type topicPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []TopicPaginateOption
+}
+
+func newTopicPaginateArgs(rv map[string]interface{}) *topicPaginateArgs {
+	args := &topicPaginateArgs{}
 	if rv == nil {
 		return args
 	}

@@ -293,12 +293,12 @@ func (aq *ArtistQuery) WithWrote(opts ...func(*AlbumQuery)) *ArtistQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Artist.Query().
-//		GroupBy(artist.FieldName).
+//		GroupBy(artist.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (aq *ArtistQuery) GroupBy(field string, fields ...string) *ArtistGroupBy {
@@ -321,11 +321,11 @@ func (aq *ArtistQuery) GroupBy(field string, fields ...string) *ArtistGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Artist.Query().
-//		Select(artist.FieldName).
+//		Select(artist.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (aq *ArtistQuery) Select(fields ...string) *ArtistSelect {
 	aq.fields = append(aq.fields, fields...)

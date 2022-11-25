@@ -17,6 +17,8 @@ autobind:
   - nubuscu/pretense/ent
   - nubuscu/pretense/ent/album
   - nubuscu/pretense/ent/artist
+  - nubuscu/pretense/ent/review
+  - nubuscu/pretense/ent/topic
 
 # This section declares type mapping between the GraphQL and Go type systems.
 models:

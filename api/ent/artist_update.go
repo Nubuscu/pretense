@@ -9,6 +9,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -25,6 +26,12 @@ type ArtistUpdate struct {
 // Where appends a list predicates to the ArtistUpdate builder.
 func (au *ArtistUpdate) Where(ps ...predicate.Artist) *ArtistUpdate {
 	au.mutation.Where(ps...)
+	return au
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (au *ArtistUpdate) SetUpdatedAt(t time.Time) *ArtistUpdate {
+	au.mutation.SetUpdatedAt(t)
 	return au
 }
 
@@ -81,6 +88,7 @@ func (au *ArtistUpdate) Save(ctx context.Context) (int, error) {
 		err      error
 		affected int
 	)
+	au.defaults()
 	if len(au.hooks) == 0 {
 		affected, err = au.sqlSave(ctx)
 	} else {
@@ -129,6 +137,14 @@ func (au *ArtistUpdate) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (au *ArtistUpdate) defaults() {
+	if _, ok := au.mutation.UpdatedAt(); !ok {
+		v := artist.UpdateDefaultUpdatedAt()
+		au.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -146,6 +162,9 @@ func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := au.mutation.UpdatedAt(); ok {
+		_spec.SetField(artist.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := au.mutation.Name(); ok {
 		_spec.SetField(artist.FieldName, field.TypeString, value)
@@ -223,6 +242,12 @@ type ArtistUpdateOne struct {
 	mutation *ArtistMutation
 }
 
+// SetUpdatedAt sets the "updated_at" field.
+func (auo *ArtistUpdateOne) SetUpdatedAt(t time.Time) *ArtistUpdateOne {
+	auo.mutation.SetUpdatedAt(t)
+	return auo
+}
+
 // SetName sets the "name" field.
 func (auo *ArtistUpdateOne) SetName(s string) *ArtistUpdateOne {
 	auo.mutation.SetName(s)
@@ -283,6 +308,7 @@ func (auo *ArtistUpdateOne) Save(ctx context.Context) (*Artist, error) {
 		err  error
 		node *Artist
 	)
+	auo.defaults()
 	if len(auo.hooks) == 0 {
 		node, err = auo.sqlSave(ctx)
 	} else {
@@ -337,6 +363,14 @@ func (auo *ArtistUpdateOne) ExecX(ctx context.Context) {
 	}
 }
 
+// defaults sets the default values of the builder before save.
+func (auo *ArtistUpdateOne) defaults() {
+	if _, ok := auo.mutation.UpdatedAt(); !ok {
+		v := artist.UpdateDefaultUpdatedAt()
+		auo.mutation.SetUpdatedAt(v)
+	}
+}
+
 func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -371,6 +405,9 @@ func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err err
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := auo.mutation.UpdatedAt(); ok {
+		_spec.SetField(artist.FieldUpdatedAt, field.TypeTime, value)
 	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.SetField(artist.FieldName, field.TypeString, value)

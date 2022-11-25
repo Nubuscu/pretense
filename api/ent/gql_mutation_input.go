@@ -8,19 +8,27 @@ import (
 
 // CreateAlbumInput represents a mutation input for creating albums.
 type CreateAlbumInput struct {
-	Name      string
-	CreatedAt *time.Time
-	ByIDs     []int
+	CreatedAt     *time.Time
+	UpdatedAt     *time.Time
+	Name          string
+	ByIDs         []int
+	IncludedInIDs []int
 }
 
 // Mutate applies the CreateAlbumInput on the AlbumMutation builder.
 func (i *CreateAlbumInput) Mutate(m *AlbumMutation) {
-	m.SetName(i.Name)
 	if v := i.CreatedAt; v != nil {
 		m.SetCreatedAt(*v)
 	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	m.SetName(i.Name)
 	if v := i.ByIDs; len(v) > 0 {
 		m.AddByIDs(v...)
+	}
+	if v := i.IncludedInIDs; len(v) > 0 {
+		m.AddIncludedInIDs(v...)
 	}
 }
 
@@ -32,12 +40,20 @@ func (c *AlbumCreate) SetInput(i CreateAlbumInput) *AlbumCreate {
 
 // CreateArtistInput represents a mutation input for creating artists.
 type CreateArtistInput struct {
-	Name     string
-	WroteIDs []int
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
+	Name      string
+	WroteIDs  []int
 }
 
 // Mutate applies the CreateArtistInput on the ArtistMutation builder.
 func (i *CreateArtistInput) Mutate(m *ArtistMutation) {
+	if v := i.CreatedAt; v != nil {
+		m.SetCreatedAt(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
 	m.SetName(i.Name)
 	if v := i.WroteIDs; len(v) > 0 {
 		m.AddWroteIDs(v...)
@@ -46,6 +62,66 @@ func (i *CreateArtistInput) Mutate(m *ArtistMutation) {
 
 // SetInput applies the change-set in the CreateArtistInput on the ArtistCreate builder.
 func (c *ArtistCreate) SetInput(i CreateArtistInput) *ArtistCreate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// CreateReviewInput represents a mutation input for creating reviews.
+type CreateReviewInput struct {
+	CreatedAt *time.Time
+	UpdatedAt *time.Time
+	Body      string
+	ReviewIDs []int
+}
+
+// Mutate applies the CreateReviewInput on the ReviewMutation builder.
+func (i *CreateReviewInput) Mutate(m *ReviewMutation) {
+	if v := i.CreatedAt; v != nil {
+		m.SetCreatedAt(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	m.SetBody(i.Body)
+	if v := i.ReviewIDs; len(v) > 0 {
+		m.AddReviewIDs(v...)
+	}
+}
+
+// SetInput applies the change-set in the CreateReviewInput on the ReviewCreate builder.
+func (c *ReviewCreate) SetInput(i CreateReviewInput) *ReviewCreate {
+	i.Mutate(c.Mutation())
+	return c
+}
+
+// CreateTopicInput represents a mutation input for creating topics.
+type CreateTopicInput struct {
+	CreatedAt     *time.Time
+	UpdatedAt     *time.Time
+	Name          string
+	ReviewedByIDs []int
+	IncludeIDs    []int
+}
+
+// Mutate applies the CreateTopicInput on the TopicMutation builder.
+func (i *CreateTopicInput) Mutate(m *TopicMutation) {
+	if v := i.CreatedAt; v != nil {
+		m.SetCreatedAt(*v)
+	}
+	if v := i.UpdatedAt; v != nil {
+		m.SetUpdatedAt(*v)
+	}
+	m.SetName(i.Name)
+	if v := i.ReviewedByIDs; len(v) > 0 {
+		m.AddReviewedByIDs(v...)
+	}
+	if v := i.IncludeIDs; len(v) > 0 {
+		m.AddIncludeIDs(v...)
+	}
+}
+
+// SetInput applies the change-set in the CreateTopicInput on the TopicCreate builder.
+func (c *TopicCreate) SetInput(i CreateTopicInput) *TopicCreate {
 	i.Mutate(c.Mutation())
 	return c
 }

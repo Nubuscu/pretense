@@ -10,6 +10,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
+	"nubuscu/pretense/ent/topic"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -19,16 +20,18 @@ import (
 // AlbumQuery is the builder for querying Album entities.
 type AlbumQuery struct {
 	config
-	limit       *int
-	offset      *int
-	unique      *bool
-	order       []OrderFunc
-	fields      []string
-	predicates  []predicate.Album
-	withBy      *ArtistQuery
-	modifiers   []func(*sql.Selector)
-	loadTotal   []func(context.Context, []*Album) error
-	withNamedBy map[string]*ArtistQuery
+	limit               *int
+	offset              *int
+	unique              *bool
+	order               []OrderFunc
+	fields              []string
+	predicates          []predicate.Album
+	withBy              *ArtistQuery
+	withIncludedIn      *TopicQuery
+	modifiers           []func(*sql.Selector)
+	loadTotal           []func(context.Context, []*Album) error
+	withNamedBy         map[string]*ArtistQuery
+	withNamedIncludedIn map[string]*TopicQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -80,6 +83,28 @@ func (aq *AlbumQuery) QueryBy() *ArtistQuery {
 			sqlgraph.From(album.Table, album.FieldID, selector),
 			sqlgraph.To(artist.Table, artist.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, album.ByTable, album.ByPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryIncludedIn chains the current query on the "included_in" edge.
+func (aq *AlbumQuery) QueryIncludedIn() *TopicQuery {
+	query := &TopicQuery{config: aq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(album.Table, album.FieldID, selector),
+			sqlgraph.To(topic.Table, topic.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, album.IncludedInTable, album.IncludedInPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -263,12 +288,13 @@ func (aq *AlbumQuery) Clone() *AlbumQuery {
 		return nil
 	}
 	return &AlbumQuery{
-		config:     aq.config,
-		limit:      aq.limit,
-		offset:     aq.offset,
-		order:      append([]OrderFunc{}, aq.order...),
-		predicates: append([]predicate.Album{}, aq.predicates...),
-		withBy:     aq.withBy.Clone(),
+		config:         aq.config,
+		limit:          aq.limit,
+		offset:         aq.offset,
+		order:          append([]OrderFunc{}, aq.order...),
+		predicates:     append([]predicate.Album{}, aq.predicates...),
+		withBy:         aq.withBy.Clone(),
+		withIncludedIn: aq.withIncludedIn.Clone(),
 		// clone intermediate query.
 		sql:    aq.sql.Clone(),
 		path:   aq.path,
@@ -287,18 +313,29 @@ func (aq *AlbumQuery) WithBy(opts ...func(*ArtistQuery)) *AlbumQuery {
 	return aq
 }
 
+// WithIncludedIn tells the query-builder to eager-load the nodes that are connected to
+// the "included_in" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AlbumQuery) WithIncludedIn(opts ...func(*TopicQuery)) *AlbumQuery {
+	query := &TopicQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withIncludedIn = query
+	return aq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Album.Query().
-//		GroupBy(album.FieldName).
+//		GroupBy(album.FieldCreatedAt).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (aq *AlbumQuery) GroupBy(field string, fields ...string) *AlbumGroupBy {
@@ -321,11 +358,11 @@ func (aq *AlbumQuery) GroupBy(field string, fields ...string) *AlbumGroupBy {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		CreatedAt time.Time `json:"created_at,omitempty"`
 //	}
 //
 //	client.Album.Query().
-//		Select(album.FieldName).
+//		Select(album.FieldCreatedAt).
 //		Scan(ctx, &v)
 func (aq *AlbumQuery) Select(fields ...string) *AlbumSelect {
 	aq.fields = append(aq.fields, fields...)
@@ -360,8 +397,9 @@ func (aq *AlbumQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Album,
 	var (
 		nodes       = []*Album{}
 		_spec       = aq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			aq.withBy != nil,
+			aq.withIncludedIn != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -392,10 +430,24 @@ func (aq *AlbumQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Album,
 			return nil, err
 		}
 	}
+	if query := aq.withIncludedIn; query != nil {
+		if err := aq.loadIncludedIn(ctx, query, nodes,
+			func(n *Album) { n.Edges.IncludedIn = []*Topic{} },
+			func(n *Album, e *Topic) { n.Edges.IncludedIn = append(n.Edges.IncludedIn, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range aq.withNamedBy {
 		if err := aq.loadBy(ctx, query, nodes,
 			func(n *Album) { n.appendNamedBy(name) },
 			func(n *Album, e *Artist) { n.appendNamedBy(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range aq.withNamedIncludedIn {
+		if err := aq.loadIncludedIn(ctx, query, nodes,
+			func(n *Album) { n.appendNamedIncludedIn(name) },
+			func(n *Album, e *Topic) { n.appendNamedIncludedIn(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -458,6 +510,64 @@ func (aq *AlbumQuery) loadBy(ctx context.Context, query *ArtistQuery, nodes []*A
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "by" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (aq *AlbumQuery) loadIncludedIn(ctx context.Context, query *TopicQuery, nodes []*Album, init func(*Album), assign func(*Album, *Topic)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Album)
+	nids := make(map[int]map[*Album]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(album.IncludedInTable)
+		s.Join(joinT).On(s.C(topic.FieldID), joinT.C(album.IncludedInPrimaryKey[0]))
+		s.Where(sql.InValues(joinT.C(album.IncludedInPrimaryKey[1]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(album.IncludedInPrimaryKey[1]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(sql.NullInt64)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := int(values[0].(*sql.NullInt64).Int64)
+			inValue := int(values[1].(*sql.NullInt64).Int64)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Album]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "included_in" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)
@@ -580,6 +690,20 @@ func (aq *AlbumQuery) WithNamedBy(name string, opts ...func(*ArtistQuery)) *Albu
 		aq.withNamedBy = make(map[string]*ArtistQuery)
 	}
 	aq.withNamedBy[name] = query
+	return aq
+}
+
+// WithNamedIncludedIn tells the query-builder to eager-load the nodes that are connected to the "included_in"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (aq *AlbumQuery) WithNamedIncludedIn(name string, opts ...func(*TopicQuery)) *AlbumQuery {
+	query := &TopicQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	if aq.withNamedIncludedIn == nil {
+		aq.withNamedIncludedIn = make(map[string]*TopicQuery)
+	}
+	aq.withNamedIncludedIn[name] = query
 	return aq
 }
 
