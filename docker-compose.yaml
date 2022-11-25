@@ -1,13 +1,17 @@
 version: '3'
 services:
   db:
-    image: janusgraph/janusgraph
+    image: postgres:14
     ports:
-      - "8182:8182"
+      - "5432:5432"
     expose:
-      - "8182"
+      - "5432"
     networks:
       - backend
+    environment:
+      POSTGRES_USER: exampleuser
+      POSTGRES_PASSWORD: wheelbarrow
+      POSTGRES_DB: musicmap
 
   api:
     build:
@@ -16,9 +20,9 @@ services:
     depends_on:
       - db
     ports:
-      - "5000:5000"
+      - "8081:8081"
     expose:
-      - "5000"
+      - "8081"
     networks:
       - frontend
       - backend
@@ -26,7 +30,7 @@ services:
       - api/.env
     environment:
       DB_HOST: db
-      DB_PORT: "8182"
+      DB_PORT: "5432"
 
   vis:
     build:
@@ -43,7 +47,7 @@ services:
       - vis/.env
     environment:
       # uses the connection details that a user would?
-      BACKEND: http://api:5000
+      BACKEND: http://api:8081
 networks:
   frontend:
   backend:

@@ -1,6 +1,0 @@
-gremlinpython
-fastapi
-uvicorn
-cachetools
-dependency-injector>=4.0,<5.0
-strawberry-graphql[fastapi]

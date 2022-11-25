@@ -1,11 +1,14 @@
-FROM python:3.10-slim-buster as base
-
-COPY requirements.in /requirements.in
-RUN pip install --no-cache-dir --upgrade -r requirements.in
-COPY src /app/src
+FROM golang:1.19-alpine
 
 WORKDIR /app
+COPY go.mod ./
+COPY go.sum ./
+RUN go mod download
 
-EXPOSE 5000
+COPY . ./
+RUN go build -o pretense-api -v ./cmd/api
 
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "5000"]
+EXPOSE 8081
+
+
+CMD [ "./pretense-api" ]

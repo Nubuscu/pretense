@@ -1,0 +1,6 @@
+# other file is auto-generated objects, this is for my extensions to it.
+
+type Mutation {
+    createAlbum(input: CreateAlbumInput!): Album
+    createArtist(input: CreateArtistInput!): Artist
+}
