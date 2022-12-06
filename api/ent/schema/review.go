@@ -1,7 +1,9 @@
 package schema
 
 import (
+	"entgo.io/contrib/entgql"
 	"entgo.io/ent"
+	"entgo.io/ent/schema"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -30,5 +32,11 @@ func (Review) Edges() []ent.Edge {
 		edge.To("reviews", Topic.Type),
 		// edge.To("reviews", Album.Type),
 		// edge.To("reviews", Artist.Type),
+	}
+}
+func (Review) Annotations() []schema.Annotation {
+	return []schema.Annotation{
+		entgql.QueryField(),
+		entgql.Mutations(entgql.MutationUpdate()),
 	}
 }

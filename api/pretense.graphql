@@ -1,8 +1,15 @@
 # other file is auto-generated objects, this is for my extensions to it.
 
 type Mutation {
+    # creations
     createAlbum(input: CreateAlbumInput!): Album
     createArtist(input: CreateArtistInput!): Artist
     CreateReview(input: CreateReviewInput!): Review
     CreateTopic(input: CreateTopicInput!): Topic
+
+    # updates
+    updateAlbum(id: ID!, input: UpdateAlbumInput!): Album
+    updateArtist(id: ID!, input: UpdateArtistInput!): Artist
+    updateReview(id: ID!, input: UpdateReviewInput!): Review
+    updateTopic(id: ID!, input: UpdateTopicInput!): Topic
 }

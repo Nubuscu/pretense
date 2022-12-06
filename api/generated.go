@@ -66,6 +66,12 @@ type ComplexityRoot struct {
 	Mutation struct {
 		CreateAlbum  func(childComplexity int, input ent.CreateAlbumInput) int
 		CreateArtist func(childComplexity int, input ent.CreateArtistInput) int
+		CreateReview func(childComplexity int, input ent.CreateReviewInput) int
+		CreateTopic  func(childComplexity int, input ent.CreateTopicInput) int
+		UpdateAlbum  func(childComplexity int, id int, input ent.UpdateAlbumInput) int
+		UpdateArtist func(childComplexity int, id int, input ent.UpdateArtistInput) int
+		UpdateReview func(childComplexity int, id int, input ent.UpdateReviewInput) int
+		UpdateTopic  func(childComplexity int, id int, input ent.UpdateTopicInput) int
 	}
 
 	PageInfo struct {
@@ -105,6 +111,12 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateAlbum(ctx context.Context, input ent.CreateAlbumInput) (*ent.Album, error)
 	CreateArtist(ctx context.Context, input ent.CreateArtistInput) (*ent.Artist, error)
+	CreateReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error)
+	CreateTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error)
+	UpdateAlbum(ctx context.Context, id int, input ent.UpdateAlbumInput) (*ent.Album, error)
+	UpdateArtist(ctx context.Context, id int, input ent.UpdateArtistInput) (*ent.Artist, error)
+	UpdateReview(ctx context.Context, id int, input ent.UpdateReviewInput) (*ent.Review, error)
+	UpdateTopic(ctx context.Context, id int, input ent.UpdateTopicInput) (*ent.Topic, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id int) (ent.Noder, error)
@@ -230,6 +242,78 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateArtist(childComplexity, args["input"].(ent.CreateArtistInput)), true
+
+	case "Mutation.CreateReview":
+		if e.complexity.Mutation.CreateReview == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_CreateReview_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateReview(childComplexity, args["input"].(ent.CreateReviewInput)), true
+
+	case "Mutation.CreateTopic":
+		if e.complexity.Mutation.CreateTopic == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_CreateTopic_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTopic(childComplexity, args["input"].(ent.CreateTopicInput)), true
+
+	case "Mutation.updateAlbum":
+		if e.complexity.Mutation.UpdateAlbum == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateAlbum_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateAlbum(childComplexity, args["id"].(int), args["input"].(ent.UpdateAlbumInput)), true
+
+	case "Mutation.updateArtist":
+		if e.complexity.Mutation.UpdateArtist == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateArtist_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateArtist(childComplexity, args["id"].(int), args["input"].(ent.UpdateArtistInput)), true
+
+	case "Mutation.updateReview":
+		if e.complexity.Mutation.UpdateReview == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateReview_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateReview(childComplexity, args["id"].(int), args["input"].(ent.UpdateReviewInput)), true
+
+	case "Mutation.updateTopic":
+		if e.complexity.Mutation.UpdateTopic == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateTopic_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateTopic(childComplexity, args["id"].(int), args["input"].(ent.UpdateTopicInput)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -400,6 +484,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateArtistInput,
 		ec.unmarshalInputCreateReviewInput,
 		ec.unmarshalInputCreateTopicInput,
+		ec.unmarshalInputUpdateAlbumInput,
+		ec.unmarshalInputUpdateArtistInput,
+		ec.unmarshalInputUpdateReviewInput,
+		ec.unmarshalInputUpdateTopicInput,
 	)
 	first := true
 
@@ -480,6 +568,36 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_CreateReview_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 ent.CreateReviewInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateReviewInput2nubuscuᚋpretenseᚋentᚐCreateReviewInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_CreateTopic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 ent.CreateTopicInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNCreateTopicInput2nubuscuᚋpretenseᚋentᚐCreateTopicInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_createAlbum_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -507,6 +625,102 @@ func (ec *executionContext) field_Mutation_createArtist_args(ctx context.Context
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateAlbum_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 ent.UpdateAlbumInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateAlbumInput2nubuscuᚋpretenseᚋentᚐUpdateAlbumInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateArtist_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 ent.UpdateArtistInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateArtistInput2nubuscuᚋpretenseᚋentᚐUpdateArtistInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateReview_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 ent.UpdateReviewInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateReviewInput2nubuscuᚋpretenseᚋentᚐUpdateReviewInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateTopic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 int
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2int(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	var arg1 ent.UpdateTopicInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateTopicInput2nubuscuᚋpretenseᚋentᚐUpdateTopicInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -1232,6 +1446,396 @@ func (ec *executionContext) fieldContext_Mutation_createArtist(ctx context.Conte
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createArtist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_CreateReview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_CreateReview(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateReview(rctx, fc.Args["input"].(ent.CreateReviewInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Review)
+	fc.Result = res
+	return ec.marshalOReview2ᚖnubuscuᚋpretenseᚋentᚐReview(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_CreateReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Review_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Review_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "body":
+				return ec.fieldContext_Review_body(ctx, field)
+			case "reviews":
+				return ec.fieldContext_Review_reviews(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_CreateReview_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_CreateTopic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_CreateTopic(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTopic(rctx, fc.Args["input"].(ent.CreateTopicInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Topic)
+	fc.Result = res
+	return ec.marshalOTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_CreateTopic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Topic_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Topic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Topic_name(ctx, field)
+			case "reviewedBy":
+				return ec.fieldContext_Topic_reviewedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Topic_includes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_CreateTopic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateAlbum(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateAlbum(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateAlbum(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateAlbumInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Album)
+	fc.Result = res
+	return ec.marshalOAlbum2ᚖnubuscuᚋpretenseᚋentᚐAlbum(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Album_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Album_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Album_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Album_name(ctx, field)
+			case "by":
+				return ec.fieldContext_Album_by(ctx, field)
+			case "includedIn":
+				return ec.fieldContext_Album_includedIn(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateAlbum_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateArtist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateArtist(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateArtist(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateArtistInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Artist)
+	fc.Result = res
+	return ec.marshalOArtist2ᚖnubuscuᚋpretenseᚋentᚐArtist(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateArtist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Artist_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Artist_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Artist_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Artist_name(ctx, field)
+			case "wrote":
+				return ec.fieldContext_Artist_wrote(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Artist", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateArtist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateReview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateReview(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateReview(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateReviewInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Review)
+	fc.Result = res
+	return ec.marshalOReview2ᚖnubuscuᚋpretenseᚋentᚐReview(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Review_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Review_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "body":
+				return ec.fieldContext_Review_body(ctx, field)
+			case "reviews":
+				return ec.fieldContext_Review_reviews(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateReview_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateTopic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_updateTopic(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateTopic(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateTopicInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Topic)
+	fc.Result = res
+	return ec.marshalOTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_updateTopic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Topic_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Topic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Topic_name(ctx, field)
+			case "reviewedBy":
+				return ec.fieldContext_Topic_reviewedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Topic_includes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateTopic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -4384,6 +4988,246 @@ func (ec *executionContext) unmarshalInputCreateTopicInput(ctx context.Context, 
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateAlbumInput(ctx context.Context, obj interface{}) (ent.UpdateAlbumInput, error) {
+	var it ent.UpdateAlbumInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"updatedAt", "name", "addByIDs", "removeByIDs", "addIncludedInIDs", "removeIncludedInIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "updatedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addByIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addByIDs"))
+			it.AddByIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeByIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeByIDs"))
+			it.RemoveByIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addIncludedInIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addIncludedInIDs"))
+			it.AddIncludedInIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeIncludedInIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeIncludedInIDs"))
+			it.RemoveIncludedInIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateArtistInput(ctx context.Context, obj interface{}) (ent.UpdateArtistInput, error) {
+	var it ent.UpdateArtistInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"updatedAt", "name", "addWroteIDs", "removeWroteIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "updatedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addWroteIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addWroteIDs"))
+			it.AddWroteIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeWroteIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeWroteIDs"))
+			it.RemoveWroteIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateReviewInput(ctx context.Context, obj interface{}) (ent.UpdateReviewInput, error) {
+	var it ent.UpdateReviewInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"updatedAt", "body", "addReviewIDs", "removeReviewIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "updatedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "body":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("body"))
+			it.Body, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addReviewIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addReviewIDs"))
+			it.AddReviewIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeReviewIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeReviewIDs"))
+			it.RemoveReviewIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateTopicInput(ctx context.Context, obj interface{}) (ent.UpdateTopicInput, error) {
+	var it ent.UpdateTopicInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"updatedAt", "name", "addReviewedByIDs", "removeReviewedByIDs", "addIncludeIDs", "removeIncludeIDs"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "updatedAt":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
+			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addReviewedByIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addReviewedByIDs"))
+			it.AddReviewedByIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeReviewedByIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeReviewedByIDs"))
+			it.RemoveReviewedByIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "addIncludeIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addIncludeIDs"))
+			it.AddIncludeIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeIncludeIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeIncludeIDs"))
+			it.RemoveIncludeIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -4599,6 +5443,42 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createArtist(ctx, field)
+			})
+
+		case "CreateReview":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_CreateReview(ctx, field)
+			})
+
+		case "CreateTopic":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_CreateTopic(ctx, field)
+			})
+
+		case "updateAlbum":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateAlbum(ctx, field)
+			})
+
+		case "updateArtist":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateArtist(ctx, field)
+			})
+
+		case "updateReview":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateReview(ctx, field)
+			})
+
+		case "updateTopic":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateTopic(ctx, field)
 			})
 
 		default:
@@ -5432,6 +6312,16 @@ func (ec *executionContext) unmarshalNCreateArtistInput2nubuscuᚋpretenseᚋent
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateReviewInput2nubuscuᚋpretenseᚋentᚐCreateReviewInput(ctx context.Context, v interface{}) (ent.CreateReviewInput, error) {
+	res, err := ec.unmarshalInputCreateReviewInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateTopicInput2nubuscuᚋpretenseᚋentᚐCreateTopicInput(ctx context.Context, v interface{}) (ent.CreateTopicInput, error) {
+	res, err := ec.unmarshalInputCreateTopicInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNID2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalIntID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5653,6 +6543,26 @@ func (ec *executionContext) marshalNTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ct
 		return graphql.Null
 	}
 	return ec._Topic(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpdateAlbumInput2nubuscuᚋpretenseᚋentᚐUpdateAlbumInput(ctx context.Context, v interface{}) (ent.UpdateAlbumInput, error) {
+	res, err := ec.unmarshalInputUpdateAlbumInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateArtistInput2nubuscuᚋpretenseᚋentᚐUpdateArtistInput(ctx context.Context, v interface{}) (ent.UpdateArtistInput, error) {
+	res, err := ec.unmarshalInputUpdateArtistInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateReviewInput2nubuscuᚋpretenseᚋentᚐUpdateReviewInput(ctx context.Context, v interface{}) (ent.UpdateReviewInput, error) {
+	res, err := ec.unmarshalInputUpdateReviewInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUpdateTopicInput2nubuscuᚋpretenseᚋentᚐUpdateTopicInput(ctx context.Context, v interface{}) (ent.UpdateTopicInput, error) {
+	res, err := ec.unmarshalInputUpdateTopicInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -6150,6 +7060,13 @@ func (ec *executionContext) marshalOReview2ᚕᚖnubuscuᚋpretenseᚋentᚐRevi
 	return ret
 }
 
+func (ec *executionContext) marshalOReview2ᚖnubuscuᚋpretenseᚋentᚐReview(ctx context.Context, sel ast.SelectionSet, v *ent.Review) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Review(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	if v == nil {
 		return nil, nil
@@ -6265,6 +7182,13 @@ func (ec *executionContext) marshalOTopic2ᚕᚖnubuscuᚋpretenseᚋentᚐTopic
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ctx context.Context, sel ast.SelectionSet, v *ent.Topic) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Topic(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {
