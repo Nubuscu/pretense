@@ -36,6 +36,7 @@ func (Review) Edges() []ent.Edge {
 }
 func (Review) Annotations() []schema.Annotation {
 	return []schema.Annotation{
+		entgql.RelayConnection(),
 		entgql.QueryField(),
 		entgql.Mutations(entgql.MutationUpdate()),
 	}

@@ -35,6 +35,7 @@ func (Artist) Edges() []ent.Edge {
 
 func (Artist) Annotations() []schema.Annotation {
 	return []schema.Annotation{
+		entgql.RelayConnection(),
 		entgql.QueryField(),
 		entgql.Mutations(entgql.MutationUpdate()),
 	}

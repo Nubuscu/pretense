@@ -20,23 +20,27 @@ func (r *queryResolver) Nodes(ctx context.Context, ids []int) ([]ent.Noder, erro
 }
 
 // Albums is the resolver for the albums field.
-func (r *queryResolver) Albums(ctx context.Context) ([]*ent.Album, error) {
-	return r.client.Album.Query().All(ctx)
+func (r *queryResolver) Albums(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.AlbumWhereInput) (*ent.AlbumConnection, error) {
+	return r.client.Album.Query().
+		Paginate(ctx, after, first, before, last, ent.WithAlbumOrder(ent.DefaultAlbumOrder), ent.WithAlbumFilter(where.Filter))
 }
 
 // Artists is the resolver for the artists field.
-func (r *queryResolver) Artists(ctx context.Context) ([]*ent.Artist, error) {
-	return r.client.Artist.Query().All(ctx)
+func (r *queryResolver) Artists(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.ArtistWhereInput) (*ent.ArtistConnection, error) {
+	return r.client.Artist.Query().
+		Paginate(ctx, after, first, before, last, ent.WithArtistOrder(ent.DefaultArtistOrder), ent.WithArtistFilter(where.Filter))
 }
 
 // Reviews is the resolver for the reviews field.
-func (r *queryResolver) Reviews(ctx context.Context) ([]*ent.Review, error) {
-	return r.client.Review.Query().All(ctx)
+func (r *queryResolver) Reviews(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.ReviewWhereInput) (*ent.ReviewConnection, error) {
+	return r.client.Review.Query().
+		Paginate(ctx, after, first, before, last, ent.WithReviewOrder(ent.DefaultReviewOrder), ent.WithReviewFilter(where.Filter))
 }
 
 // Topics is the resolver for the topics field.
-func (r *queryResolver) Topics(ctx context.Context) ([]*ent.Topic, error) {
-	return r.client.Topic.Query().All(ctx)
+func (r *queryResolver) Topics(ctx context.Context, after *ent.Cursor, first *int, before *ent.Cursor, last *int, where *ent.TopicWhereInput) (*ent.TopicConnection, error) {
+	return r.client.Topic.Query().
+		Paginate(ctx, after, first, before, last, ent.WithTopicOrder(ent.DefaultTopicOrder), ent.WithTopicFilter(where.Filter))
 }
 
 // Query returns QueryResolver implementation.

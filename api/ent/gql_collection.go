@@ -77,6 +77,9 @@ func newAlbumPaginateArgs(rv map[string]interface{}) *albumPaginateArgs {
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
 	}
+	if v, ok := rv[whereField].(*AlbumWhereInput); ok {
+		args.opts = append(args.opts, WithAlbumFilter(v.Filter))
+	}
 	return args
 }
 
@@ -136,6 +139,9 @@ func newArtistPaginateArgs(rv map[string]interface{}) *artistPaginateArgs {
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
 	}
+	if v, ok := rv[whereField].(*ArtistWhereInput); ok {
+		args.opts = append(args.opts, WithArtistFilter(v.Filter))
+	}
 	return args
 }
 
@@ -194,6 +200,9 @@ func newReviewPaginateArgs(rv map[string]interface{}) *reviewPaginateArgs {
 	}
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[whereField].(*ReviewWhereInput); ok {
+		args.opts = append(args.opts, WithReviewFilter(v.Filter))
 	}
 	return args
 }
@@ -265,6 +274,9 @@ func newTopicPaginateArgs(rv map[string]interface{}) *topicPaginateArgs {
 	}
 	if v := rv[beforeField]; v != nil {
 		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[whereField].(*TopicWhereInput); ok {
+		args.opts = append(args.opts, WithTopicFilter(v.Filter))
 	}
 	return args
 }
