@@ -2,14 +2,12 @@
 
 type Mutation {
     # creations
-    createAlbum(input: CreateAlbumInput!): Album
-    createArtist(input: CreateArtistInput!): Artist
-    CreateReview(input: CreateReviewInput!): Review
-    CreateTopic(input: CreateTopicInput!): Topic
+    upsertAlbum(input: CreateAlbumInput!): Album
+    upsertArtist(input: CreateArtistInput!): Artist
+    upsertReview(input: CreateReviewInput!): Review
+    upsertTopic(input: CreateTopicInput!): Topic
 
-    # updates
-    updateAlbum(id: ID!, input: UpdateAlbumInput!): Album
-    updateArtist(id: ID!, input: UpdateArtistInput!): Artist
-    updateReview(id: ID!, input: UpdateReviewInput!): Review
-    updateTopic(id: ID!, input: UpdateTopicInput!): Topic
+
+    # bulk upload helpers
+    createAlbumAndArtists(album: CreateAlbumInput!, artists: [CreateArtistInput!]!): Album
 }

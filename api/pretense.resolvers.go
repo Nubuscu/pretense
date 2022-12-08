@@ -5,47 +5,66 @@ package pretense
 
 import (
 	"context"
+	"fmt"
 	"nubuscu/pretense/ent"
+	"nubuscu/pretense/ent/album"
+	"nubuscu/pretense/ent/artist"
+	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/topic"
 )
 
-// CreateAlbum is the resolver for the createAlbum field.
-func (r *mutationResolver) CreateAlbum(ctx context.Context, input ent.CreateAlbumInput) (*ent.Album, error) {
-	return r.client.Album.Create().SetInput(input).Save(ctx)
+// UpsertAlbum is the resolver for the upsertAlbum field.
+func (r *mutationResolver) UpsertAlbum(ctx context.Context, input ent.CreateAlbumInput) (*ent.Album, error) {
+	id, err := r.client.Album.Create().SetInput(input).OnConflictColumns(album.FieldName).UpdateNewValues().ID(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to upsert Album %w", err))
+	}
+	return r.client.Album.Get(ctx, id)
 }
 
-// CreateArtist is the resolver for the createArtist field.
-func (r *mutationResolver) CreateArtist(ctx context.Context, input ent.CreateArtistInput) (*ent.Artist, error) {
-	return r.client.Artist.Create().SetInput(input).Save(ctx)
+// UpsertArtist is the resolver for the upsertArtist field.
+func (r *mutationResolver) UpsertArtist(ctx context.Context, input ent.CreateArtistInput) (*ent.Artist, error) {
+	id, err := r.client.Artist.Create().SetInput(input).OnConflictColumns(artist.FieldName).UpdateNewValues().ID(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to upsert Artist %w", err))
+	}
+	return r.client.Artist.Get(ctx, id)
 }
 
-// CreateReview is the resolver for the CreateReview field.
-func (r *mutationResolver) CreateReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error) {
-	return r.client.Review.Create().SetInput(input).Save(ctx)
+// UpsertReview is the resolver for the upsertReview field.
+func (r *mutationResolver) UpsertReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error) {
+	// TODO can't actually upsert with an id, might need another unique-ish field. maybe title?
+	id, err := r.client.Review.Create().SetInput(input).OnConflictColumns(review.FieldID).UpdateNewValues().ID(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to upsert Review %w", err))
+	}
+	return r.client.Review.Get(ctx, id)
 }
 
-// CreateTopic is the resolver for the CreateTopic field.
-func (r *mutationResolver) CreateTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error) {
-	return r.client.Topic.Create().SetInput(input).Save(ctx)
+// UpsertTopic is the resolver for the upsertTopic field.
+func (r *mutationResolver) UpsertTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error) {
+	id, err := r.client.Topic.Create().SetInput(input).OnConflictColumns(topic.FieldName).UpdateNewValues().ID(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to upsert Topic %w", err))
+	}
+	return r.client.Topic.Get(ctx, id)
 }
 
-// UpdateAlbum is the resolver for the updateAlbum field.
-func (r *mutationResolver) UpdateAlbum(ctx context.Context, id int, input ent.UpdateAlbumInput) (*ent.Album, error) {
-	return r.client.Album.UpdateOneID(id).SetInput(input).Save(ctx)
-}
-
-// UpdateArtist is the resolver for the updateArtist field.
-func (r *mutationResolver) UpdateArtist(ctx context.Context, id int, input ent.UpdateArtistInput) (*ent.Artist, error) {
-	return r.client.Artist.UpdateOneID(id).SetInput(input).Save(ctx)
-}
-
-// UpdateReview is the resolver for the updateReview field.
-func (r *mutationResolver) UpdateReview(ctx context.Context, id int, input ent.UpdateReviewInput) (*ent.Review, error) {
-	return r.client.Review.UpdateOneID(id).SetInput(input).Save(ctx)
-}
-
-// UpdateTopic is the resolver for the updateTopic field.
-func (r *mutationResolver) UpdateTopic(ctx context.Context, id int, input ent.UpdateTopicInput) (*ent.Topic, error) {
-	return r.client.Topic.UpdateOneID(id).SetInput(input).Save(ctx)
+// CreateAlbumAndArtists is the resolver for the createAlbumAndArtists field.
+func (r *mutationResolver) CreateAlbumAndArtists(ctx context.Context, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) (*ent.Album, error) {
+	createdAlbum, err := r.UpsertAlbum(ctx, album)
+	if err != nil {
+		return nil, err
+	}
+	var artistIds []int
+	for _, artistInput := range artists {
+		createdArtist, err := r.UpsertArtist(ctx, *artistInput)
+		if err != nil {
+			return nil, err
+		}
+		artistIds = append(artistIds, createdArtist.ID)
+	}
+	return r.client.Album.UpdateOne(createdAlbum).AddByIDs(artistIds...).Save(ctx)
 }
 
 // Mutation returns MutationResolver implementation.

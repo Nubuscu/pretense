@@ -64,14 +64,11 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateAlbum  func(childComplexity int, input ent.CreateAlbumInput) int
-		CreateArtist func(childComplexity int, input ent.CreateArtistInput) int
-		CreateReview func(childComplexity int, input ent.CreateReviewInput) int
-		CreateTopic  func(childComplexity int, input ent.CreateTopicInput) int
-		UpdateAlbum  func(childComplexity int, id int, input ent.UpdateAlbumInput) int
-		UpdateArtist func(childComplexity int, id int, input ent.UpdateArtistInput) int
-		UpdateReview func(childComplexity int, id int, input ent.UpdateReviewInput) int
-		UpdateTopic  func(childComplexity int, id int, input ent.UpdateTopicInput) int
+		CreateAlbumAndArtists func(childComplexity int, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) int
+		UpsertAlbum           func(childComplexity int, input ent.CreateAlbumInput) int
+		UpsertArtist          func(childComplexity int, input ent.CreateArtistInput) int
+		UpsertReview          func(childComplexity int, input ent.CreateReviewInput) int
+		UpsertTopic           func(childComplexity int, input ent.CreateTopicInput) int
 	}
 
 	PageInfo struct {
@@ -109,14 +106,11 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateAlbum(ctx context.Context, input ent.CreateAlbumInput) (*ent.Album, error)
-	CreateArtist(ctx context.Context, input ent.CreateArtistInput) (*ent.Artist, error)
-	CreateReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error)
-	CreateTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error)
-	UpdateAlbum(ctx context.Context, id int, input ent.UpdateAlbumInput) (*ent.Album, error)
-	UpdateArtist(ctx context.Context, id int, input ent.UpdateArtistInput) (*ent.Artist, error)
-	UpdateReview(ctx context.Context, id int, input ent.UpdateReviewInput) (*ent.Review, error)
-	UpdateTopic(ctx context.Context, id int, input ent.UpdateTopicInput) (*ent.Topic, error)
+	UpsertAlbum(ctx context.Context, input ent.CreateAlbumInput) (*ent.Album, error)
+	UpsertArtist(ctx context.Context, input ent.CreateArtistInput) (*ent.Artist, error)
+	UpsertReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error)
+	UpsertTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error)
+	CreateAlbumAndArtists(ctx context.Context, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) (*ent.Album, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id int) (ent.Noder, error)
@@ -219,101 +213,65 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Artist.Wrote(childComplexity), true
 
-	case "Mutation.createAlbum":
-		if e.complexity.Mutation.CreateAlbum == nil {
+	case "Mutation.createAlbumAndArtists":
+		if e.complexity.Mutation.CreateAlbumAndArtists == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createAlbum_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createAlbumAndArtists_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateAlbum(childComplexity, args["input"].(ent.CreateAlbumInput)), true
+		return e.complexity.Mutation.CreateAlbumAndArtists(childComplexity, args["album"].(ent.CreateAlbumInput), args["artists"].([]*ent.CreateArtistInput)), true
 
-	case "Mutation.createArtist":
-		if e.complexity.Mutation.CreateArtist == nil {
+	case "Mutation.upsertAlbum":
+		if e.complexity.Mutation.UpsertAlbum == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createArtist_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_upsertAlbum_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateArtist(childComplexity, args["input"].(ent.CreateArtistInput)), true
+		return e.complexity.Mutation.UpsertAlbum(childComplexity, args["input"].(ent.CreateAlbumInput)), true
 
-	case "Mutation.CreateReview":
-		if e.complexity.Mutation.CreateReview == nil {
+	case "Mutation.upsertArtist":
+		if e.complexity.Mutation.UpsertArtist == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_CreateReview_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_upsertArtist_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateReview(childComplexity, args["input"].(ent.CreateReviewInput)), true
+		return e.complexity.Mutation.UpsertArtist(childComplexity, args["input"].(ent.CreateArtistInput)), true
 
-	case "Mutation.CreateTopic":
-		if e.complexity.Mutation.CreateTopic == nil {
+	case "Mutation.upsertReview":
+		if e.complexity.Mutation.UpsertReview == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_CreateTopic_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_upsertReview_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTopic(childComplexity, args["input"].(ent.CreateTopicInput)), true
+		return e.complexity.Mutation.UpsertReview(childComplexity, args["input"].(ent.CreateReviewInput)), true
 
-	case "Mutation.updateAlbum":
-		if e.complexity.Mutation.UpdateAlbum == nil {
+	case "Mutation.upsertTopic":
+		if e.complexity.Mutation.UpsertTopic == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_updateAlbum_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_upsertTopic_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateAlbum(childComplexity, args["id"].(int), args["input"].(ent.UpdateAlbumInput)), true
-
-	case "Mutation.updateArtist":
-		if e.complexity.Mutation.UpdateArtist == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateArtist_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateArtist(childComplexity, args["id"].(int), args["input"].(ent.UpdateArtistInput)), true
-
-	case "Mutation.updateReview":
-		if e.complexity.Mutation.UpdateReview == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateReview_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateReview(childComplexity, args["id"].(int), args["input"].(ent.UpdateReviewInput)), true
-
-	case "Mutation.updateTopic":
-		if e.complexity.Mutation.UpdateTopic == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_updateTopic_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.UpdateTopic(childComplexity, args["id"].(int), args["input"].(ent.UpdateTopicInput)), true
+		return e.complexity.Mutation.UpsertTopic(childComplexity, args["input"].(ent.CreateTopicInput)), true
 
 	case "PageInfo.endCursor":
 		if e.complexity.PageInfo.EndCursor == nil {
@@ -568,37 +526,31 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_CreateReview_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createAlbumAndArtists_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 ent.CreateReviewInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateReviewInput2nubuscuᚋpretenseᚋentᚐCreateReviewInput(ctx, tmp)
+	var arg0 ent.CreateAlbumInput
+	if tmp, ok := rawArgs["album"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("album"))
+		arg0, err = ec.unmarshalNCreateAlbumInput2nubuscuᚋpretenseᚋentᚐCreateAlbumInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_CreateTopic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 ent.CreateTopicInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNCreateTopicInput2nubuscuᚋpretenseᚋentᚐCreateTopicInput(ctx, tmp)
+	args["album"] = arg0
+	var arg1 []*ent.CreateArtistInput
+	if tmp, ok := rawArgs["artists"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("artists"))
+		arg1, err = ec.unmarshalNCreateArtistInput2ᚕᚖnubuscuᚋpretenseᚋentᚐCreateArtistInputᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg0
+	args["artists"] = arg1
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createAlbum_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_upsertAlbum_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 ent.CreateAlbumInput
@@ -613,7 +565,7 @@ func (ec *executionContext) field_Mutation_createAlbum_args(ctx context.Context,
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_createArtist_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_upsertArtist_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 ent.CreateArtistInput
@@ -628,99 +580,33 @@ func (ec *executionContext) field_Mutation_createArtist_args(ctx context.Context
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateAlbum_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_upsertReview_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 ent.UpdateAlbumInput
+	var arg0 ent.CreateReviewInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateAlbumInput2nubuscuᚋpretenseᚋentᚐUpdateAlbumInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateReviewInput2nubuscuᚋpretenseᚋentᚐCreateReviewInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg1
+	args["input"] = arg0
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_updateArtist_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_upsertTopic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 ent.UpdateArtistInput
+	var arg0 ent.CreateTopicInput
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateArtistInput2nubuscuᚋpretenseᚋentᚐUpdateArtistInput(ctx, tmp)
+		arg0, err = ec.unmarshalNCreateTopicInput2nubuscuᚋpretenseᚋentᚐCreateTopicInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["input"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateReview_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 ent.UpdateReviewInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateReviewInput2nubuscuᚋpretenseᚋentᚐUpdateReviewInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_updateTopic_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 int
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2int(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 ent.UpdateTopicInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateTopicInput2nubuscuᚋpretenseᚋentᚐUpdateTopicInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg1
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -1322,8 +1208,8 @@ func (ec *executionContext) fieldContext_Artist_wrote(ctx context.Context, field
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createAlbum(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createAlbum(ctx, field)
+func (ec *executionContext) _Mutation_upsertAlbum(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_upsertAlbum(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1336,7 +1222,7 @@ func (ec *executionContext) _Mutation_createAlbum(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateAlbum(rctx, fc.Args["input"].(ent.CreateAlbumInput))
+		return ec.resolvers.Mutation().UpsertAlbum(rctx, fc.Args["input"].(ent.CreateAlbumInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1350,7 +1236,7 @@ func (ec *executionContext) _Mutation_createAlbum(ctx context.Context, field gra
 	return ec.marshalOAlbum2ᚖnubuscuᚋpretenseᚋentᚐAlbum(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_upsertAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1381,15 +1267,15 @@ func (ec *executionContext) fieldContext_Mutation_createAlbum(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createAlbum_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_upsertAlbum_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_createArtist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_createArtist(ctx, field)
+func (ec *executionContext) _Mutation_upsertArtist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_upsertArtist(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1402,7 +1288,7 @@ func (ec *executionContext) _Mutation_createArtist(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateArtist(rctx, fc.Args["input"].(ent.CreateArtistInput))
+		return ec.resolvers.Mutation().UpsertArtist(rctx, fc.Args["input"].(ent.CreateArtistInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1416,7 +1302,7 @@ func (ec *executionContext) _Mutation_createArtist(ctx context.Context, field gr
 	return ec.marshalOArtist2ᚖnubuscuᚋpretenseᚋentᚐArtist(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_createArtist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_upsertArtist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1445,15 +1331,15 @@ func (ec *executionContext) fieldContext_Mutation_createArtist(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_createArtist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_upsertArtist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_CreateReview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_CreateReview(ctx, field)
+func (ec *executionContext) _Mutation_upsertReview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_upsertReview(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1466,7 +1352,7 @@ func (ec *executionContext) _Mutation_CreateReview(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateReview(rctx, fc.Args["input"].(ent.CreateReviewInput))
+		return ec.resolvers.Mutation().UpsertReview(rctx, fc.Args["input"].(ent.CreateReviewInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1480,7 +1366,7 @@ func (ec *executionContext) _Mutation_CreateReview(ctx context.Context, field gr
 	return ec.marshalOReview2ᚖnubuscuᚋpretenseᚋentᚐReview(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_CreateReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_upsertReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1509,15 +1395,15 @@ func (ec *executionContext) fieldContext_Mutation_CreateReview(ctx context.Conte
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_CreateReview_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_upsertReview_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_CreateTopic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_CreateTopic(ctx, field)
+func (ec *executionContext) _Mutation_upsertTopic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_upsertTopic(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1530,7 +1416,7 @@ func (ec *executionContext) _Mutation_CreateTopic(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTopic(rctx, fc.Args["input"].(ent.CreateTopicInput))
+		return ec.resolvers.Mutation().UpsertTopic(rctx, fc.Args["input"].(ent.CreateTopicInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1544,7 +1430,7 @@ func (ec *executionContext) _Mutation_CreateTopic(ctx context.Context, field gra
 	return ec.marshalOTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_CreateTopic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_upsertTopic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1575,15 +1461,15 @@ func (ec *executionContext) fieldContext_Mutation_CreateTopic(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_CreateTopic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_upsertTopic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_updateAlbum(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateAlbum(ctx, field)
+func (ec *executionContext) _Mutation_createAlbumAndArtists(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createAlbumAndArtists(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1596,7 +1482,7 @@ func (ec *executionContext) _Mutation_updateAlbum(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateAlbum(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateAlbumInput))
+		return ec.resolvers.Mutation().CreateAlbumAndArtists(rctx, fc.Args["album"].(ent.CreateAlbumInput), fc.Args["artists"].([]*ent.CreateArtistInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1610,7 +1496,7 @@ func (ec *executionContext) _Mutation_updateAlbum(ctx context.Context, field gra
 	return ec.marshalOAlbum2ᚖnubuscuᚋpretenseᚋentᚐAlbum(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_updateAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_createAlbumAndArtists(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1641,201 +1527,7 @@ func (ec *executionContext) fieldContext_Mutation_updateAlbum(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateAlbum_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateArtist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateArtist(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateArtist(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateArtistInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*ent.Artist)
-	fc.Result = res
-	return ec.marshalOArtist2ᚖnubuscuᚋpretenseᚋentᚐArtist(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateArtist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Artist_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Artist_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Artist_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Artist_name(ctx, field)
-			case "wrote":
-				return ec.fieldContext_Artist_wrote(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Artist", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateArtist_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateReview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateReview(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateReview(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateReviewInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*ent.Review)
-	fc.Result = res
-	return ec.marshalOReview2ᚖnubuscuᚋpretenseᚋentᚐReview(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Review_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Review_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Review_updatedAt(ctx, field)
-			case "body":
-				return ec.fieldContext_Review_body(ctx, field)
-			case "reviews":
-				return ec.fieldContext_Review_reviews(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateReview_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_updateTopic(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_updateTopic(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTopic(rctx, fc.Args["id"].(int), fc.Args["input"].(ent.UpdateTopicInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*ent.Topic)
-	fc.Result = res
-	return ec.marshalOTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_updateTopic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Topic_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Topic_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Topic_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_Topic_name(ctx, field)
-			case "reviewedBy":
-				return ec.fieldContext_Topic_reviewedBy(ctx, field)
-			case "includes":
-				return ec.fieldContext_Topic_includes(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_updateTopic_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_createAlbumAndArtists_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -5433,52 +5125,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Mutation")
-		case "createAlbum":
+		case "upsertAlbum":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createAlbum(ctx, field)
+				return ec._Mutation_upsertAlbum(ctx, field)
 			})
 
-		case "createArtist":
+		case "upsertArtist":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_createArtist(ctx, field)
+				return ec._Mutation_upsertArtist(ctx, field)
 			})
 
-		case "CreateReview":
+		case "upsertReview":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_CreateReview(ctx, field)
+				return ec._Mutation_upsertReview(ctx, field)
 			})
 
-		case "CreateTopic":
+		case "upsertTopic":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_CreateTopic(ctx, field)
+				return ec._Mutation_upsertTopic(ctx, field)
 			})
 
-		case "updateAlbum":
+		case "createAlbumAndArtists":
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateAlbum(ctx, field)
-			})
-
-		case "updateArtist":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateArtist(ctx, field)
-			})
-
-		case "updateReview":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateReview(ctx, field)
-			})
-
-		case "updateTopic":
-
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_updateTopic(ctx, field)
+				return ec._Mutation_createAlbumAndArtists(ctx, field)
 			})
 
 		default:
@@ -6312,6 +5986,28 @@ func (ec *executionContext) unmarshalNCreateArtistInput2nubuscuᚋpretenseᚋent
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNCreateArtistInput2ᚕᚖnubuscuᚋpretenseᚋentᚐCreateArtistInputᚄ(ctx context.Context, v interface{}) ([]*ent.CreateArtistInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*ent.CreateArtistInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCreateArtistInput2ᚖnubuscuᚋpretenseᚋentᚐCreateArtistInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNCreateArtistInput2ᚖnubuscuᚋpretenseᚋentᚐCreateArtistInput(ctx context.Context, v interface{}) (*ent.CreateArtistInput, error) {
+	res, err := ec.unmarshalInputCreateArtistInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNCreateReviewInput2nubuscuᚋpretenseᚋentᚐCreateReviewInput(ctx context.Context, v interface{}) (ent.CreateReviewInput, error) {
 	res, err := ec.unmarshalInputCreateReviewInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -6543,26 +6239,6 @@ func (ec *executionContext) marshalNTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ct
 		return graphql.Null
 	}
 	return ec._Topic(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNUpdateAlbumInput2nubuscuᚋpretenseᚋentᚐUpdateAlbumInput(ctx context.Context, v interface{}) (ent.UpdateAlbumInput, error) {
-	res, err := ec.unmarshalInputUpdateAlbumInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUpdateArtistInput2nubuscuᚋpretenseᚋentᚐUpdateArtistInput(ctx context.Context, v interface{}) (ent.UpdateArtistInput, error) {
-	res, err := ec.unmarshalInputUpdateArtistInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUpdateReviewInput2nubuscuᚋpretenseᚋentᚐUpdateReviewInput(ctx context.Context, v interface{}) (ent.UpdateReviewInput, error) {
-	res, err := ec.unmarshalInputUpdateReviewInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNUpdateTopicInput2nubuscuᚋpretenseᚋentᚐUpdateTopicInput(ctx context.Context, v interface{}) (ent.UpdateTopicInput, error) {
-	res, err := ec.unmarshalInputUpdateTopicInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
