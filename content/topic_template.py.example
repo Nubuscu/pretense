@@ -1,0 +1,10 @@
+ALBUMS = []
+
+
+# topic name (what shows in cytoscape)
+TOPIC = ""
+# review name (could be longer/descriptive)
+TITLE = ""
+
+BODY = """
+"""
