@@ -33,8 +33,7 @@ func (r *mutationResolver) UpsertArtist(ctx context.Context, input ent.CreateArt
 
 // UpsertReview is the resolver for the upsertReview field.
 func (r *mutationResolver) UpsertReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error) {
-	// TODO can't actually upsert with an id, might need another unique-ish field. maybe title?
-	id, err := r.client.Review.Create().SetInput(input).OnConflictColumns(review.FieldID).UpdateNewValues().ID(ctx)
+	id, err := r.client.Review.Create().SetInput(input).OnConflictColumns(review.FieldName).UpdateNewValues().ID(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to upsert Review %w", err))
 	}
@@ -65,6 +64,25 @@ func (r *mutationResolver) CreateAlbumAndArtists(ctx context.Context, album ent.
 		artistIds = append(artistIds, createdArtist.ID)
 	}
 	return r.client.Album.UpdateOne(createdAlbum).AddByIDs(artistIds...).Save(ctx)
+}
+
+// CreateTopicWithReview is the resolver for the createTopicWithReview field.
+func (r *mutationResolver) CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albums []*ent.CreateAlbumInput) (*ent.Topic, error) {
+	var albumIds []int
+	for _, album := range albums {
+		createdAlbum, _ := r.UpsertAlbum(ctx, *album)
+		albumIds = append(albumIds, createdAlbum.ID)
+	}
+	topic, _ := r.UpsertTopic(ctx, ent.CreateTopicInput{
+		Name:       topicName,
+		IncludeIDs: albumIds,
+	})
+	r.UpsertReview(ctx, ent.CreateReviewInput{
+		Name:      reviewName,
+		Body:      reviewBody,
+		ReviewIDs: []int{topic.ID},
+	})
+	return topic, nil
 }
 
 // Mutation returns MutationResolver implementation.

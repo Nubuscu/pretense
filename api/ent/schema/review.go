@@ -22,6 +22,7 @@ func (Review) Mixin() []ent.Mixin {
 // Fields of the Review.
 func (Review) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("name").NotEmpty().Unique(),
 		field.Text("body").NotEmpty(),
 	}
 }

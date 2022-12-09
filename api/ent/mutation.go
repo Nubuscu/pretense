@@ -1147,6 +1147,7 @@ type ReviewMutation struct {
 	id             *int
 	created_at     *time.Time
 	updated_at     *time.Time
+	name           *string
 	body           *string
 	clearedFields  map[string]struct{}
 	reviews        map[int]struct{}
@@ -1327,6 +1328,42 @@ func (m *ReviewMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetName sets the "name" field.
+func (m *ReviewMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ReviewMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Review entity.
+// If the Review object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ReviewMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ReviewMutation) ResetName() {
+	m.name = nil
+}
+
 // SetBody sets the "body" field.
 func (m *ReviewMutation) SetBody(s string) {
 	m.body = &s
@@ -1436,12 +1473,15 @@ func (m *ReviewMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ReviewMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.created_at != nil {
 		fields = append(fields, review.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, review.FieldUpdatedAt)
+	}
+	if m.name != nil {
+		fields = append(fields, review.FieldName)
 	}
 	if m.body != nil {
 		fields = append(fields, review.FieldBody)
@@ -1458,6 +1498,8 @@ func (m *ReviewMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case review.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case review.FieldName:
+		return m.Name()
 	case review.FieldBody:
 		return m.Body()
 	}
@@ -1473,6 +1515,8 @@ func (m *ReviewMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldCreatedAt(ctx)
 	case review.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case review.FieldName:
+		return m.OldName(ctx)
 	case review.FieldBody:
 		return m.OldBody(ctx)
 	}
@@ -1497,6 +1541,13 @@ func (m *ReviewMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case review.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
 		return nil
 	case review.FieldBody:
 		v, ok := value.(string)
@@ -1559,6 +1610,9 @@ func (m *ReviewMutation) ResetField(name string) error {
 		return nil
 	case review.FieldUpdatedAt:
 		m.ResetUpdatedAt()
+		return nil
+	case review.FieldName:
+		m.ResetName()
 		return nil
 	case review.FieldBody:
 		m.ResetBody()

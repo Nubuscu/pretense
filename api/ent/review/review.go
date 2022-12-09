@@ -15,6 +15,8 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldBody holds the string denoting the body field in the database.
 	FieldBody = "body"
 	// EdgeReviews holds the string denoting the reviews edge name in mutations.
@@ -33,6 +35,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldName,
 	FieldBody,
 }
 
@@ -59,6 +62,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// NameValidator is a validator for the "name" field. It is called by the builders before save.
+	NameValidator func(string) error
 	// BodyValidator is a validator for the "body" field. It is called by the builders before save.
 	BodyValidator func(string) error
 )

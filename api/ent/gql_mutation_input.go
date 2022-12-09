@@ -150,6 +150,7 @@ func (c *ArtistUpdateOne) SetInput(i UpdateArtistInput) *ArtistUpdateOne {
 type CreateReviewInput struct {
 	CreatedAt *time.Time
 	UpdatedAt *time.Time
+	Name      string
 	Body      string
 	ReviewIDs []int
 }
@@ -162,6 +163,7 @@ func (i *CreateReviewInput) Mutate(m *ReviewMutation) {
 	if v := i.UpdatedAt; v != nil {
 		m.SetUpdatedAt(*v)
 	}
+	m.SetName(i.Name)
 	m.SetBody(i.Body)
 	if v := i.ReviewIDs; len(v) > 0 {
 		m.AddReviewIDs(v...)
@@ -177,6 +179,7 @@ func (c *ReviewCreate) SetInput(i CreateReviewInput) *ReviewCreate {
 // UpdateReviewInput represents a mutation input for updating reviews.
 type UpdateReviewInput struct {
 	UpdatedAt       *time.Time
+	Name            *string
 	Body            *string
 	AddReviewIDs    []int
 	RemoveReviewIDs []int
@@ -186,6 +189,9 @@ type UpdateReviewInput struct {
 func (i *UpdateReviewInput) Mutate(m *ReviewMutation) {
 	if v := i.UpdatedAt; v != nil {
 		m.SetUpdatedAt(*v)
+	}
+	if v := i.Name; v != nil {
+		m.SetName(*v)
 	}
 	if v := i.Body; v != nil {
 		m.SetBody(*v)

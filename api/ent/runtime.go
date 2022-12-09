@@ -64,8 +64,12 @@ func init() {
 	review.DefaultUpdatedAt = reviewDescUpdatedAt.Default.(func() time.Time)
 	// review.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	review.UpdateDefaultUpdatedAt = reviewDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// reviewDescName is the schema descriptor for name field.
+	reviewDescName := reviewFields[0].Descriptor()
+	// review.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	review.NameValidator = reviewDescName.Validators[0].(func(string) error)
 	// reviewDescBody is the schema descriptor for body field.
-	reviewDescBody := reviewFields[0].Descriptor()
+	reviewDescBody := reviewFields[1].Descriptor()
 	// review.BodyValidator is a validator for the "body" field. It is called by the builders before save.
 	review.BodyValidator = reviewDescBody.Validators[0].(func(string) error)
 	topicMixin := schema.Topic{}.Mixin()

@@ -87,6 +87,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateAlbumAndArtists func(childComplexity int, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) int
+		CreateTopicWithReview func(childComplexity int, topicName string, reviewName string, reviewBody string, albums []*ent.CreateAlbumInput) int
 		UpsertAlbum           func(childComplexity int, input ent.CreateAlbumInput) int
 		UpsertArtist          func(childComplexity int, input ent.CreateArtistInput) int
 		UpsertReview          func(childComplexity int, input ent.CreateReviewInput) int
@@ -113,6 +114,7 @@ type ComplexityRoot struct {
 		Body      func(childComplexity int) int
 		CreatedAt func(childComplexity int) int
 		ID        func(childComplexity int) int
+		Name      func(childComplexity int) int
 		Reviews   func(childComplexity int) int
 		UpdatedAt func(childComplexity int) int
 	}
@@ -155,6 +157,7 @@ type MutationResolver interface {
 	UpsertReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error)
 	UpsertTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error)
 	CreateAlbumAndArtists(ctx context.Context, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) (*ent.Album, error)
+	CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albums []*ent.CreateAlbumInput) (*ent.Topic, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id int) (ent.Noder, error)
@@ -339,6 +342,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CreateAlbumAndArtists(childComplexity, args["album"].(ent.CreateAlbumInput), args["artists"].([]*ent.CreateArtistInput)), true
 
+	case "Mutation.createTopicWithReview":
+		if e.complexity.Mutation.CreateTopicWithReview == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createTopicWithReview_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CreateTopicWithReview(childComplexity, args["topicName"].(string), args["reviewName"].(string), args["reviewBody"].(string), args["albums"].([]*ent.CreateAlbumInput)), true
+
 	case "Mutation.upsertAlbum":
 		if e.complexity.Mutation.UpsertAlbum == nil {
 			break
@@ -507,6 +522,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Review.ID(childComplexity), true
+
+	case "Review.name":
+		if e.complexity.Review.Name == nil {
+			break
+		}
+
+		return e.complexity.Review.Name(childComplexity), true
 
 	case "Review.reviews":
 		if e.complexity.Review.Reviews == nil {
@@ -755,6 +777,48 @@ func (ec *executionContext) field_Mutation_createAlbumAndArtists_args(ctx contex
 		}
 	}
 	args["artists"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_createTopicWithReview_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["topicName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("topicName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["topicName"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["reviewName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewName"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["reviewName"] = arg1
+	var arg2 string
+	if tmp, ok := rawArgs["reviewBody"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reviewBody"))
+		arg2, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["reviewBody"] = arg2
+	var arg3 []*ent.CreateAlbumInput
+	if tmp, ok := rawArgs["albums"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("albums"))
+		arg3, err = ec.unmarshalNCreateAlbumInput2ᚕᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["albums"] = arg3
 	return args, nil
 }
 
@@ -2278,6 +2342,8 @@ func (ec *executionContext) fieldContext_Mutation_upsertReview(ctx context.Conte
 				return ec.fieldContext_Review_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Review_name(ctx, field)
 			case "body":
 				return ec.fieldContext_Review_body(ctx, field)
 			case "reviews":
@@ -2426,6 +2492,72 @@ func (ec *executionContext) fieldContext_Mutation_createAlbumAndArtists(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_createAlbumAndArtists_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createTopicWithReview(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_createTopicWithReview(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().CreateTopicWithReview(rctx, fc.Args["topicName"].(string), fc.Args["reviewName"].(string), fc.Args["reviewBody"].(string), fc.Args["albums"].([]*ent.CreateAlbumInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*ent.Topic)
+	fc.Result = res
+	return ec.marshalOTopic2ᚖnubuscuᚋpretenseᚋentᚐTopic(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_createTopicWithReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Topic_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Topic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Topic_name(ctx, field)
+			case "reviewedBy":
+				return ec.fieldContext_Topic_reviewedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Topic_includes(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createTopicWithReview_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -3222,6 +3354,50 @@ func (ec *executionContext) fieldContext_Review_updatedAt(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Review_name(ctx context.Context, field graphql.CollectedField, obj *ent.Review) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Review_name(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Review_name(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Review",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Review_body(ctx context.Context, field graphql.CollectedField, obj *ent.Review) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Review_body(ctx, field)
 	if err != nil {
@@ -3508,6 +3684,8 @@ func (ec *executionContext) fieldContext_ReviewEdge_node(ctx context.Context, fi
 				return ec.fieldContext_Review_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Review_name(ctx, field)
 			case "body":
 				return ec.fieldContext_Review_body(ctx, field)
 			case "reviews":
@@ -3781,6 +3959,8 @@ func (ec *executionContext) fieldContext_Topic_reviewedBy(ctx context.Context, f
 				return ec.fieldContext_Review_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_Review_name(ctx, field)
 			case "body":
 				return ec.fieldContext_Review_body(ctx, field)
 			case "reviews":
@@ -6711,7 +6891,7 @@ func (ec *executionContext) unmarshalInputCreateReviewInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"createdAt", "updatedAt", "body", "reviewIDs"}
+	fieldsInOrder := [...]string{"createdAt", "updatedAt", "name", "body", "reviewIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6731,6 +6911,14 @@ func (ec *executionContext) unmarshalInputCreateReviewInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6823,7 +7011,7 @@ func (ec *executionContext) unmarshalInputReviewWhereInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "body", "bodyNEQ", "bodyIn", "bodyNotIn", "bodyGT", "bodyGTE", "bodyLT", "bodyLTE", "bodyContains", "bodyHasPrefix", "bodyHasSuffix", "bodyEqualFold", "bodyContainsFold", "hasReviews", "hasReviewsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "body", "bodyNEQ", "bodyIn", "bodyNotIn", "bodyGT", "bodyGTE", "bodyLT", "bodyLTE", "bodyContains", "bodyHasPrefix", "bodyHasSuffix", "bodyEqualFold", "bodyContainsFold", "hasReviews", "hasReviewsWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7043,6 +7231,110 @@ func (ec *executionContext) unmarshalInputReviewWhereInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAtLTE"))
 			it.UpdatedAtLTE, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameNEQ"))
+			it.NameNEQ, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameIn"))
+			it.NameIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameNotIn"))
+			it.NameNotIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameGT"))
+			it.NameGT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameGTE"))
+			it.NameGTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameLT"))
+			it.NameLT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameLTE"))
+			it.NameLTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameContains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContains"))
+			it.NameContains, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameHasPrefix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameHasPrefix"))
+			it.NameHasPrefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameHasSuffix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameHasSuffix"))
+			it.NameHasSuffix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameEqualFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameEqualFold"))
+			it.NameEqualFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "nameContainsFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameContainsFold"))
+			it.NameContainsFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7671,7 +7963,7 @@ func (ec *executionContext) unmarshalInputUpdateReviewInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"updatedAt", "body", "addReviewIDs", "removeReviewIDs"}
+	fieldsInOrder := [...]string{"updatedAt", "name", "body", "addReviewIDs", "removeReviewIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7683,6 +7975,14 @@ func (ec *executionContext) unmarshalInputUpdateReviewInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8161,6 +8461,12 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 				return ec._Mutation_createAlbumAndArtists(ctx, field)
 			})
 
+		case "createTopicWithReview":
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createTopicWithReview(ctx, field)
+			})
+
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -8419,6 +8725,13 @@ func (ec *executionContext) _Review(ctx context.Context, sel ast.SelectionSet, o
 		case "updatedAt":
 
 			out.Values[i] = ec._Review_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "name":
+
+			out.Values[i] = ec._Review_name(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -9077,6 +9390,28 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 func (ec *executionContext) unmarshalNCreateAlbumInput2nubuscuᚋpretenseᚋentᚐCreateAlbumInput(ctx context.Context, v interface{}) (ent.CreateAlbumInput, error) {
 	res, err := ec.unmarshalInputCreateAlbumInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNCreateAlbumInput2ᚕᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInputᚄ(ctx context.Context, v interface{}) ([]*ent.CreateAlbumInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*ent.CreateAlbumInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNCreateAlbumInput2ᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNCreateAlbumInput2ᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInput(ctx context.Context, v interface{}) (*ent.CreateAlbumInput, error) {
+	res, err := ec.unmarshalInputCreateAlbumInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNCreateArtistInput2nubuscuᚋpretenseᚋentᚐCreateArtistInput(ctx context.Context, v interface{}) (ent.CreateArtistInput, error) {

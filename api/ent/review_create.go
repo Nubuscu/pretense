@@ -51,6 +51,12 @@ func (rc *ReviewCreate) SetNillableUpdatedAt(t *time.Time) *ReviewCreate {
 	return rc
 }
 
+// SetName sets the "name" field.
+func (rc *ReviewCreate) SetName(s string) *ReviewCreate {
+	rc.mutation.SetName(s)
+	return rc
+}
+
 // SetBody sets the "body" field.
 func (rc *ReviewCreate) SetBody(s string) *ReviewCreate {
 	rc.mutation.SetBody(s)
@@ -167,6 +173,14 @@ func (rc *ReviewCreate) check() error {
 	if _, ok := rc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Review.updated_at"`)}
 	}
+	if _, ok := rc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Review.name"`)}
+	}
+	if v, ok := rc.mutation.Name(); ok {
+		if err := review.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Review.name": %w`, err)}
+		}
+	}
 	if _, ok := rc.mutation.Body(); !ok {
 		return &ValidationError{Name: "body", err: errors.New(`ent: missing required field "Review.body"`)}
 	}
@@ -210,6 +224,10 @@ func (rc *ReviewCreate) createSpec() (*Review, *sqlgraph.CreateSpec) {
 	if value, ok := rc.mutation.UpdatedAt(); ok {
 		_spec.SetField(review.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
+	}
+	if value, ok := rc.mutation.Name(); ok {
+		_spec.SetField(review.FieldName, field.TypeString, value)
+		_node.Name = value
 	}
 	if value, ok := rc.mutation.Body(); ok {
 		_spec.SetField(review.FieldBody, field.TypeString, value)
@@ -298,6 +316,18 @@ func (u *ReviewUpsert) UpdateUpdatedAt() *ReviewUpsert {
 	return u
 }
 
+// SetName sets the "name" field.
+func (u *ReviewUpsert) SetName(v string) *ReviewUpsert {
+	u.Set(review.FieldName, v)
+	return u
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ReviewUpsert) UpdateName() *ReviewUpsert {
+	u.SetExcluded(review.FieldName)
+	return u
+}
+
 // SetBody sets the "body" field.
 func (u *ReviewUpsert) SetBody(v string) *ReviewUpsert {
 	u.Set(review.FieldBody, v)
@@ -366,6 +396,20 @@ func (u *ReviewUpsertOne) SetUpdatedAt(v time.Time) *ReviewUpsertOne {
 func (u *ReviewUpsertOne) UpdateUpdatedAt() *ReviewUpsertOne {
 	return u.Update(func(s *ReviewUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ReviewUpsertOne) SetName(v string) *ReviewUpsertOne {
+	return u.Update(func(s *ReviewUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ReviewUpsertOne) UpdateName() *ReviewUpsertOne {
+	return u.Update(func(s *ReviewUpsert) {
+		s.UpdateName()
 	})
 }
 
@@ -601,6 +645,20 @@ func (u *ReviewUpsertBulk) SetUpdatedAt(v time.Time) *ReviewUpsertBulk {
 func (u *ReviewUpsertBulk) UpdateUpdatedAt() *ReviewUpsertBulk {
 	return u.Update(func(s *ReviewUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetName sets the "name" field.
+func (u *ReviewUpsertBulk) SetName(v string) *ReviewUpsertBulk {
+	return u.Update(func(s *ReviewUpsert) {
+		s.SetName(v)
+	})
+}
+
+// UpdateName sets the "name" field to the value that was provided on create.
+func (u *ReviewUpsertBulk) UpdateName() *ReviewUpsertBulk {
+	return u.Update(func(s *ReviewUpsert) {
+		s.UpdateName()
 	})
 }
 

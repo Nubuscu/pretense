@@ -35,6 +35,12 @@ func (ru *ReviewUpdate) SetUpdatedAt(t time.Time) *ReviewUpdate {
 	return ru
 }
 
+// SetName sets the "name" field.
+func (ru *ReviewUpdate) SetName(s string) *ReviewUpdate {
+	ru.mutation.SetName(s)
+	return ru
+}
+
 // SetBody sets the "body" field.
 func (ru *ReviewUpdate) SetBody(s string) *ReviewUpdate {
 	ru.mutation.SetBody(s)
@@ -153,6 +159,11 @@ func (ru *ReviewUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ru *ReviewUpdate) check() error {
+	if v, ok := ru.mutation.Name(); ok {
+		if err := review.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Review.name": %w`, err)}
+		}
+	}
 	if v, ok := ru.mutation.Body(); ok {
 		if err := review.BodyValidator(v); err != nil {
 			return &ValidationError{Name: "body", err: fmt.Errorf(`ent: validator failed for field "Review.body": %w`, err)}
@@ -181,6 +192,9 @@ func (ru *ReviewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := ru.mutation.UpdatedAt(); ok {
 		_spec.SetField(review.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := ru.mutation.Name(); ok {
+		_spec.SetField(review.FieldName, field.TypeString, value)
 	}
 	if value, ok := ru.mutation.Body(); ok {
 		_spec.SetField(review.FieldBody, field.TypeString, value)
@@ -261,6 +275,12 @@ type ReviewUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (ruo *ReviewUpdateOne) SetUpdatedAt(t time.Time) *ReviewUpdateOne {
 	ruo.mutation.SetUpdatedAt(t)
+	return ruo
+}
+
+// SetName sets the "name" field.
+func (ruo *ReviewUpdateOne) SetName(s string) *ReviewUpdateOne {
+	ruo.mutation.SetName(s)
 	return ruo
 }
 
@@ -395,6 +415,11 @@ func (ruo *ReviewUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (ruo *ReviewUpdateOne) check() error {
+	if v, ok := ruo.mutation.Name(); ok {
+		if err := review.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Review.name": %w`, err)}
+		}
+	}
 	if v, ok := ruo.mutation.Body(); ok {
 		if err := review.BodyValidator(v); err != nil {
 			return &ValidationError{Name: "body", err: fmt.Errorf(`ent: validator failed for field "Review.body": %w`, err)}
@@ -440,6 +465,9 @@ func (ruo *ReviewUpdateOne) sqlSave(ctx context.Context) (_node *Review, err err
 	}
 	if value, ok := ruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(review.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := ruo.mutation.Name(); ok {
+		_spec.SetField(review.FieldName, field.TypeString, value)
 	}
 	if value, ok := ruo.mutation.Body(); ok {
 		_spec.SetField(review.FieldBody, field.TypeString, value)

@@ -39,6 +39,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Unique: true},
 		{Name: "body", Type: field.TypeString, Size: 2147483647},
 	}
 	// ReviewsTable holds the schema information for the "reviews" table.
