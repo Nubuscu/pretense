@@ -2,14 +2,18 @@ import { createClient, gql } from '@urql/svelte';
 
 let root = `${process.env.BACKEND}`;
 const client = createClient({
-  url: `${root}/v1/graphql`
+  url: `${root}/query`
 })
 
 const TOPIC_TITLES_QUERY = gql`
   query topicTitles {
     topics {
-      id
-      name
+      edges {
+        node {
+          id
+          name
+        }
+      }
     }
   }
 `
@@ -19,7 +23,7 @@ export async function load() {
   if (resp.error) {
     console.error(resp.error)
   } else {
-    retval = resp.data.topics
+    retval = resp.data.topics.edges
   }
   return {
     topics: retval

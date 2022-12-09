@@ -1,29 +1,33 @@
-import { multiTopic, singleTopic } from "$lib/topicProcessing";
+import { singleTopic } from "$lib/topicProcessing";
 import { createClient, gql } from '@urql/svelte';
 
 
 let root = `${process.env.BACKEND}`;
 
 const client = createClient({
-  url: `${root}/v1/graphql`
+  url: `${root}/query`
 })
 
 const TOPIC_QUERY = gql`
-  query singleTopic($id: Int) {
-    topics(id: $id) {
-      id
-      name
-      reviews {
-        id
-        title
-        body
-      }
-      albums {
-        id
-        name
-        artists {
+  query singleTopic($id: ID) {
+    topics(where: {id: $id}) {
+      edges {
+        node {
           id
           name
+          reviewedBy {
+            id
+            name
+            body
+          }
+          includes {
+            id
+            name
+            by {
+              id
+              name
+            }
+          }
         }
       }
     }
@@ -35,13 +39,13 @@ export async function load({ params }) {
     console.error(resp.error)
     return;
   }
-  const content = resp.data.topics[0]
+  const content = resp.data.topics.edges[0]?.node
 
   return {
     id: params.id,
     title: content.name,
-    reviews: content.reviews.map(r => {
-      return { id: r.id, title: r.title ?? "", body: r.body ?? "" }
+    reviews: content.reviewedBy.map(r => {
+      return { id: r.id, title: r.name ?? "", body: r.body ?? "" }
     }),
     graphInput: singleTopic(content),
   }

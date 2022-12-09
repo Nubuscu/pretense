@@ -6,7 +6,8 @@
     if (topics) {
         topics?.forEach((t) => {
             let opt = t;
-            opt.uri = `/topics/${t.id}`;
+            opt.uri = `/topics/${t.node.id}`;
+            opt.name = t.node.name;
             opt.sort_index = t.id;
             options = [opt, ...options];
         });

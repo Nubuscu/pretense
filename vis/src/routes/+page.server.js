@@ -5,20 +5,24 @@ import { createClient, gql } from '@urql/svelte';
 let root = `${process.env.BACKEND}`;
 
 const client = createClient({
-  url: `${root}/v1/graphql`
+  url: `${root}/query`
 })
 
 const ALL_TOPICS_QUERY = gql`
   query allTopics {
     topics {
-      id
-      name
-      albums {
-        id
-        name
-        artists {
+      edges {
+        node {
           id
           name
+          includes {
+            id
+            name
+            by {
+              id
+              name
+            }
+          }
         }
       }
     }
@@ -31,13 +35,8 @@ export async function load({ params }) {
     console.error(resp.error)
     return;
   }
-  const topics = resp.data.topics
+  const topics = resp.data.topics.edges
 
-  const singles = {}
-  topics.map(t => [t.id, singleTopic(t)]).forEach(x => {
-    let [id, graphData] = x
-    singles[id] = graphData
-  })
   const all_processed = multiTopic(topics);
   return {
     multi: all_processed,

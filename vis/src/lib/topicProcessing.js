@@ -11,7 +11,6 @@
 export function singleTopic(topicData, topicId = null) {
   let nodes = [];
   let edges = [];
-
   let topicNodeId;
   if (topicId !== null) {
     topicNodeId = `topic_${topicId}`
@@ -22,13 +21,13 @@ export function singleTopic(topicData, topicId = null) {
       cluster: topicNodeId,
     });
   }
-  topicData.albums.forEach((album) => {
+  topicData.includes.forEach((album) => {
     let albumNodeId = `album_${album.id}`;
 
     let albumNode = {
       id: albumNodeId,
-      label: `${album.name} - ${album.artists.map(a => a.name).join(', ')}`,
-      artists: album.artists,
+      label: `${album.name} - ${album.by.map(a => a.name).join(', ')}`,
+      artists: album.by,
       cluster: topicNodeId,  // for cytoscape-cise
     };
     if (topicId !== null) {
@@ -60,7 +59,7 @@ export function multiTopic(topicsData, method = singleTopic) {
       nodes: newNodes,
       edges: newEdges,
       content: _content,
-    } = method(topicData, topicData.id);
+    } = method(topicData.node, topicData.node.id);
     newNodes.forEach(newNode => {
       // just add topics, no dups or artists to process
       if (newNode.isTopic) {
