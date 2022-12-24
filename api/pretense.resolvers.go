@@ -15,9 +15,9 @@ import (
 
 // UpsertAlbum is the resolver for the upsertAlbum field.
 func (r *mutationResolver) UpsertAlbum(ctx context.Context, input ent.CreateAlbumInput) (*ent.Album, error) {
-	id, err := r.client.Album.Create().SetInput(input).OnConflictColumns(album.FieldName).DoNothing().ID(ctx)
+	id, err := r.client.Album.Create().SetInput(input).OnConflictColumns(album.FieldName).Ignore().ID(ctx)
 	if err != nil {
-		log.Println("failed to upsert Album %w", err)
+		log.Println("failed to upsert Album", input.Name, err)
 		return nil, err
 	}
 	return r.client.Album.Get(ctx, id)
@@ -25,9 +25,9 @@ func (r *mutationResolver) UpsertAlbum(ctx context.Context, input ent.CreateAlbu
 
 // UpsertArtist is the resolver for the upsertArtist field.
 func (r *mutationResolver) UpsertArtist(ctx context.Context, input ent.CreateArtistInput) (*ent.Artist, error) {
-	id, err := r.client.Artist.Create().SetInput(input).OnConflictColumns(artist.FieldName).DoNothing().ID(ctx)
+	id, err := r.client.Artist.Create().SetInput(input).OnConflictColumns(artist.FieldName).Ignore().ID(ctx)
 	if err != nil {
-		log.Println("failed to upsert Artist %w", err)
+		log.Println("failed to upsert Artist", input.Name, err)
 		return nil, err
 	}
 	return r.client.Artist.Get(ctx, id)
@@ -38,7 +38,7 @@ func (r *mutationResolver) UpsertReview(ctx context.Context, input ent.CreateRev
 	// should still be able to update review body for the same name
 	id, err := r.client.Review.Create().SetInput(input).OnConflictColumns(review.FieldName).UpdateNewValues().ID(ctx)
 	if err != nil {
-		log.Println("failed to upsert Review %w", err)
+		log.Println("failed to upsert Review", input.Name, err)
 		return nil, err
 	}
 	return r.client.Review.Get(ctx, id)
@@ -48,7 +48,7 @@ func (r *mutationResolver) UpsertReview(ctx context.Context, input ent.CreateRev
 func (r *mutationResolver) UpsertTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error) {
 	id, err := r.client.Topic.Create().SetInput(input).OnConflictColumns(topic.FieldName).UpdateNewValues().ID(ctx)
 	if err != nil {
-		log.Println("failed to upsert Topic %w", err)
+		log.Println("failed to upsert Topic", input.Name, err)
 		return nil, err
 	}
 	return r.client.Topic.Get(ctx, id)
@@ -75,17 +75,26 @@ func (r *mutationResolver) CreateAlbumAndArtists(ctx context.Context, album ent.
 func (r *mutationResolver) CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albums []*ent.CreateAlbumInput) (*ent.Topic, error) {
 	var albumIds []int
 	for _, album := range albums {
-		createdAlbum, _ := r.UpsertAlbum(ctx, *album)
+		createdAlbum, err := r.UpsertAlbum(ctx, *album)
+		if err != nil {
+			return nil, err
+		}
 		albumIds = append(albumIds, createdAlbum.ID)
 	}
-	topic, _ := r.UpsertTopic(ctx, ent.CreateTopicInput{
+	topic, err := r.UpsertTopic(ctx, ent.CreateTopicInput{
 		Name:       topicName,
 		IncludeIDs: albumIds,
 	})
-	review, _ := r.UpsertReview(ctx, ent.CreateReviewInput{
+	if err != nil {
+		return nil, err
+	}
+	review, err := r.UpsertReview(ctx, ent.CreateReviewInput{
 		Name: reviewName,
 		Body: reviewBody,
 	})
+	if err != nil {
+		return nil, err
+	}
 	r.client.Review.UpdateOne(review).AddReviews(topic).Save(ctx)
 	return topic, nil
 }
