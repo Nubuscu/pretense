@@ -46,12 +46,17 @@ func (r *mutationResolver) UpsertReview(ctx context.Context, input ent.CreateRev
 
 // UpsertTopic is the resolver for the upsertTopic field.
 func (r *mutationResolver) UpsertTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error) {
-	id, err := r.client.Topic.Create().SetInput(input).OnConflictColumns(topic.FieldName).UpdateNewValues().ID(ctx)
+	id, err := r.client.Topic.Create().SetName(input.Name).OnConflictColumns(topic.FieldName).Ignore().ID(ctx)
 	if err != nil {
 		log.Println("failed to upsert Topic", input.Name, err)
 		return nil, err
 	}
-	return r.client.Topic.Get(ctx, id)
+	created, err := r.client.Topic.UpdateOneID(id).ClearIncludes().AddIncludeIDs(input.IncludeIDs...).Save(ctx)
+	if err != nil {
+		log.Println("failed to upsert Topic includes", input.Name, err)
+		return nil, err
+	}
+	return created, nil
 }
 
 // CreateAlbumAndArtists is the resolver for the createAlbumAndArtists field.
@@ -95,7 +100,10 @@ func (r *mutationResolver) CreateTopicWithReview(ctx context.Context, topicName 
 	if err != nil {
 		return nil, err
 	}
-	r.client.Review.UpdateOne(review).AddReviews(topic).Save(ctx)
+	_, revErr := r.client.Review.UpdateOne(review).AddReviews(topic).Save(ctx)
+	if revErr != nil {
+		log.Println("upserting review - topic edge failed, may already exist.", revErr)
+	}
 	return topic, nil
 }
 
