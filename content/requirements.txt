@@ -1,2 +1,4 @@
+Authlib==1.2.0
 python-graphql-client
 requests
+fastapi

@@ -46,7 +46,6 @@ services:
     env_file:
       - vis/.env
     environment:
-      # uses the connection details that a user would?
       BACKEND: http://api:8081
 networks:
   frontend:
