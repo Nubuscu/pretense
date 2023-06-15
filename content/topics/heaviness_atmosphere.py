@@ -5,6 +5,7 @@ ALBUMS = [
     "A Tear in the Fabric of Life",
     "Ohms",
     "Where Owls Know My Name",
+    "The Great Collapse",
 ]
 
 

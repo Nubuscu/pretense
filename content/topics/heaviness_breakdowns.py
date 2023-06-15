@@ -5,6 +5,8 @@ ALBUMS = [
     "Dark Skies",
     "Slave To Nothing",
     "Kostolom",
+    "Thegodmachine",
+    "Lifeblood",
 ]
 
 

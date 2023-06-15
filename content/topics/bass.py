@@ -8,6 +8,7 @@ ALBUMS = [
     "The Physical World",
     "Royal Blood",
     "L.D. 50",
+    "Fantasy Empire",
 ]
 
 
