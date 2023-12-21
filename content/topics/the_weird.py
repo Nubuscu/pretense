@@ -4,6 +4,7 @@ ALBUMS = [
     "Bottomless Pit",
     "Mezmerize",
     "Steal This Album!",
+    "Antipop",
 ]
 
 
