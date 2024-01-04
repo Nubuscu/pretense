@@ -3,6 +3,7 @@
   import cytoscape from "cytoscape";
   import elk from "cytoscape-elk";
   import GraphStyles from "$lib/GraphStyles.js";
+  import { selectedTopicId } from "$lib/stores.js"
   setContext("graphSharedState", {
     getCyInstance: () => cyInstance,
   });
@@ -52,21 +53,24 @@
     cyInstance.on("tap", "node[isTopic]", (event) => {
       let data = event.target.data();
       // id ~= topic_N
-      let topic_id = data.id.split("_").reverse()[0];
-      window.location.href = `/topics/${topic_id}`;
+      let topicId = data.id.split("_").reverse()[0];
+      selectedTopicId.set(topicId)
+      
     });
   });
 </script>
 
 <div class="graph" bind:this={refElement}>
   {#if cyInstance}
-    <!-- <slot /> -->
+    <slot />
   {/if}
 </div>
 
 <style>
   .graph {
-    min-height: 100vh;
-    background-color: var(--bg);
+    min-height: 75vh;
+    display: flex;
+    min-width: 80vw;
+    background-color: black;
   }
 </style>
