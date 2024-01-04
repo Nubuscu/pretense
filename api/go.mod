@@ -6,8 +6,10 @@ require (
 	entgo.io/contrib v0.3.4
 	entgo.io/ent v0.11.5-0.20221031135557-521f9b57bc3d
 	github.com/99designs/gqlgen v0.17.20
+	github.com/go-chi/chi/v5 v5.0.11
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/lib/pq v1.10.7
+	github.com/rs/cors v1.10.1
 	github.com/vektah/gqlparser/v2 v2.5.1
 	github.com/vmihailenco/msgpack/v5 v5.0.0-beta.9
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4

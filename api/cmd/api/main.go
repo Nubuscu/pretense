@@ -13,7 +13,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-chi/chi/v5"
 	_ "github.com/lib/pq"
+	"github.com/rs/cors"
 )
 
 func main() {
@@ -34,13 +36,20 @@ func main() {
 	}
 
 	// Configure the server and start listening on :8081.
+	router := chi.NewRouter()
+
+	router.Use(cors.New(cors.Options{
+		AllowedOrigins: []string{"*"},
+	}).Handler)
+
 	srv := handler.NewDefaultServer(pretense.NewSchema(client))
-	http.Handle("/",
+	router.Handle("/",
 		playground.Handler("Api", "/query"),
 	)
-	http.Handle("/query", srv)
+	router.Handle("/query", srv)
+
 	log.Println("listening on :8081")
-	if err := http.ListenAndServe(":8081", nil); err != nil {
+	if err := http.ListenAndServe(":8081", router); err != nil {
 		log.Fatal("http server terminated", err)
 	}
 }
