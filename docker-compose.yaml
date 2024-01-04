@@ -32,21 +32,19 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
 
-  vis:
-    build:
-      target: prod
-      context: ./vis
-      dockerfile: Dockerfile
-    depends_on:
-      - api
-    ports:
-      - "3000:3000"
-    networks:
-      - frontend
-    env_file:
-      - vis/.env
-    environment:
-      BACKEND: http://api:8081
+  # vis:
+  #   build:
+  #     target: prod
+  #     context: ./vis
+  #     dockerfile: Dockerfile
+  #   depends_on:
+  #     - api
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - frontend
+  #   environment:
+  #     BACKEND: http://api:8081
 networks:
   frontend:
   backend:

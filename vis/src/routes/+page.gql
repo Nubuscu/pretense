@@ -1,0 +1,18 @@
+query AllTopics {
+    topics {
+        edges {
+            node {
+                id
+                name
+                includes {
+                    id
+                    name
+                    by {
+                        id
+                        name
+                    }
+                }
+            }
+        }
+    }
+}
