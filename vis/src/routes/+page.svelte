@@ -17,22 +17,23 @@
 			(element) => element.node.id == $selectedTopicId
 		).node;
 		reviews = selectedTopic.reviewedBy;
-		topicTitle = selectedTopic.name
+		topicTitle = selectedTopic.name;
 		console.log(reviews);
 	}
 </script>
 
 <html lang="en">
-	<h1>Pretense</h1>
-
 	<div class="container">
-		<Graph input={processed} />
-		<div class="text-content">
-		<h2>{topicTitle}</h2>
-		{#each reviews as {name, body}}
-		<h3>{name}</h3>
-		<SvelteMarkdown source={body} />
-		{/each}
+		<div class="container-inner">
+			<h1>Pretense</h1>
+			<Graph input={processed} />
+			<div class="text-content">
+				<h2>{topicTitle}</h2>
+				{#each reviews as { name, body }}
+					<h3>{name}</h3>
+					<SvelteMarkdown source={body} />
+				{/each}
+			</div>
 		</div>
 	</div>
 </html>
@@ -48,7 +49,7 @@
 		justify-content: center;
 		flex-flow: column;
 	}
-	.text-content {
-		max-width: 80%;
+	.container-inner {
+		max-width: 80vw;
 	}
 </style>

@@ -2,6 +2,16 @@
  * Styles for what goes inside cytoscape.
  * node and edge weights and styles, etc.
  */
+
+const colours = {
+  // https://materialtheme.arcsine.dev/
+  primary: '#512da8',
+  primaryDark: '#371c8d',
+  primaryLight: '#cbc0e5',
+  accent: '#797979',
+  text: '#ffffff',
+  bg: '#2c2c2c',
+}
 export default [
   {
     selector: 'node',
@@ -14,10 +24,10 @@ export default [
       'text-valign': 'center',
       'text-wrap': 'wrap',
       'text-max-width': '140',
-      'background-color': '#458588', // blue-dim
-      'border-color': '#83a598', // blue
+      'background-color': colours.primary,
+      'border-color': colours.primary,
       'border-width': '1',
-      'color': '#d5c4a1', // fg2
+      'color': colours.text,
     }
   },
   {
@@ -25,37 +35,24 @@ export default [
     style: {
       'width': '40',
       'height': '40',
-      'shape': 'hexagon',
-      'background-color': '#b16286', // purple-dim
-      'border-color': '#d3869b', // purple
+      'shape': 'circle',
+      'background-color': colours.primaryDark,
+      'border-color': colours.primaryDark,
     }
   },
   {
     selector: 'edge',
     style: {
       'curve-style': 'bezier',
-      'color': '#7c6f64',
+      'color': colours.primaryLight,
       'text-background-color': '#ffffff',
       'text-background-opacity': '1',
       'text-background-padding': '3',
       'width': '3',
       'target-arrow-shape': 'none',
-      'line-color': '#7c6f64',  // bg4
-      'target-arrow-color': '#7c6f64',
+      'line-color': colours.primaryLight,
+      'target-arrow-color': colours.primaryLight,
       'font-weight': 'bold'
-    }
-  },
-  {
-    selector: 'edge[label]',
-    style: {
-      'content': `data(label)`,
-    }
-  },
-  {
-    selector: 'edge.label',
-    style: {
-      'line-color': 'orange',
-      'target-arrow-color': 'orange'
     }
   }
 ]
