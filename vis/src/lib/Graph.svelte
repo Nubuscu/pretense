@@ -2,7 +2,7 @@
 	import { onMount, setContext } from 'svelte';
 	import cytoscape from 'cytoscape';
 	import elk from 'cytoscape-elk';
-	import GraphStyles from '$lib/GraphStyles.js';
+	import GraphStyles from '$lib/styles.js';
 	import { selectedTopicId } from '$lib/stores.js';
 	setContext('graphSharedState', {
 		getCyInstance: () => cyInstance

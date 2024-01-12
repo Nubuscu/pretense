@@ -3,12 +3,22 @@
 	import { selectedTopicId } from '$lib/stores.js';
 	import { multiTopic } from '$lib/topicProcessing';
 	import SvelteMarkdown from 'svelte-markdown';
+	import CollapsibleSection from '$lib/CollapsibleSection.svelte';
 
 	/* @type { import('./$houdini').PageData } */
 	export let data;
 
 	let reviews = [];
 	let topicTitle = '';
+	let staticText = `
+A project in which I try to overanalyze my taste in music. I thought a typical blog felt too linear, so here we are.
+
+This is as much for my own interest as it is anyone who might stumble across it.
+It's a way to grapple with what I listen to, how my tastes have evolved over time, what discoveries were made when, etc.
+There might be a few recommendations but this is mostly me writing to myself.
+
+Click on one of the "topic" nodes to expand more text below.
+	`;
 	$: ({ AllTopics } = data);
 	$: processed = multiTopic($AllTopics.data.topics.edges);
 
@@ -18,7 +28,6 @@
 		).node;
 		reviews = selectedTopic.reviewedBy;
 		topicTitle = selectedTopic.name;
-		console.log(reviews);
 	}
 </script>
 
@@ -26,6 +35,9 @@
 	<div class="container">
 		<div class="container-inner">
 			<h1>Pretense</h1>
+			<CollapsibleSection headerText="intro blurb" >
+				<SvelteMarkdown source={staticText} />
+			</CollapsibleSection>
 			<Graph input={processed} />
 			<div class="text-content">
 				<h2>{topicTitle}</h2>
