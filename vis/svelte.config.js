@@ -7,9 +7,9 @@ const config = {
 		alias: {
 			$houdini: './$houdini',
 		},
-		paths: {
-			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
-		},
+		// paths: {
+		// 	base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
+		// },
 		prerender: {
 			handleHttpError:({path, referrer, message}) => {
 				console.error("Failed to build path", path, referrer)
