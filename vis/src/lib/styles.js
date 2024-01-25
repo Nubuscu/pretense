@@ -3,7 +3,7 @@
  * node and edge weights and styles, etc.
  */
 
-const colours = {
+export const colours = {
   // https://materialtheme.arcsine.dev/
   primary: '#512da8',
   primaryDark: '#371c8d',
@@ -28,6 +28,10 @@ export default [
       'border-color': colours.primary,
       'border-width': '1',
       'color': colours.text,
+      'layoutDimensions': {
+        'nodeDimensionsIncludeLabels': true,
+
+      }
     }
   },
   {
@@ -35,7 +39,7 @@ export default [
     style: {
       'width': '40',
       'height': '40',
-      'shape': 'circle',
+      'shape': 'hexagon',
       'background-color': colours.primaryDark,
       'border-color': colours.primaryDark,
     }
@@ -50,9 +54,14 @@ export default [
       'text-background-padding': '3',
       'width': '3',
       'target-arrow-shape': 'none',
-      'line-color': colours.primaryLight,
-      'target-arrow-color': colours.primaryLight,
+      'line-color': colours.accent,
       'font-weight': 'bold'
     }
-  }
+  },
+  {
+    selector: 'edge[source ^= "topic"][target ^= "album"]',
+    style: {
+      'line-color': colours.primaryLight,
+    }
+  },
 ]

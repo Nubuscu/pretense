@@ -3,7 +3,7 @@
 	import cytoscape from 'cytoscape';
 	import elk from 'cytoscape-elk';
 	import GraphStyles from '$lib/styles.js';
-	import { selectedTopicId } from '$lib/stores.js';
+	import { selectedTopicId, openModal } from '$lib/stores.js';
 	setContext('graphSharedState', {
 		getCyInstance: () => cyInstance
 	});
@@ -14,6 +14,7 @@
 		// batch process to stop it trying to reprocess the layout for every new node
 		cyInstance.batch(() => {
 			input.nodes.forEach((node) => {
+				console.log(node);
 				cyInstance.add({
 					group: 'nodes',
 					id: node.id,
@@ -32,7 +33,9 @@
 				.makeLayout({
 					name: 'elk',
 					animate: true,
-					nodeDimensionsIncludeLabels: true,
+					layoutDimensions: {
+						nodeDimensionsIncludeLabels: true
+					},
 					elk: {
 						algorithm: 'disco',
 						// any of the options here: https://www.eclipse.org/elk/reference.html
@@ -47,7 +50,8 @@
 		cytoscape.use(elk);
 		cyInstance = cytoscape({
 			container: refElement,
-			style: GraphStyles
+			style: GraphStyles,
+			wheelSensitivity: 0.15
 		});
 		cyInstance.on('add', () => {});
 		cyInstance.on('tap', 'node[isTopic]', (event) => {
@@ -55,6 +59,7 @@
 			// id ~= topic_N
 			let topicId = data.id.split('_').reverse()[0];
 			selectedTopicId.set(topicId);
+			openModal.set(true);
 		});
 	});
 </script>
@@ -67,7 +72,7 @@
 
 <style>
 	.graph {
-		min-height: 75vh;
+		min-height: 85vh;
 		display: flex;
 		min-width: 80vw;
 		background-color: #393939;

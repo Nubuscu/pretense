@@ -1,9 +1,10 @@
 <script>
 	import Graph from '$lib/Graph.svelte';
-	import { selectedTopicId } from '$lib/stores.js';
+	import { selectedTopicId, openModal } from '$lib/stores.js';
 	import { multiTopic } from '$lib/topicProcessing';
 	import SvelteMarkdown from 'svelte-markdown';
 	import CollapsibleSection from '$lib/CollapsibleSection.svelte';
+	import Modal from '$lib/Modal.svelte';
 
 	/* @type { import('./$houdini').PageData } */
 	export let data;
@@ -19,6 +20,7 @@ There might be a few recommendations but this is mostly me writing to myself.
 
 Click on one of the "topic" nodes to expand more text below.
 	`;
+
 	$: ({ AllTopics } = data);
 	$: processed = multiTopic($AllTopics.data.topics.edges);
 
@@ -35,17 +37,19 @@ Click on one of the "topic" nodes to expand more text below.
 	<div class="container">
 		<div class="container-inner">
 			<h1>Pretense</h1>
-			<CollapsibleSection headerText="intro blurb" >
+			<CollapsibleSection headerText="intro blurb">
 				<SvelteMarkdown source={staticText} />
 			</CollapsibleSection>
 			<Graph input={processed} />
-			<div class="text-content">
-				<h2>{topicTitle}</h2>
-				{#each reviews as { name, body }}
-					<h3>{name}</h3>
-					<SvelteMarkdown source={body} />
-				{/each}
-			</div>
+			<Modal bind:showModal={$openModal}>
+				<h2 slot="header">{topicTitle}</h2>
+				<div class="text-content">
+					{#each reviews as { name, body }}
+						<h3>{name}</h3>
+						<SvelteMarkdown source={body} />
+					{/each}
+				</div>
+			</Modal>
 		</div>
 	</div>
 </html>
@@ -56,12 +60,14 @@ Click on one of the "topic" nodes to expand more text below.
 	}
 	.container {
 		height: 100%;
+		width: 100%;
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-flow: column;
 	}
 	.container-inner {
-		max-width: 80vw;
+		width: 100%;
+		height: 100%;
 	}
 </style>
