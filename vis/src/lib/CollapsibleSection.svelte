@@ -1,6 +1,5 @@
 <script>
 	// stolen from https://svelte.dev/repl/a5f4d395b15a44d48a6b2239ef705fc4?version=3.35.0
-	import GraphStyles from '$lib/styles.js'; 
     export let headerText;
 
 	let expanded = false;

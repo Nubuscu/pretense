@@ -8,11 +8,12 @@ export const colours = {
   primary: '#512da8',
   primaryDark: '#371c8d',
   primaryLight: '#cbc0e5',
-  accent: '#797979',
+  edgeDefault: '#797979',
+  edgeSelected: '#cbc0e5',
   text: '#ffffff',
   bg: '#2c2c2c',
 }
-export default [
+export const graphStyles = [
   {
     selector: 'node',
     style: {
@@ -54,7 +55,7 @@ export default [
       'text-background-padding': '3',
       'width': '3',
       'target-arrow-shape': 'none',
-      'line-color': colours.accent,
+      'line-color': colours.edgeDefault,
       'font-weight': 'bold'
     }
   },

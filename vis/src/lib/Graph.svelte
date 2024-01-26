@@ -2,7 +2,8 @@
 	import { onMount, setContext } from 'svelte';
 	import cytoscape from 'cytoscape';
 	import elk from 'cytoscape-elk';
-	import GraphStyles from '$lib/styles.js';
+	import cise from 'cytoscape-cise';
+	import { colours, graphStyles } from '$lib/styles.js';
 	import { selectedTopicId, openModal } from '$lib/stores.js';
 	setContext('graphSharedState', {
 		getCyInstance: () => cyInstance
@@ -14,7 +15,6 @@
 		// batch process to stop it trying to reprocess the layout for every new node
 		cyInstance.batch(() => {
 			input.nodes.forEach((node) => {
-				console.log(node);
 				cyInstance.add({
 					group: 'nodes',
 					id: node.id,
@@ -31,26 +31,28 @@
 			// apply layout after everything's been added
 			cyInstance
 				.makeLayout({
+					name: 'cise',
+					clusters: (node) => node.cluster,
+					allowNodesInsideCircle: true
+				})
+				.run();
+			cyInstance
+				.makeLayout({
+					// use elk/disco afterwards to pack disconnected graph parts closer together
 					name: 'elk',
-					animate: true,
-					layoutDimensions: {
-						nodeDimensionsIncludeLabels: true
-					},
 					elk: {
-						algorithm: 'disco',
-						// any of the options here: https://www.eclipse.org/elk/reference.html
-						// are available, just drop the `org.eclipse` prefix.
-						componentLayoutAlgorithm: 'stress'
+						algorithm: 'disco'
 					}
 				})
 				.run();
 		});
 	}
 	onMount(() => {
+		cytoscape.use(cise);
 		cytoscape.use(elk);
 		cyInstance = cytoscape({
 			container: refElement,
-			style: GraphStyles,
+			style: graphStyles,
 			wheelSensitivity: 0.15
 		});
 		cyInstance.on('add', () => {});
@@ -60,6 +62,18 @@
 			let topicId = data.id.split('_').reverse()[0];
 			selectedTopicId.set(topicId);
 			openModal.set(true);
+		});
+		cyInstance.on('mouseover', 'node', (event) => {
+			let edges = event.target.connectedEdges();
+			edges.forEach((e) => {
+				e.style({ 'line-color': colours.edgeSelected });
+			});
+		});
+		cyInstance.on('mouseout', 'node', (event) => {
+			let edges = event.target.connectedEdges();
+			edges.forEach((e) => {
+				e.style({ 'line-color': colours.edgeDefault });
+			});
 		});
 	});
 </script>
