@@ -15,7 +15,7 @@ ALBUMS = [
 # topic name (what shows in cytoscape)
 TOPIC = "Bass"
 # review name (could be longer/descriptive)
-TITLE = "Learning bass"
+TITLE = "Learning an instrument: how I started actively listening"
 
 # text content. Formatted as markdown in the frontend.
 BODY = """
@@ -23,7 +23,10 @@ One of the main injections of new music was learning an instrument.
 Each of the tutors I had would try to mix in skill-appropriate songs and riffs, largely from the discographies of muse, rage against the machine, or RHCP.
 The latter didn't quite stick for me, but the other two are fun.
 
-Once I'd comfortable picked it up, I started looking around for bands that featured bass heavily. At some points I had to pick out songs to play for assessments, so I'd go hunting for riffs for fun, technicality, and novelty.
+This was also the first time I'd pick up music and wonder "would this be fun to play?", and then listen intentionally to pick out what the bassist was doing.
+I started looking around for bands that featured bass heavily.
+
+At some points I had to pick out songs to play for assessments, so I'd go hunting for riffs for fun, technicality, and novelty.
 
 A few bands that appeared a few times from that are:
 - Tool. The Pot, Schism, Sober, Forty Six & 2, and many more

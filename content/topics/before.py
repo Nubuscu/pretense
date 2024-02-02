@@ -16,15 +16,15 @@ ALBUMS = [
 # topic name (what shows in cytoscape)
 TOPIC = "The Before Times"
 # review name (could be longer/descriptive)
-TITLE = "The life story without a recipe"
+TITLE = "The life story but without a recipe at the end"
 
 # text content. Formatted as markdown in the frontend.
 BODY = """
 Like most people, my taste in music was formed initially from what I heard around me.
 On one side, Mum had CCM like Hillsong, some Bon Jovi, ABBA, and Shania Twain (too much Shania).
-On the other, Dad had some Creed, Green Day, _that_ Evanescence album, and I think Avril Lavigne at some point.
+On the other, Dad had some Creed, Green Day, that one Evanescence album, and I think Avril Lavigne at some point.
 
-I think I gravitated towards the riffs from Dad's side. As a kid, I think mum's music was uncool by association but I can appreciate it in retrospect.
+I think I gravitated towards the riffs from Dad's side, and thus began a lifelong quest for heavier music.
 
 As I got a little older, I started wanting to buy more music, but that was restricted by a couple of things:
 1. CDs were expensive in kid terms

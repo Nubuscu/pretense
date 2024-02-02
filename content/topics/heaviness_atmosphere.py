@@ -6,6 +6,9 @@ ALBUMS = [
     "Ohms",
     "Where Owls Know My Name",
     "The Great Collapse",
+    "Exercises in Futility",
+    "Litourgiya",
+    "Rashomon",
 ]
 
 
