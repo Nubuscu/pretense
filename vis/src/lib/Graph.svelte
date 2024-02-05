@@ -65,13 +65,33 @@
 		});
 		cyInstance.on('mouseover', 'node', (event) => {
 			let edges = event.target.connectedEdges();
+			let nextNodes = edges.flatMap((e) => e.connectedNodes().filter((n) => n !== event.target));
+			let nextEdges = nextNodes.flatMap((n) =>
+				n.connectedEdges().filter((e) => !edges.includes(e))
+			);
 			edges.forEach((e) => {
 				e.style({ 'line-color': colours.edgeSelected });
+			});
+			nextNodes.forEach((n) => {
+				n.style({ 'background-color': colours.nodeNearby });
+			});
+			nextEdges.forEach((e) => {
+				e.style({ 'line-color': colours.edgeNearby });
 			});
 		});
 		cyInstance.on('mouseout', 'node', (event) => {
 			let edges = event.target.connectedEdges();
+			let nextNodes = edges.flatMap((e) => e.connectedNodes().filter((n) => n !== event.target));
+			let nextEdges = nextNodes.flatMap((n) =>
+				n.connectedEdges().filter((e) => !edges.includes(e))
+			);
 			edges.forEach((e) => {
+				e.style({ 'line-color': colours.edgeDefault });
+			});
+			nextNodes.forEach((n) => {
+				n.style({ 'background-color': n.isTopic ? colours.nodeDefault : colours.nodeTopicDefault });
+			});
+			nextEdges.forEach((e) => {
 				e.style({ 'line-color': colours.edgeDefault });
 			});
 		});
