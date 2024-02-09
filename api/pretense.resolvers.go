@@ -77,7 +77,7 @@ func (r *mutationResolver) CreateAlbumAndArtists(ctx context.Context, album ent.
 }
 
 // CreateTopicWithReview is the resolver for the createTopicWithReview field.
-func (r *mutationResolver) CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albumNames []string) (*ent.Topic, error) {
+func (r *mutationResolver) CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albumNames []string, metaLabels []string) (*ent.Topic, error) {
 	var albumIds []int
 	for _, albumName := range albumNames {
 
@@ -87,16 +87,19 @@ func (r *mutationResolver) CreateTopicWithReview(ctx context.Context, topicName 
 		}
 		albumIds = append(albumIds, id)
 	}
+	log.Printf("got meta labels: %v", metaLabels)
 	topic, err := r.UpsertTopic(ctx, ent.CreateTopicInput{
 		Name:       topicName,
 		IncludeIDs: albumIds,
+		MetaLabels: metaLabels,
 	})
 	if err != nil {
 		return nil, err
 	}
 	review, err := r.UpsertReview(ctx, ent.CreateReviewInput{
-		Name: reviewName,
-		Body: reviewBody,
+		Name:       reviewName,
+		Body:       reviewBody,
+		MetaLabels: metaLabels,
 	})
 	if err != nil {
 		return nil, err
@@ -112,18 +115,3 @@ func (r *mutationResolver) CreateTopicWithReview(ctx context.Context, topicName 
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func contains(s []int, e int) bool {
-	for _, a := range s {
-		if a == e {
-			return true
-		}
-	}
-	return false
-}

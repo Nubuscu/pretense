@@ -17,6 +17,9 @@ TOPIC = "Atmosphere"
 # review name (could be longer/descriptive)
 TITLE = "heaviness: atmosphere"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = ["heaviness"]
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 

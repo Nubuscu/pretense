@@ -18,6 +18,9 @@ TOPIC = "Breakdowns"
 # review name (could be longer/descriptive)
 TITLE = "heaviness: breakdowns"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = ["heaviness"]
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 Breakdowns are more-or-less the sticking point of modern metalcore/deathcore.

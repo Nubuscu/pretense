@@ -18,6 +18,9 @@ TOPIC = "The Gym"
 # review name (could be longer/descriptive)
 TITLE = "Lift heavy rock make sad voice go away"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = []
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 At some point when I was riding skateboards, I figured out I would skate faster if I listened to angry music.

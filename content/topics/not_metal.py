@@ -17,6 +17,9 @@ TOPIC = "Not Metal?"
 # review name (could be longer/descriptive)
 TITLE = "I can't believe it's not metal"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = []
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 weirdly, there's a few things in the collection that aren't metal.

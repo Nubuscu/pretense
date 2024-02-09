@@ -19,6 +19,9 @@ TOPIC = "Fuzz"
 # review name (could be longer/descriptive)
 TITLE = "The fuzz"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = []
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 Overdrive, distortion, and fuzz are all (typically) guitar effects along the same spectrum - push more signal through the amplifier than you should and see what it does.

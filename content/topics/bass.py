@@ -17,6 +17,9 @@ TOPIC = "Bass"
 # review name (could be longer/descriptive)
 TITLE = "Learning an instrument: how I started actively listening"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = []
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 One of the main injections of new music was learning an instrument.

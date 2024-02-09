@@ -12,8 +12,8 @@ KNOWN_TOPICS = [f.split(".")[0] for f in os.listdir(TOPIC_DIR) if f.endswith(".p
 CLIENT = GraphqlClient(endpoint="http://localhost:8081/query", verify=False)
 
 MUTATION = """
-mutation createTopicWithReview($topicName: String!, $reviewName: String!, $reviewBody: String!, $albumNames: [String!]!) {
-    createTopicWithReview(topicName: $topicName, reviewName: $reviewName, reviewBody: $reviewBody, albumNames: $albumNames) {
+mutation createTopicWithReview($topicName: String!, $reviewName: String!, $reviewBody: String!, $albumNames: [String!]!, $metaLabels: [String!]!) {
+    createTopicWithReview(topicName: $topicName, reviewName: $reviewName, reviewBody: $reviewBody, albumNames: $albumNames, metaLabels: $metaLabels) {
         id
     }
 }
@@ -47,16 +47,17 @@ def main():
         topic = module.TOPIC
         title = module.TITLE
         body = module.BODY
+        meta_labels = module.META
+
+        variables = {
+            "topicName": topic,
+            "reviewName": title,
+            "reviewBody": body,
+            "albumNames": albums,
+            "metaLabels": meta_labels,
+        }
         try:
-            CLIENT.execute(
-                query=MUTATION,
-                variables={
-                    "topicName": topic,
-                    "reviewName": title,
-                    "reviewBody": body,
-                    "albumNames": albums,
-                },
-            )
+            CLIENT.execute(query=MUTATION, variables=variables)
         except HTTPError as err:
             print(err.response.json())
             breakpoint()

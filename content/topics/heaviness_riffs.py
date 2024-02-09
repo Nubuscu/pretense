@@ -20,6 +20,9 @@ TOPIC = "Riffs"
 # review name (could be longer/descriptive)
 TITLE = "heaviness: riffs"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = ["heaviness"]
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 In my quest to overanalyze music, we get to riffs.

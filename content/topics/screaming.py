@@ -15,6 +15,9 @@ TOPIC = "Screaming"
 # review name (could be longer/descriptive)
 TITLE = "How to not hate the vocals"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = []
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 One of the complaints about metal I hear from non-fans seems to be the harsh vocals.

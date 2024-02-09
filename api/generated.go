@@ -93,7 +93,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateAlbumAndArtists func(childComplexity int, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) int
-		CreateTopicWithReview func(childComplexity int, topicName string, reviewName string, reviewBody string, albumNames []string) int
+		CreateTopicWithReview func(childComplexity int, topicName string, reviewName string, reviewBody string, albumNames []string, metaLabels []string) int
 		UpsertAlbum           func(childComplexity int, input ent.CreateAlbumInput) int
 		UpsertArtist          func(childComplexity int, input ent.CreateArtistInput) int
 		UpsertReview          func(childComplexity int, input ent.CreateReviewInput) int
@@ -177,7 +177,7 @@ type MutationResolver interface {
 	UpsertReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error)
 	UpsertTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error)
 	CreateAlbumAndArtists(ctx context.Context, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) (*ent.Album, error)
-	CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albumNames []string) (*ent.Topic, error)
+	CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albumNames []string, metaLabels []string) (*ent.Topic, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id int) (ent.Noder, error)
@@ -414,7 +414,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTopicWithReview(childComplexity, args["topicName"].(string), args["reviewName"].(string), args["reviewBody"].(string), args["albumNames"].([]string)), true
+		return e.complexity.Mutation.CreateTopicWithReview(childComplexity, args["topicName"].(string), args["reviewName"].(string), args["reviewBody"].(string), args["albumNames"].([]string), args["metaLabels"].([]string)), true
 
 	case "Mutation.upsertAlbum":
 		if e.complexity.Mutation.UpsertAlbum == nil {
@@ -959,6 +959,15 @@ func (ec *executionContext) field_Mutation_createTopicWithReview_args(ctx contex
 		}
 	}
 	args["albumNames"] = arg3
+	var arg4 []string
+	if tmp, ok := rawArgs["metaLabels"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+		arg4, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["metaLabels"] = arg4
 	return args, nil
 }
 
@@ -2996,7 +3005,7 @@ func (ec *executionContext) _Mutation_createTopicWithReview(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTopicWithReview(rctx, fc.Args["topicName"].(string), fc.Args["reviewName"].(string), fc.Args["reviewBody"].(string), fc.Args["albumNames"].([]string))
+		return ec.resolvers.Mutation().CreateTopicWithReview(rctx, fc.Args["topicName"].(string), fc.Args["reviewName"].(string), fc.Args["reviewBody"].(string), fc.Args["albumNames"].([]string), fc.Args["metaLabels"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

@@ -18,6 +18,9 @@ TOPIC = "The Before Times"
 # review name (could be longer/descriptive)
 TITLE = "The life story but without a recipe at the end"
 
+# metadata labels. can be used for grouping/layouts later.
+META: list[str] = []
+
 # text content. Formatted as markdown in the frontend.
 BODY = """
 Like most people, my taste in music was formed initially from what I heard around me.

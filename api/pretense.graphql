@@ -10,5 +10,5 @@ type Mutation {
 
     # bulk upload helpers
     createAlbumAndArtists(album: CreateAlbumInput!, artists: [CreateArtistInput!]!): Album
-    createTopicWithReview(topicName: String!, reviewName: String!, reviewBody: String!, albumNames: [String!]!): Topic
+    createTopicWithReview(topicName: String!, reviewName: String!, reviewBody: String!, albumNames: [String!]!, metaLabels: [String!]!): Topic
 }
