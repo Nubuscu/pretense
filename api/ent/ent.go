@@ -9,6 +9,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 
 	"entgo.io/ent"
@@ -37,6 +38,7 @@ func columnChecker(table string) func(string) error {
 		album.Table:  album.ValidColumn,
 		artist.Table: artist.ValidColumn,
 		review.Table: review.ValidColumn,
+		tag.Table:    tag.ValidColumn,
 		topic.Table:  topic.ValidColumn,
 	}
 	check, ok := checks[table]

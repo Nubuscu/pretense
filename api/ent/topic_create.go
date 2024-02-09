@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 
@@ -52,6 +53,12 @@ func (tc *TopicCreate) SetNillableUpdatedAt(t *time.Time) *TopicCreate {
 	return tc
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (tc *TopicCreate) SetMetaLabels(s []string) *TopicCreate {
+	tc.mutation.SetMetaLabels(s)
+	return tc
+}
+
 // SetName sets the "name" field.
 func (tc *TopicCreate) SetName(s string) *TopicCreate {
 	tc.mutation.SetName(s)
@@ -86,6 +93,21 @@ func (tc *TopicCreate) AddIncludes(a ...*Album) *TopicCreate {
 		ids[i] = a[i].ID
 	}
 	return tc.AddIncludeIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (tc *TopicCreate) AddTaggedWithIDs(ids ...int) *TopicCreate {
+	tc.mutation.AddTaggedWithIDs(ids...)
+	return tc
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (tc *TopicCreate) AddTaggedWith(t ...*Tag) *TopicCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tc.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the TopicMutation object of the builder.
@@ -173,6 +195,10 @@ func (tc *TopicCreate) defaults() {
 		v := topic.DefaultUpdatedAt()
 		tc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := tc.mutation.MetaLabels(); !ok {
+		v := topic.DefaultMetaLabels
+		tc.mutation.SetMetaLabels(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -182,6 +208,9 @@ func (tc *TopicCreate) check() error {
 	}
 	if _, ok := tc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Topic.updated_at"`)}
+	}
+	if _, ok := tc.mutation.MetaLabels(); !ok {
+		return &ValidationError{Name: "meta_labels", err: errors.New(`ent: missing required field "Topic.meta_labels"`)}
 	}
 	if _, ok := tc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Topic.name"`)}
@@ -222,6 +251,10 @@ func (tc *TopicCreate) createSpec() (*Topic, *sqlgraph.CreateSpec) {
 		_spec.SetField(topic.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := tc.mutation.MetaLabels(); ok {
+		_spec.SetField(topic.FieldMetaLabels, field.TypeJSON, value)
+		_node.MetaLabels = value
+	}
 	if value, ok := tc.mutation.Name(); ok {
 		_spec.SetField(topic.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -256,6 +289,25 @@ func (tc *TopicCreate) createSpec() (*Topic, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: album.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tc.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   topic.TaggedWithTable,
+			Columns: topic.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}
@@ -328,6 +380,18 @@ func (u *TopicUpsert) UpdateUpdatedAt() *TopicUpsert {
 	return u
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (u *TopicUpsert) SetMetaLabels(v []string) *TopicUpsert {
+	u.Set(topic.FieldMetaLabels, v)
+	return u
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *TopicUpsert) UpdateMetaLabels() *TopicUpsert {
+	u.SetExcluded(topic.FieldMetaLabels)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *TopicUpsert) SetName(v string) *TopicUpsert {
 	u.Set(topic.FieldName, v)
@@ -396,6 +460,20 @@ func (u *TopicUpsertOne) SetUpdatedAt(v time.Time) *TopicUpsertOne {
 func (u *TopicUpsertOne) UpdateUpdatedAt() *TopicUpsertOne {
 	return u.Update(func(s *TopicUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (u *TopicUpsertOne) SetMetaLabels(v []string) *TopicUpsertOne {
+	return u.Update(func(s *TopicUpsert) {
+		s.SetMetaLabels(v)
+	})
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *TopicUpsertOne) UpdateMetaLabels() *TopicUpsertOne {
+	return u.Update(func(s *TopicUpsert) {
+		s.UpdateMetaLabels()
 	})
 }
 
@@ -631,6 +709,20 @@ func (u *TopicUpsertBulk) SetUpdatedAt(v time.Time) *TopicUpsertBulk {
 func (u *TopicUpsertBulk) UpdateUpdatedAt() *TopicUpsertBulk {
 	return u.Update(func(s *TopicUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (u *TopicUpsertBulk) SetMetaLabels(v []string) *TopicUpsertBulk {
+	return u.Update(func(s *TopicUpsert) {
+		s.SetMetaLabels(v)
+	})
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *TopicUpsertBulk) UpdateMetaLabels() *TopicUpsertBulk {
+	return u.Update(func(s *TopicUpsert) {
+		s.UpdateMetaLabels()
 	})
 }
 

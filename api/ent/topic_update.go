@@ -9,11 +9,13 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/predicate"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -33,6 +35,18 @@ func (tu *TopicUpdate) Where(ps ...predicate.Topic) *TopicUpdate {
 // SetUpdatedAt sets the "updated_at" field.
 func (tu *TopicUpdate) SetUpdatedAt(t time.Time) *TopicUpdate {
 	tu.mutation.SetUpdatedAt(t)
+	return tu
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (tu *TopicUpdate) SetMetaLabels(s []string) *TopicUpdate {
+	tu.mutation.SetMetaLabels(s)
+	return tu
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (tu *TopicUpdate) AppendMetaLabels(s []string) *TopicUpdate {
+	tu.mutation.AppendMetaLabels(s)
 	return tu
 }
 
@@ -70,6 +84,21 @@ func (tu *TopicUpdate) AddIncludes(a ...*Album) *TopicUpdate {
 		ids[i] = a[i].ID
 	}
 	return tu.AddIncludeIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (tu *TopicUpdate) AddTaggedWithIDs(ids ...int) *TopicUpdate {
+	tu.mutation.AddTaggedWithIDs(ids...)
+	return tu
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (tu *TopicUpdate) AddTaggedWith(t ...*Tag) *TopicUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the TopicMutation object of the builder.
@@ -117,6 +146,27 @@ func (tu *TopicUpdate) RemoveIncludes(a ...*Album) *TopicUpdate {
 		ids[i] = a[i].ID
 	}
 	return tu.RemoveIncludeIDs(ids...)
+}
+
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (tu *TopicUpdate) ClearTaggedWith() *TopicUpdate {
+	tu.mutation.ClearTaggedWith()
+	return tu
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (tu *TopicUpdate) RemoveTaggedWithIDs(ids ...int) *TopicUpdate {
+	tu.mutation.RemoveTaggedWithIDs(ids...)
+	return tu
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (tu *TopicUpdate) RemoveTaggedWith(t ...*Tag) *TopicUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tu.RemoveTaggedWithIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -202,6 +252,14 @@ func (tu *TopicUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := tu.mutation.UpdatedAt(); ok {
 		_spec.SetField(topic.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := tu.mutation.MetaLabels(); ok {
+		_spec.SetField(topic.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := tu.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, topic.FieldMetaLabels, value)
+		})
 	}
 	if value, ok := tu.mutation.Name(); ok {
 		_spec.SetField(topic.FieldName, field.TypeString, value)
@@ -314,6 +372,60 @@ func (tu *TopicUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tu.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   topic.TaggedWithTable,
+			Columns: topic.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !tu.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   topic.TaggedWithTable,
+			Columns: topic.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tu.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   topic.TaggedWithTable,
+			Columns: topic.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{topic.Label}
@@ -336,6 +448,18 @@ type TopicUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (tuo *TopicUpdateOne) SetUpdatedAt(t time.Time) *TopicUpdateOne {
 	tuo.mutation.SetUpdatedAt(t)
+	return tuo
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (tuo *TopicUpdateOne) SetMetaLabels(s []string) *TopicUpdateOne {
+	tuo.mutation.SetMetaLabels(s)
+	return tuo
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (tuo *TopicUpdateOne) AppendMetaLabels(s []string) *TopicUpdateOne {
+	tuo.mutation.AppendMetaLabels(s)
 	return tuo
 }
 
@@ -373,6 +497,21 @@ func (tuo *TopicUpdateOne) AddIncludes(a ...*Album) *TopicUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return tuo.AddIncludeIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (tuo *TopicUpdateOne) AddTaggedWithIDs(ids ...int) *TopicUpdateOne {
+	tuo.mutation.AddTaggedWithIDs(ids...)
+	return tuo
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (tuo *TopicUpdateOne) AddTaggedWith(t ...*Tag) *TopicUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the TopicMutation object of the builder.
@@ -420,6 +559,27 @@ func (tuo *TopicUpdateOne) RemoveIncludes(a ...*Album) *TopicUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return tuo.RemoveIncludeIDs(ids...)
+}
+
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (tuo *TopicUpdateOne) ClearTaggedWith() *TopicUpdateOne {
+	tuo.mutation.ClearTaggedWith()
+	return tuo
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (tuo *TopicUpdateOne) RemoveTaggedWithIDs(ids ...int) *TopicUpdateOne {
+	tuo.mutation.RemoveTaggedWithIDs(ids...)
+	return tuo
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (tuo *TopicUpdateOne) RemoveTaggedWith(t ...*Tag) *TopicUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return tuo.RemoveTaggedWithIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -536,6 +696,14 @@ func (tuo *TopicUpdateOne) sqlSave(ctx context.Context) (_node *Topic, err error
 	if value, ok := tuo.mutation.UpdatedAt(); ok {
 		_spec.SetField(topic.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := tuo.mutation.MetaLabels(); ok {
+		_spec.SetField(topic.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := tuo.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, topic.FieldMetaLabels, value)
+		})
+	}
 	if value, ok := tuo.mutation.Name(); ok {
 		_spec.SetField(topic.FieldName, field.TypeString, value)
 	}
@@ -639,6 +807,60 @@ func (tuo *TopicUpdateOne) sqlSave(ctx context.Context) (_node *Topic, err error
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: album.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tuo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   topic.TaggedWithTable,
+			Columns: topic.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !tuo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   topic.TaggedWithTable,
+			Columns: topic.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tuo.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   topic.TaggedWithTable,
+			Columns: topic.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

@@ -4,7 +4,7 @@ ALBUMS = [
     "Wasting Light",
     "The Triptych",
     "Constellations",
-    "thegodmachine",
+    "Thegodmachine",
     "Slave to Nothing",
     "Welcome To The Masquerade",
 ]

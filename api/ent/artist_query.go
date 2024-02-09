@@ -10,6 +10,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
+	"nubuscu/pretense/ent/tag"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -19,16 +20,18 @@ import (
 // ArtistQuery is the builder for querying Artist entities.
 type ArtistQuery struct {
 	config
-	limit          *int
-	offset         *int
-	unique         *bool
-	order          []OrderFunc
-	fields         []string
-	predicates     []predicate.Artist
-	withWrote      *AlbumQuery
-	modifiers      []func(*sql.Selector)
-	loadTotal      []func(context.Context, []*Artist) error
-	withNamedWrote map[string]*AlbumQuery
+	limit               *int
+	offset              *int
+	unique              *bool
+	order               []OrderFunc
+	fields              []string
+	predicates          []predicate.Artist
+	withWrote           *AlbumQuery
+	withTaggedWith      *TagQuery
+	modifiers           []func(*sql.Selector)
+	loadTotal           []func(context.Context, []*Artist) error
+	withNamedWrote      map[string]*AlbumQuery
+	withNamedTaggedWith map[string]*TagQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -80,6 +83,28 @@ func (aq *ArtistQuery) QueryWrote() *AlbumQuery {
 			sqlgraph.From(artist.Table, artist.FieldID, selector),
 			sqlgraph.To(album.Table, album.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, artist.WroteTable, artist.WrotePrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTaggedWith chains the current query on the "tagged_with" edge.
+func (aq *ArtistQuery) QueryTaggedWith() *TagQuery {
+	query := &TagQuery{config: aq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(artist.Table, artist.FieldID, selector),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, artist.TaggedWithTable, artist.TaggedWithPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -263,12 +288,13 @@ func (aq *ArtistQuery) Clone() *ArtistQuery {
 		return nil
 	}
 	return &ArtistQuery{
-		config:     aq.config,
-		limit:      aq.limit,
-		offset:     aq.offset,
-		order:      append([]OrderFunc{}, aq.order...),
-		predicates: append([]predicate.Artist{}, aq.predicates...),
-		withWrote:  aq.withWrote.Clone(),
+		config:         aq.config,
+		limit:          aq.limit,
+		offset:         aq.offset,
+		order:          append([]OrderFunc{}, aq.order...),
+		predicates:     append([]predicate.Artist{}, aq.predicates...),
+		withWrote:      aq.withWrote.Clone(),
+		withTaggedWith: aq.withTaggedWith.Clone(),
 		// clone intermediate query.
 		sql:    aq.sql.Clone(),
 		path:   aq.path,
@@ -284,6 +310,17 @@ func (aq *ArtistQuery) WithWrote(opts ...func(*AlbumQuery)) *ArtistQuery {
 		opt(query)
 	}
 	aq.withWrote = query
+	return aq
+}
+
+// WithTaggedWith tells the query-builder to eager-load the nodes that are connected to
+// the "tagged_with" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *ArtistQuery) WithTaggedWith(opts ...func(*TagQuery)) *ArtistQuery {
+	query := &TagQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withTaggedWith = query
 	return aq
 }
 
@@ -360,8 +397,9 @@ func (aq *ArtistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Artis
 	var (
 		nodes       = []*Artist{}
 		_spec       = aq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			aq.withWrote != nil,
+			aq.withTaggedWith != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -392,10 +430,24 @@ func (aq *ArtistQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Artis
 			return nil, err
 		}
 	}
+	if query := aq.withTaggedWith; query != nil {
+		if err := aq.loadTaggedWith(ctx, query, nodes,
+			func(n *Artist) { n.Edges.TaggedWith = []*Tag{} },
+			func(n *Artist, e *Tag) { n.Edges.TaggedWith = append(n.Edges.TaggedWith, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range aq.withNamedWrote {
 		if err := aq.loadWrote(ctx, query, nodes,
 			func(n *Artist) { n.appendNamedWrote(name) },
 			func(n *Artist, e *Album) { n.appendNamedWrote(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range aq.withNamedTaggedWith {
+		if err := aq.loadTaggedWith(ctx, query, nodes,
+			func(n *Artist) { n.appendNamedTaggedWith(name) },
+			func(n *Artist, e *Tag) { n.appendNamedTaggedWith(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -458,6 +510,64 @@ func (aq *ArtistQuery) loadWrote(ctx context.Context, query *AlbumQuery, nodes [
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "wrote" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (aq *ArtistQuery) loadTaggedWith(ctx context.Context, query *TagQuery, nodes []*Artist, init func(*Artist), assign func(*Artist, *Tag)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Artist)
+	nids := make(map[int]map[*Artist]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(artist.TaggedWithTable)
+		s.Join(joinT).On(s.C(tag.FieldID), joinT.C(artist.TaggedWithPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(artist.TaggedWithPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(artist.TaggedWithPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(sql.NullInt64)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := int(values[0].(*sql.NullInt64).Int64)
+			inValue := int(values[1].(*sql.NullInt64).Int64)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Artist]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "tagged_with" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)
@@ -580,6 +690,20 @@ func (aq *ArtistQuery) WithNamedWrote(name string, opts ...func(*AlbumQuery)) *A
 		aq.withNamedWrote = make(map[string]*AlbumQuery)
 	}
 	aq.withNamedWrote[name] = query
+	return aq
+}
+
+// WithNamedTaggedWith tells the query-builder to eager-load the nodes that are connected to the "tagged_with"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (aq *ArtistQuery) WithNamedTaggedWith(name string, opts ...func(*TagQuery)) *ArtistQuery {
+	query := &TagQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	if aq.withNamedTaggedWith == nil {
+		aq.withNamedTaggedWith = make(map[string]*TagQuery)
+	}
+	aq.withNamedTaggedWith[name] = query
 	return aq
 }
 

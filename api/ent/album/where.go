@@ -95,6 +95,13 @@ func UpdatedAt(v time.Time) predicate.Album {
 	})
 }
 
+// SpotifyURL applies equality check predicate on the "spotify_url" field. It's identical to SpotifyURLEQ.
+func SpotifyURL(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSpotifyURL), v))
+	})
+}
+
 // Name applies equality check predicate on the "name" field. It's identical to NameEQ.
 func Name(v string) predicate.Album {
 	return predicate.Album(func(s *sql.Selector) {
@@ -227,6 +234,105 @@ func UpdatedAtLT(v time.Time) predicate.Album {
 func UpdatedAtLTE(v time.Time) predicate.Album {
 	return predicate.Album(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// SpotifyURLEQ applies the EQ predicate on the "spotify_url" field.
+func SpotifyURLEQ(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLNEQ applies the NEQ predicate on the "spotify_url" field.
+func SpotifyURLNEQ(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLIn applies the In predicate on the "spotify_url" field.
+func SpotifyURLIn(vs ...string) predicate.Album {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.In(s.C(FieldSpotifyURL), v...))
+	})
+}
+
+// SpotifyURLNotIn applies the NotIn predicate on the "spotify_url" field.
+func SpotifyURLNotIn(vs ...string) predicate.Album {
+	v := make([]any, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.NotIn(s.C(FieldSpotifyURL), v...))
+	})
+}
+
+// SpotifyURLGT applies the GT predicate on the "spotify_url" field.
+func SpotifyURLGT(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLGTE applies the GTE predicate on the "spotify_url" field.
+func SpotifyURLGTE(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLLT applies the LT predicate on the "spotify_url" field.
+func SpotifyURLLT(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLLTE applies the LTE predicate on the "spotify_url" field.
+func SpotifyURLLTE(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLContains applies the Contains predicate on the "spotify_url" field.
+func SpotifyURLContains(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLHasPrefix applies the HasPrefix predicate on the "spotify_url" field.
+func SpotifyURLHasPrefix(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLHasSuffix applies the HasSuffix predicate on the "spotify_url" field.
+func SpotifyURLHasSuffix(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLEqualFold applies the EqualFold predicate on the "spotify_url" field.
+func SpotifyURLEqualFold(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldSpotifyURL), v))
+	})
+}
+
+// SpotifyURLContainsFold applies the ContainsFold predicate on the "spotify_url" field.
+func SpotifyURLContainsFold(v string) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldSpotifyURL), v))
 	})
 }
 
@@ -376,6 +482,34 @@ func HasIncludedInWith(preds ...predicate.Topic) predicate.Album {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(IncludedInInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, true, IncludedInTable, IncludedInPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTaggedWith applies the HasEdge predicate on the "tagged_with" edge.
+func HasTaggedWith() predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaggedWithTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TaggedWithTable, TaggedWithPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTaggedWithWith applies the HasEdge predicate on the "tagged_with" edge with a given conditions (other predicates).
+func HasTaggedWithWith(preds ...predicate.Tag) predicate.Album {
+	return predicate.Album(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaggedWithInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TaggedWithTable, TaggedWithPrimaryKey...),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

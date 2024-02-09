@@ -32,6 +32,18 @@ func (a *Album) IncludedIn(ctx context.Context) (result []*Topic, err error) {
 	return result, err
 }
 
+func (a *Album) TaggedWith(ctx context.Context) (result []*Tag, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = a.NamedTaggedWith(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = a.Edges.TaggedWithOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = a.QueryTaggedWith().All(ctx)
+	}
+	return result, err
+}
+
 func (a *Artist) Wrote(ctx context.Context) (result []*Album, err error) {
 	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
 		result, err = a.NamedWrote(graphql.GetFieldContext(ctx).Field.Alias)
@@ -44,6 +56,18 @@ func (a *Artist) Wrote(ctx context.Context) (result []*Album, err error) {
 	return result, err
 }
 
+func (a *Artist) TaggedWith(ctx context.Context) (result []*Tag, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = a.NamedTaggedWith(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = a.Edges.TaggedWithOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = a.QueryTaggedWith().All(ctx)
+	}
+	return result, err
+}
+
 func (r *Review) Reviews(ctx context.Context) (result []*Topic, err error) {
 	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
 		result, err = r.NamedReviews(graphql.GetFieldContext(ctx).Field.Alias)
@@ -52,6 +76,66 @@ func (r *Review) Reviews(ctx context.Context) (result []*Topic, err error) {
 	}
 	if IsNotLoaded(err) {
 		result, err = r.QueryReviews().All(ctx)
+	}
+	return result, err
+}
+
+func (r *Review) TaggedWith(ctx context.Context) (result []*Tag, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = r.NamedTaggedWith(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = r.Edges.TaggedWithOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = r.QueryTaggedWith().All(ctx)
+	}
+	return result, err
+}
+
+func (t *Tag) TagsAlbum(ctx context.Context) (result []*Album, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = t.NamedTagsAlbum(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = t.Edges.TagsAlbumOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = t.QueryTagsAlbum().All(ctx)
+	}
+	return result, err
+}
+
+func (t *Tag) TagsArtist(ctx context.Context) (result []*Artist, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = t.NamedTagsArtist(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = t.Edges.TagsArtistOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = t.QueryTagsArtist().All(ctx)
+	}
+	return result, err
+}
+
+func (t *Tag) TagsReview(ctx context.Context) (result []*Review, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = t.NamedTagsReview(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = t.Edges.TagsReviewOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = t.QueryTagsReview().All(ctx)
+	}
+	return result, err
+}
+
+func (t *Tag) TagsTopic(ctx context.Context) (result []*Topic, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = t.NamedTagsTopic(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = t.Edges.TagsTopicOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = t.QueryTagsTopic().All(ctx)
 	}
 	return result, err
 }
@@ -76,6 +160,18 @@ func (t *Topic) Includes(ctx context.Context) (result []*Album, err error) {
 	}
 	if IsNotLoaded(err) {
 		result, err = t.QueryIncludes().All(ctx)
+	}
+	return result, err
+}
+
+func (t *Topic) TaggedWith(ctx context.Context) (result []*Tag, err error) {
+	if fc := graphql.GetFieldContext(ctx); fc != nil && fc.Field.Alias != "" {
+		result, err = t.NamedTaggedWith(graphql.GetFieldContext(ctx).Field.Alias)
+	} else {
+		result, err = t.Edges.TaggedWithOrErr()
+	}
+	if IsNotLoaded(err) {
+		result, err = t.QueryTaggedWith().All(ctx)
 	}
 	return result, err
 }

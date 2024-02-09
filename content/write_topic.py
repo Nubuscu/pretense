@@ -4,6 +4,7 @@ import importlib.util
 import sys
 
 from python_graphql_client import GraphqlClient
+from requests import HTTPError
 
 TOPIC_DIR = os.path.join(os.getcwd(), "topics")
 KNOWN_TOPICS = [f.split(".")[0] for f in os.listdir(TOPIC_DIR) if f.endswith(".py")]
@@ -11,8 +12,8 @@ KNOWN_TOPICS = [f.split(".")[0] for f in os.listdir(TOPIC_DIR) if f.endswith(".p
 CLIENT = GraphqlClient(endpoint="http://localhost:8081/query", verify=False)
 
 MUTATION = """
-mutation createTopicWithReview($topicName: String!, $reviewName: String!, $reviewBody: String!, $albums: [CreateAlbumInput!]!) {
-    createTopicWithReview(topicName: $topicName, reviewName: $reviewName, reviewBody: $reviewBody, albums: $albums) {
+mutation createTopicWithReview($topicName: String!, $reviewName: String!, $reviewBody: String!, $albumNames: [String!]!) {
+    createTopicWithReview(topicName: $topicName, reviewName: $reviewName, reviewBody: $reviewBody, albumNames: $albumNames) {
         id
     }
 }
@@ -46,15 +47,20 @@ def main():
         topic = module.TOPIC
         title = module.TITLE
         body = module.BODY
-        CLIENT.execute(
-            query=MUTATION,
-            variables={
-                "topicName": topic,
-                "reviewName": title,
-                "reviewBody": body,
-                "albums": [{"name": album} for album in albums],
-            },
-        )
+        try:
+            CLIENT.execute(
+                query=MUTATION,
+                variables={
+                    "topicName": topic,
+                    "reviewName": title,
+                    "reviewBody": body,
+                    "albumNames": albums,
+                },
+            )
+        except HTTPError as err:
+            print(err.response.json())
+            breakpoint()
+            raise err
 
 
 if __name__ == "__main__":

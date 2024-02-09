@@ -7,6 +7,7 @@ import (
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/review"
 	"nubuscu/pretense/ent/schema"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 )
@@ -18,6 +19,8 @@ func init() {
 	albumMixin := schema.Album{}.Mixin()
 	albumMixinFields0 := albumMixin[0].Fields()
 	_ = albumMixinFields0
+	albumMixinFields1 := albumMixin[1].Fields()
+	_ = albumMixinFields1
 	albumFields := schema.Album{}.Fields()
 	_ = albumFields
 	// albumDescCreatedAt is the schema descriptor for created_at field.
@@ -30,6 +33,14 @@ func init() {
 	album.DefaultUpdatedAt = albumDescUpdatedAt.Default.(func() time.Time)
 	// album.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	album.UpdateDefaultUpdatedAt = albumDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// albumDescMetaLabels is the schema descriptor for meta_labels field.
+	albumDescMetaLabels := albumMixinFields0[2].Descriptor()
+	// album.DefaultMetaLabels holds the default value on creation for the meta_labels field.
+	album.DefaultMetaLabels = albumDescMetaLabels.Default.([]string)
+	// albumDescSpotifyURL is the schema descriptor for spotify_url field.
+	albumDescSpotifyURL := albumMixinFields1[0].Descriptor()
+	// album.SpotifyURLValidator is a validator for the "spotify_url" field. It is called by the builders before save.
+	album.SpotifyURLValidator = albumDescSpotifyURL.Validators[0].(func(string) error)
 	// albumDescName is the schema descriptor for name field.
 	albumDescName := albumFields[0].Descriptor()
 	// album.NameValidator is a validator for the "name" field. It is called by the builders before save.
@@ -37,6 +48,8 @@ func init() {
 	artistMixin := schema.Artist{}.Mixin()
 	artistMixinFields0 := artistMixin[0].Fields()
 	_ = artistMixinFields0
+	artistMixinFields1 := artistMixin[1].Fields()
+	_ = artistMixinFields1
 	artistFields := schema.Artist{}.Fields()
 	_ = artistFields
 	// artistDescCreatedAt is the schema descriptor for created_at field.
@@ -49,6 +62,14 @@ func init() {
 	artist.DefaultUpdatedAt = artistDescUpdatedAt.Default.(func() time.Time)
 	// artist.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	artist.UpdateDefaultUpdatedAt = artistDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// artistDescMetaLabels is the schema descriptor for meta_labels field.
+	artistDescMetaLabels := artistMixinFields0[2].Descriptor()
+	// artist.DefaultMetaLabels holds the default value on creation for the meta_labels field.
+	artist.DefaultMetaLabels = artistDescMetaLabels.Default.([]string)
+	// artistDescSpotifyURL is the schema descriptor for spotify_url field.
+	artistDescSpotifyURL := artistMixinFields1[0].Descriptor()
+	// artist.SpotifyURLValidator is a validator for the "spotify_url" field. It is called by the builders before save.
+	artist.SpotifyURLValidator = artistDescSpotifyURL.Validators[0].(func(string) error)
 	reviewMixin := schema.Review{}.Mixin()
 	reviewMixinFields0 := reviewMixin[0].Fields()
 	_ = reviewMixinFields0
@@ -64,6 +85,10 @@ func init() {
 	review.DefaultUpdatedAt = reviewDescUpdatedAt.Default.(func() time.Time)
 	// review.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	review.UpdateDefaultUpdatedAt = reviewDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// reviewDescMetaLabels is the schema descriptor for meta_labels field.
+	reviewDescMetaLabels := reviewMixinFields0[2].Descriptor()
+	// review.DefaultMetaLabels holds the default value on creation for the meta_labels field.
+	review.DefaultMetaLabels = reviewDescMetaLabels.Default.([]string)
 	// reviewDescName is the schema descriptor for name field.
 	reviewDescName := reviewFields[0].Descriptor()
 	// review.NameValidator is a validator for the "name" field. It is called by the builders before save.
@@ -72,6 +97,16 @@ func init() {
 	reviewDescBody := reviewFields[1].Descriptor()
 	// review.BodyValidator is a validator for the "body" field. It is called by the builders before save.
 	review.BodyValidator = reviewDescBody.Validators[0].(func(string) error)
+	tagFields := schema.Tag{}.Fields()
+	_ = tagFields
+	// tagDescKey is the schema descriptor for key field.
+	tagDescKey := tagFields[0].Descriptor()
+	// tag.KeyValidator is a validator for the "key" field. It is called by the builders before save.
+	tag.KeyValidator = tagDescKey.Validators[0].(func(string) error)
+	// tagDescValue is the schema descriptor for value field.
+	tagDescValue := tagFields[1].Descriptor()
+	// tag.ValueValidator is a validator for the "value" field. It is called by the builders before save.
+	tag.ValueValidator = tagDescValue.Validators[0].(func(string) error)
 	topicMixin := schema.Topic{}.Mixin()
 	topicMixinFields0 := topicMixin[0].Fields()
 	_ = topicMixinFields0
@@ -87,4 +122,8 @@ func init() {
 	topic.DefaultUpdatedAt = topicDescUpdatedAt.Default.(func() time.Time)
 	// topic.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	topic.UpdateDefaultUpdatedAt = topicDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// topicDescMetaLabels is the schema descriptor for meta_labels field.
+	topicDescMetaLabels := topicMixinFields0[2].Descriptor()
+	// topic.DefaultMetaLabels holds the default value on creation for the meta_labels field.
+	topic.DefaultMetaLabels = topicDescMetaLabels.Default.([]string)
 }

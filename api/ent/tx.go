@@ -18,6 +18,8 @@ type Tx struct {
 	Artist *ArtistClient
 	// Review is the client for interacting with the Review builders.
 	Review *ReviewClient
+	// Tag is the client for interacting with the Tag builders.
+	Tag *TagClient
 	// Topic is the client for interacting with the Topic builders.
 	Topic *TopicClient
 
@@ -154,6 +156,7 @@ func (tx *Tx) init() {
 	tx.Album = NewAlbumClient(tx.config)
 	tx.Artist = NewArtistClient(tx.config)
 	tx.Review = NewReviewClient(tx.config)
+	tx.Tag = NewTagClient(tx.config)
 	tx.Topic = NewTopicClient(tx.config)
 }
 

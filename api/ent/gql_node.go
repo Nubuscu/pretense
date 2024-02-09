@@ -9,6 +9,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"sync"
 	"sync/atomic"
@@ -53,8 +54,8 @@ func (a *Album) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     a.ID,
 		Type:   "Album",
-		Fields: make([]*Field, 3),
-		Edges:  make([]*Edge, 2),
+		Fields: make([]*Field, 5),
+		Edges:  make([]*Edge, 3),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(a.CreatedAt); err != nil {
@@ -73,10 +74,26 @@ func (a *Album) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "updated_at",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(a.Name); err != nil {
+	if buf, err = json.Marshal(a.MetaLabels); err != nil {
 		return nil, err
 	}
 	node.Fields[2] = &Field{
+		Type:  "[]string",
+		Name:  "meta_labels",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(a.SpotifyURL); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "string",
+		Name:  "spotify_url",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(a.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
 		Type:  "string",
 		Name:  "name",
 		Value: string(buf),
@@ -101,6 +118,16 @@ func (a *Album) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[2] = &Edge{
+		Type: "Tag",
+		Name: "tagged_with",
+	}
+	err = a.QueryTaggedWith().
+		Select(tag.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -108,8 +135,8 @@ func (a *Artist) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     a.ID,
 		Type:   "Artist",
-		Fields: make([]*Field, 3),
-		Edges:  make([]*Edge, 1),
+		Fields: make([]*Field, 5),
+		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(a.CreatedAt); err != nil {
@@ -128,10 +155,26 @@ func (a *Artist) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "updated_at",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(a.Name); err != nil {
+	if buf, err = json.Marshal(a.MetaLabels); err != nil {
 		return nil, err
 	}
 	node.Fields[2] = &Field{
+		Type:  "[]string",
+		Name:  "meta_labels",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(a.SpotifyURL); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
+		Type:  "string",
+		Name:  "spotify_url",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(a.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[4] = &Field{
 		Type:  "string",
 		Name:  "name",
 		Value: string(buf),
@@ -146,6 +189,16 @@ func (a *Artist) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[1] = &Edge{
+		Type: "Tag",
+		Name: "tagged_with",
+	}
+	err = a.QueryTaggedWith().
+		Select(tag.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -153,8 +206,8 @@ func (r *Review) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     r.ID,
 		Type:   "Review",
-		Fields: make([]*Field, 4),
-		Edges:  make([]*Edge, 1),
+		Fields: make([]*Field, 5),
+		Edges:  make([]*Edge, 2),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(r.CreatedAt); err != nil {
@@ -173,10 +226,18 @@ func (r *Review) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "updated_at",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(r.Name); err != nil {
+	if buf, err = json.Marshal(r.MetaLabels); err != nil {
 		return nil, err
 	}
 	node.Fields[2] = &Field{
+		Type:  "[]string",
+		Name:  "meta_labels",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(r.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
 		Type:  "string",
 		Name:  "name",
 		Value: string(buf),
@@ -184,7 +245,7 @@ func (r *Review) Node(ctx context.Context) (node *Node, err error) {
 	if buf, err = json.Marshal(r.Body); err != nil {
 		return nil, err
 	}
-	node.Fields[3] = &Field{
+	node.Fields[4] = &Field{
 		Type:  "string",
 		Name:  "body",
 		Value: string(buf),
@@ -199,6 +260,83 @@ func (r *Review) Node(ctx context.Context) (node *Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	node.Edges[1] = &Edge{
+		Type: "Tag",
+		Name: "tagged_with",
+	}
+	err = r.QueryTaggedWith().
+		Select(tag.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	return node, nil
+}
+
+func (t *Tag) Node(ctx context.Context) (node *Node, err error) {
+	node = &Node{
+		ID:     t.ID,
+		Type:   "Tag",
+		Fields: make([]*Field, 2),
+		Edges:  make([]*Edge, 4),
+	}
+	var buf []byte
+	if buf, err = json.Marshal(t.Key); err != nil {
+		return nil, err
+	}
+	node.Fields[0] = &Field{
+		Type:  "string",
+		Name:  "key",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(t.Value); err != nil {
+		return nil, err
+	}
+	node.Fields[1] = &Field{
+		Type:  "string",
+		Name:  "value",
+		Value: string(buf),
+	}
+	node.Edges[0] = &Edge{
+		Type: "Album",
+		Name: "tags_album",
+	}
+	err = t.QueryTagsAlbum().
+		Select(album.FieldID).
+		Scan(ctx, &node.Edges[0].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[1] = &Edge{
+		Type: "Artist",
+		Name: "tags_artist",
+	}
+	err = t.QueryTagsArtist().
+		Select(artist.FieldID).
+		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[2] = &Edge{
+		Type: "Review",
+		Name: "tags_review",
+	}
+	err = t.QueryTagsReview().
+		Select(review.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[3] = &Edge{
+		Type: "Topic",
+		Name: "tags_topic",
+	}
+	err = t.QueryTagsTopic().
+		Select(topic.FieldID).
+		Scan(ctx, &node.Edges[3].IDs)
+	if err != nil {
+		return nil, err
+	}
 	return node, nil
 }
 
@@ -206,8 +344,8 @@ func (t *Topic) Node(ctx context.Context) (node *Node, err error) {
 	node = &Node{
 		ID:     t.ID,
 		Type:   "Topic",
-		Fields: make([]*Field, 3),
-		Edges:  make([]*Edge, 2),
+		Fields: make([]*Field, 4),
+		Edges:  make([]*Edge, 3),
 	}
 	var buf []byte
 	if buf, err = json.Marshal(t.CreatedAt); err != nil {
@@ -226,10 +364,18 @@ func (t *Topic) Node(ctx context.Context) (node *Node, err error) {
 		Name:  "updated_at",
 		Value: string(buf),
 	}
-	if buf, err = json.Marshal(t.Name); err != nil {
+	if buf, err = json.Marshal(t.MetaLabels); err != nil {
 		return nil, err
 	}
 	node.Fields[2] = &Field{
+		Type:  "[]string",
+		Name:  "meta_labels",
+		Value: string(buf),
+	}
+	if buf, err = json.Marshal(t.Name); err != nil {
+		return nil, err
+	}
+	node.Fields[3] = &Field{
 		Type:  "string",
 		Name:  "name",
 		Value: string(buf),
@@ -251,6 +397,16 @@ func (t *Topic) Node(ctx context.Context) (node *Node, err error) {
 	err = t.QueryIncludes().
 		Select(album.FieldID).
 		Scan(ctx, &node.Edges[1].IDs)
+	if err != nil {
+		return nil, err
+	}
+	node.Edges[2] = &Edge{
+		Type: "Tag",
+		Name: "tagged_with",
+	}
+	err = t.QueryTaggedWith().
+		Select(tag.FieldID).
+		Scan(ctx, &node.Edges[2].IDs)
 	if err != nil {
 		return nil, err
 	}
@@ -351,6 +507,18 @@ func (c *Client) noder(ctx context.Context, table string, id int) (Noder, error)
 		query := c.Review.Query().
 			Where(review.ID(id))
 		query, err := query.CollectFields(ctx, "Review")
+		if err != nil {
+			return nil, err
+		}
+		n, err := query.Only(ctx)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case tag.Table:
+		query := c.Tag.Query().
+			Where(tag.ID(id))
+		query, err := query.CollectFields(ctx, "Tag")
 		if err != nil {
 			return nil, err
 		}
@@ -480,6 +648,22 @@ func (c *Client) noders(ctx context.Context, table string, ids []int) ([]Noder, 
 		query := c.Review.Query().
 			Where(review.IDIn(ids...))
 		query, err := query.CollectFields(ctx, "Review")
+		if err != nil {
+			return nil, err
+		}
+		nodes, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, node := range nodes {
+			for _, noder := range idmap[node.ID] {
+				*noder = node
+			}
+		}
+	case tag.Table:
+		query := c.Tag.Query().
+			Where(tag.IDIn(ids...))
+		query, err := query.CollectFields(ctx, "Tag")
 		if err != nil {
 			return nil, err
 		}

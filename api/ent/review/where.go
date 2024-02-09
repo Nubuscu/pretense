@@ -463,6 +463,34 @@ func HasReviewsWith(preds ...predicate.Topic) predicate.Review {
 	})
 }
 
+// HasTaggedWith applies the HasEdge predicate on the "tagged_with" edge.
+func HasTaggedWith() predicate.Review {
+	return predicate.Review(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaggedWithTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TaggedWithTable, TaggedWithPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTaggedWithWith applies the HasEdge predicate on the "tagged_with" edge with a given conditions (other predicates).
+func HasTaggedWithWith(preds ...predicate.Tag) predicate.Review {
+	return predicate.Review(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaggedWithInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TaggedWithTable, TaggedWithPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Review) predicate.Review {
 	return predicate.Review(func(s *sql.Selector) {

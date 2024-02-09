@@ -31,8 +31,7 @@ func (Review) Fields() []ent.Field {
 func (Review) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("reviews", Topic.Type),
-		// edge.To("reviews", Album.Type),
-		// edge.To("reviews", Artist.Type),
+		edge.To("tagged_with", Tag.Type),
 	}
 }
 func (Review) Annotations() []schema.Annotation {

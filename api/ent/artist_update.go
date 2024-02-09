@@ -9,10 +9,12 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
+	"nubuscu/pretense/ent/tag"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -35,6 +37,24 @@ func (au *ArtistUpdate) SetUpdatedAt(t time.Time) *ArtistUpdate {
 	return au
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (au *ArtistUpdate) SetMetaLabels(s []string) *ArtistUpdate {
+	au.mutation.SetMetaLabels(s)
+	return au
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (au *ArtistUpdate) AppendMetaLabels(s []string) *ArtistUpdate {
+	au.mutation.AppendMetaLabels(s)
+	return au
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (au *ArtistUpdate) SetSpotifyURL(s string) *ArtistUpdate {
+	au.mutation.SetSpotifyURL(s)
+	return au
+}
+
 // SetName sets the "name" field.
 func (au *ArtistUpdate) SetName(s string) *ArtistUpdate {
 	au.mutation.SetName(s)
@@ -54,6 +74,21 @@ func (au *ArtistUpdate) AddWrote(a ...*Album) *ArtistUpdate {
 		ids[i] = a[i].ID
 	}
 	return au.AddWroteIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (au *ArtistUpdate) AddTaggedWithIDs(ids ...int) *ArtistUpdate {
+	au.mutation.AddTaggedWithIDs(ids...)
+	return au
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (au *ArtistUpdate) AddTaggedWith(t ...*Tag) *ArtistUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the ArtistMutation object of the builder.
@@ -82,6 +117,27 @@ func (au *ArtistUpdate) RemoveWrote(a ...*Album) *ArtistUpdate {
 	return au.RemoveWroteIDs(ids...)
 }
 
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (au *ArtistUpdate) ClearTaggedWith() *ArtistUpdate {
+	au.mutation.ClearTaggedWith()
+	return au
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (au *ArtistUpdate) RemoveTaggedWithIDs(ids ...int) *ArtistUpdate {
+	au.mutation.RemoveTaggedWithIDs(ids...)
+	return au
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (au *ArtistUpdate) RemoveTaggedWith(t ...*Tag) *ArtistUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.RemoveTaggedWithIDs(ids...)
+}
+
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (au *ArtistUpdate) Save(ctx context.Context) (int, error) {
 	var (
@@ -90,12 +146,18 @@ func (au *ArtistUpdate) Save(ctx context.Context) (int, error) {
 	)
 	au.defaults()
 	if len(au.hooks) == 0 {
+		if err = au.check(); err != nil {
+			return 0, err
+		}
 		affected, err = au.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*ArtistMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = au.check(); err != nil {
+				return 0, err
 			}
 			au.mutation = mutation
 			affected, err = au.sqlSave(ctx)
@@ -145,6 +207,16 @@ func (au *ArtistUpdate) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (au *ArtistUpdate) check() error {
+	if v, ok := au.mutation.SpotifyURL(); ok {
+		if err := artist.SpotifyURLValidator(v); err != nil {
+			return &ValidationError{Name: "spotify_url", err: fmt.Errorf(`ent: validator failed for field "Artist.spotify_url": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -165,6 +237,17 @@ func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := au.mutation.UpdatedAt(); ok {
 		_spec.SetField(artist.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := au.mutation.MetaLabels(); ok {
+		_spec.SetField(artist.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := au.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, artist.FieldMetaLabels, value)
+		})
+	}
+	if value, ok := au.mutation.SpotifyURL(); ok {
+		_spec.SetField(artist.FieldSpotifyURL, field.TypeString, value)
 	}
 	if value, ok := au.mutation.Name(); ok {
 		_spec.SetField(artist.FieldName, field.TypeString, value)
@@ -223,6 +306,60 @@ func (au *ArtistUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if au.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   artist.TaggedWithTable,
+			Columns: artist.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !au.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   artist.TaggedWithTable,
+			Columns: artist.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   artist.TaggedWithTable,
+			Columns: artist.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{artist.Label}
@@ -248,6 +385,24 @@ func (auo *ArtistUpdateOne) SetUpdatedAt(t time.Time) *ArtistUpdateOne {
 	return auo
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (auo *ArtistUpdateOne) SetMetaLabels(s []string) *ArtistUpdateOne {
+	auo.mutation.SetMetaLabels(s)
+	return auo
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (auo *ArtistUpdateOne) AppendMetaLabels(s []string) *ArtistUpdateOne {
+	auo.mutation.AppendMetaLabels(s)
+	return auo
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (auo *ArtistUpdateOne) SetSpotifyURL(s string) *ArtistUpdateOne {
+	auo.mutation.SetSpotifyURL(s)
+	return auo
+}
+
 // SetName sets the "name" field.
 func (auo *ArtistUpdateOne) SetName(s string) *ArtistUpdateOne {
 	auo.mutation.SetName(s)
@@ -267,6 +422,21 @@ func (auo *ArtistUpdateOne) AddWrote(a ...*Album) *ArtistUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return auo.AddWroteIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (auo *ArtistUpdateOne) AddTaggedWithIDs(ids ...int) *ArtistUpdateOne {
+	auo.mutation.AddTaggedWithIDs(ids...)
+	return auo
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (auo *ArtistUpdateOne) AddTaggedWith(t ...*Tag) *ArtistUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the ArtistMutation object of the builder.
@@ -295,6 +465,27 @@ func (auo *ArtistUpdateOne) RemoveWrote(a ...*Album) *ArtistUpdateOne {
 	return auo.RemoveWroteIDs(ids...)
 }
 
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (auo *ArtistUpdateOne) ClearTaggedWith() *ArtistUpdateOne {
+	auo.mutation.ClearTaggedWith()
+	return auo
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (auo *ArtistUpdateOne) RemoveTaggedWithIDs(ids ...int) *ArtistUpdateOne {
+	auo.mutation.RemoveTaggedWithIDs(ids...)
+	return auo
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (auo *ArtistUpdateOne) RemoveTaggedWith(t ...*Tag) *ArtistUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.RemoveTaggedWithIDs(ids...)
+}
+
 // Select allows selecting one or more fields (columns) of the returned entity.
 // The default is selecting all fields defined in the entity schema.
 func (auo *ArtistUpdateOne) Select(field string, fields ...string) *ArtistUpdateOne {
@@ -310,12 +501,18 @@ func (auo *ArtistUpdateOne) Save(ctx context.Context) (*Artist, error) {
 	)
 	auo.defaults()
 	if len(auo.hooks) == 0 {
+		if err = auo.check(); err != nil {
+			return nil, err
+		}
 		node, err = auo.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*ArtistMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = auo.check(); err != nil {
+				return nil, err
 			}
 			auo.mutation = mutation
 			node, err = auo.sqlSave(ctx)
@@ -371,6 +568,16 @@ func (auo *ArtistUpdateOne) defaults() {
 	}
 }
 
+// check runs all checks and user-defined validators on the builder.
+func (auo *ArtistUpdateOne) check() error {
+	if v, ok := auo.mutation.SpotifyURL(); ok {
+		if err := artist.SpotifyURLValidator(v); err != nil {
+			return &ValidationError{Name: "spotify_url", err: fmt.Errorf(`ent: validator failed for field "Artist.spotify_url": %w`, err)}
+		}
+	}
+	return nil
+}
+
 func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err error) {
 	_spec := &sqlgraph.UpdateSpec{
 		Node: &sqlgraph.NodeSpec{
@@ -408,6 +615,17 @@ func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err err
 	}
 	if value, ok := auo.mutation.UpdatedAt(); ok {
 		_spec.SetField(artist.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := auo.mutation.MetaLabels(); ok {
+		_spec.SetField(artist.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := auo.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, artist.FieldMetaLabels, value)
+		})
+	}
+	if value, ok := auo.mutation.SpotifyURL(); ok {
+		_spec.SetField(artist.FieldSpotifyURL, field.TypeString, value)
 	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.SetField(artist.FieldName, field.TypeString, value)
@@ -458,6 +676,60 @@ func (auo *ArtistUpdateOne) sqlSave(ctx context.Context) (_node *Artist, err err
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: album.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   artist.TaggedWithTable,
+			Columns: artist.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !auo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   artist.TaggedWithTable,
+			Columns: artist.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   artist.TaggedWithTable,
+			Columns: artist.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

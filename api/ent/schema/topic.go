@@ -31,6 +31,7 @@ func (Topic) Fields() []ent.Field {
 func (Topic) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("includes", Album.Type),
+		edge.To("tagged_with", Tag.Type),
 	}
 }
 

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"nubuscu/pretense/ent/review"
 	"strings"
@@ -20,6 +21,8 @@ type Review struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// MetaLabels holds the value of the "meta_labels" field.
+	MetaLabels []string `json:"meta_labels,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Body holds the value of the "body" field.
@@ -33,13 +36,16 @@ type Review struct {
 type ReviewEdges struct {
 	// Reviews holds the value of the reviews edge.
 	Reviews []*Topic `json:"reviews,omitempty"`
+	// TaggedWith holds the value of the tagged_with edge.
+	TaggedWith []*Tag `json:"tagged_with,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 	// totalCount holds the count of the edges above.
-	totalCount [1]map[string]int
+	totalCount [2]map[string]int
 
-	namedReviews map[string][]*Topic
+	namedReviews    map[string][]*Topic
+	namedTaggedWith map[string][]*Tag
 }
 
 // ReviewsOrErr returns the Reviews value or an error if the edge
@@ -51,11 +57,22 @@ func (e ReviewEdges) ReviewsOrErr() ([]*Topic, error) {
 	return nil, &NotLoadedError{edge: "reviews"}
 }
 
+// TaggedWithOrErr returns the TaggedWith value or an error if the edge
+// was not loaded in eager-loading.
+func (e ReviewEdges) TaggedWithOrErr() ([]*Tag, error) {
+	if e.loadedTypes[1] {
+		return e.TaggedWith, nil
+	}
+	return nil, &NotLoadedError{edge: "tagged_with"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Review) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case review.FieldMetaLabels:
+			values[i] = new([]byte)
 		case review.FieldID:
 			values[i] = new(sql.NullInt64)
 		case review.FieldName, review.FieldBody:
@@ -95,6 +112,14 @@ func (r *Review) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				r.UpdatedAt = value.Time
 			}
+		case review.FieldMetaLabels:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field meta_labels", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &r.MetaLabels); err != nil {
+					return fmt.Errorf("unmarshal field meta_labels: %w", err)
+				}
+			}
 		case review.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -115,6 +140,11 @@ func (r *Review) assignValues(columns []string, values []any) error {
 // QueryReviews queries the "reviews" edge of the Review entity.
 func (r *Review) QueryReviews() *TopicQuery {
 	return (&ReviewClient{config: r.config}).QueryReviews(r)
+}
+
+// QueryTaggedWith queries the "tagged_with" edge of the Review entity.
+func (r *Review) QueryTaggedWith() *TagQuery {
+	return (&ReviewClient{config: r.config}).QueryTaggedWith(r)
 }
 
 // Update returns a builder for updating this Review.
@@ -146,6 +176,9 @@ func (r *Review) String() string {
 	builder.WriteString("updated_at=")
 	builder.WriteString(r.UpdatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
+	builder.WriteString("meta_labels=")
+	builder.WriteString(fmt.Sprintf("%v", r.MetaLabels))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(r.Name)
 	builder.WriteString(", ")
@@ -176,6 +209,30 @@ func (r *Review) appendNamedReviews(name string, edges ...*Topic) {
 		r.Edges.namedReviews[name] = []*Topic{}
 	} else {
 		r.Edges.namedReviews[name] = append(r.Edges.namedReviews[name], edges...)
+	}
+}
+
+// NamedTaggedWith returns the TaggedWith named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (r *Review) NamedTaggedWith(name string) ([]*Tag, error) {
+	if r.Edges.namedTaggedWith == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := r.Edges.namedTaggedWith[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (r *Review) appendNamedTaggedWith(name string, edges ...*Tag) {
+	if r.Edges.namedTaggedWith == nil {
+		r.Edges.namedTaggedWith = make(map[string][]*Tag)
+	}
+	if len(edges) == 0 {
+		r.Edges.namedTaggedWith[name] = []*Tag{}
+	} else {
+		r.Edges.namedTaggedWith[name] = append(r.Edges.namedTaggedWith[name], edges...)
 	}
 }
 

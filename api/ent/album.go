@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"nubuscu/pretense/ent/album"
 	"strings"
@@ -20,6 +21,10 @@ type Album struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// MetaLabels holds the value of the "meta_labels" field.
+	MetaLabels []string `json:"meta_labels,omitempty"`
+	// SpotifyURL holds the value of the "spotify_url" field.
+	SpotifyURL string `json:"spotify_url,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -33,14 +38,17 @@ type AlbumEdges struct {
 	By []*Artist `json:"by,omitempty"`
 	// IncludedIn holds the value of the included_in edge.
 	IncludedIn []*Topic `json:"included_in,omitempty"`
+	// TaggedWith holds the value of the tagged_with edge.
+	TaggedWith []*Tag `json:"tagged_with,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 	// totalCount holds the count of the edges above.
-	totalCount [2]map[string]int
+	totalCount [3]map[string]int
 
 	namedBy         map[string][]*Artist
 	namedIncludedIn map[string][]*Topic
+	namedTaggedWith map[string][]*Tag
 }
 
 // ByOrErr returns the By value or an error if the edge
@@ -61,14 +69,25 @@ func (e AlbumEdges) IncludedInOrErr() ([]*Topic, error) {
 	return nil, &NotLoadedError{edge: "included_in"}
 }
 
+// TaggedWithOrErr returns the TaggedWith value or an error if the edge
+// was not loaded in eager-loading.
+func (e AlbumEdges) TaggedWithOrErr() ([]*Tag, error) {
+	if e.loadedTypes[2] {
+		return e.TaggedWith, nil
+	}
+	return nil, &NotLoadedError{edge: "tagged_with"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Album) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case album.FieldMetaLabels:
+			values[i] = new([]byte)
 		case album.FieldID:
 			values[i] = new(sql.NullInt64)
-		case album.FieldName:
+		case album.FieldSpotifyURL, album.FieldName:
 			values[i] = new(sql.NullString)
 		case album.FieldCreatedAt, album.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -105,6 +124,20 @@ func (a *Album) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				a.UpdatedAt = value.Time
 			}
+		case album.FieldMetaLabels:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field meta_labels", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &a.MetaLabels); err != nil {
+					return fmt.Errorf("unmarshal field meta_labels: %w", err)
+				}
+			}
+		case album.FieldSpotifyURL:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field spotify_url", values[i])
+			} else if value.Valid {
+				a.SpotifyURL = value.String
+			}
 		case album.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -124,6 +157,11 @@ func (a *Album) QueryBy() *ArtistQuery {
 // QueryIncludedIn queries the "included_in" edge of the Album entity.
 func (a *Album) QueryIncludedIn() *TopicQuery {
 	return (&AlbumClient{config: a.config}).QueryIncludedIn(a)
+}
+
+// QueryTaggedWith queries the "tagged_with" edge of the Album entity.
+func (a *Album) QueryTaggedWith() *TagQuery {
+	return (&AlbumClient{config: a.config}).QueryTaggedWith(a)
 }
 
 // Update returns a builder for updating this Album.
@@ -154,6 +192,12 @@ func (a *Album) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(a.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("meta_labels=")
+	builder.WriteString(fmt.Sprintf("%v", a.MetaLabels))
+	builder.WriteString(", ")
+	builder.WriteString("spotify_url=")
+	builder.WriteString(a.SpotifyURL)
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(a.Name)
@@ -206,6 +250,30 @@ func (a *Album) appendNamedIncludedIn(name string, edges ...*Topic) {
 		a.Edges.namedIncludedIn[name] = []*Topic{}
 	} else {
 		a.Edges.namedIncludedIn[name] = append(a.Edges.namedIncludedIn[name], edges...)
+	}
+}
+
+// NamedTaggedWith returns the TaggedWith named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (a *Album) NamedTaggedWith(name string) ([]*Tag, error) {
+	if a.Edges.namedTaggedWith == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := a.Edges.namedTaggedWith[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (a *Album) appendNamedTaggedWith(name string, edges ...*Tag) {
+	if a.Edges.namedTaggedWith == nil {
+		a.Edges.namedTaggedWith = make(map[string][]*Tag)
+	}
+	if len(edges) == 0 {
+		a.Edges.namedTaggedWith[name] = []*Tag{}
+	} else {
+		a.Edges.namedTaggedWith[name] = append(a.Edges.namedTaggedWith[name], edges...)
 	}
 }
 

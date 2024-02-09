@@ -2,6 +2,7 @@
 Gets all liked albums and inserts them, along with their artists
 Intended as a one-off pull but should be safely re-runnable.
 """
+
 import multiprocessing
 import base64
 import hashlib
@@ -32,8 +33,8 @@ URL_FMT = "https://api.spotify.com/v1/me/albums?limit={limit}&offset={offset}&ma
 CLIENT = GraphqlClient(endpoint="http://localhost:8081/query", verify=False)
 
 MUTATION = """
-mutation createAlbumAndArtists($name: String!, $artists: [CreateArtistInput!]!) {
-  createAlbumAndArtists(album: {name: $name}, artists: $artists) {
+mutation createAlbumAndArtists($album: CreateAlbumInput!, $artists: [CreateArtistInput!]!) {
+  createAlbumAndArtists(album: $album, artists: $artists) {
     id
   }
 }
@@ -133,14 +134,30 @@ def login() -> str:
 
 def parse_and_insert(items):
     for item in items:
-        album_name = item.get("album", {}).get("name")
-        raw_artists = item.get("album", {}).get("artists", [])
+        album = item.get("album", {})
+        raw_artists = album.get("artists", [])
         _vars = {
-            "name": filter_album_name(album_name),
-            "artists": [{"name": a.get("name")} for a in raw_artists],
+            "album": {
+                "name": filter_album_name(album.get("name")),
+                "spotifyURL": album.get("external_urls", {}).get(
+                    "spotify", "about:blank"
+                ),
+            },
+            "artists": [
+                {
+                    "name": a.get("name"),
+                    "spotifyURL": a.get("external_urls", {}).get("spotify"),
+                }
+                for a in raw_artists
+            ],
         }
         LOG.info("inserting %s", _vars)
-        CLIENT.execute(query=MUTATION, variables=_vars)
+        try:
+            CLIENT.execute(query=MUTATION, variables=_vars)
+        except requests.HTTPError as err:
+            print(err)
+            breakpoint()
+            raise
 
 
 def filter_album_name(name):

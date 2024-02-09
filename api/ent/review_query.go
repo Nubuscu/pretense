@@ -9,6 +9,7 @@ import (
 	"math"
 	"nubuscu/pretense/ent/predicate"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 
 	"entgo.io/ent/dialect/sql"
@@ -19,16 +20,18 @@ import (
 // ReviewQuery is the builder for querying Review entities.
 type ReviewQuery struct {
 	config
-	limit            *int
-	offset           *int
-	unique           *bool
-	order            []OrderFunc
-	fields           []string
-	predicates       []predicate.Review
-	withReviews      *TopicQuery
-	modifiers        []func(*sql.Selector)
-	loadTotal        []func(context.Context, []*Review) error
-	withNamedReviews map[string]*TopicQuery
+	limit               *int
+	offset              *int
+	unique              *bool
+	order               []OrderFunc
+	fields              []string
+	predicates          []predicate.Review
+	withReviews         *TopicQuery
+	withTaggedWith      *TagQuery
+	modifiers           []func(*sql.Selector)
+	loadTotal           []func(context.Context, []*Review) error
+	withNamedReviews    map[string]*TopicQuery
+	withNamedTaggedWith map[string]*TagQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -80,6 +83,28 @@ func (rq *ReviewQuery) QueryReviews() *TopicQuery {
 			sqlgraph.From(review.Table, review.FieldID, selector),
 			sqlgraph.To(topic.Table, topic.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, review.ReviewsTable, review.ReviewsPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTaggedWith chains the current query on the "tagged_with" edge.
+func (rq *ReviewQuery) QueryTaggedWith() *TagQuery {
+	query := &TagQuery{config: rq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := rq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := rq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(review.Table, review.FieldID, selector),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, review.TaggedWithTable, review.TaggedWithPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(rq.driver.Dialect(), step)
 		return fromU, nil
@@ -263,12 +288,13 @@ func (rq *ReviewQuery) Clone() *ReviewQuery {
 		return nil
 	}
 	return &ReviewQuery{
-		config:      rq.config,
-		limit:       rq.limit,
-		offset:      rq.offset,
-		order:       append([]OrderFunc{}, rq.order...),
-		predicates:  append([]predicate.Review{}, rq.predicates...),
-		withReviews: rq.withReviews.Clone(),
+		config:         rq.config,
+		limit:          rq.limit,
+		offset:         rq.offset,
+		order:          append([]OrderFunc{}, rq.order...),
+		predicates:     append([]predicate.Review{}, rq.predicates...),
+		withReviews:    rq.withReviews.Clone(),
+		withTaggedWith: rq.withTaggedWith.Clone(),
 		// clone intermediate query.
 		sql:    rq.sql.Clone(),
 		path:   rq.path,
@@ -284,6 +310,17 @@ func (rq *ReviewQuery) WithReviews(opts ...func(*TopicQuery)) *ReviewQuery {
 		opt(query)
 	}
 	rq.withReviews = query
+	return rq
+}
+
+// WithTaggedWith tells the query-builder to eager-load the nodes that are connected to
+// the "tagged_with" edge. The optional arguments are used to configure the query builder of the edge.
+func (rq *ReviewQuery) WithTaggedWith(opts ...func(*TagQuery)) *ReviewQuery {
+	query := &TagQuery{config: rq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	rq.withTaggedWith = query
 	return rq
 }
 
@@ -360,8 +397,9 @@ func (rq *ReviewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Revie
 	var (
 		nodes       = []*Review{}
 		_spec       = rq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			rq.withReviews != nil,
+			rq.withTaggedWith != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -392,10 +430,24 @@ func (rq *ReviewQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Revie
 			return nil, err
 		}
 	}
+	if query := rq.withTaggedWith; query != nil {
+		if err := rq.loadTaggedWith(ctx, query, nodes,
+			func(n *Review) { n.Edges.TaggedWith = []*Tag{} },
+			func(n *Review, e *Tag) { n.Edges.TaggedWith = append(n.Edges.TaggedWith, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range rq.withNamedReviews {
 		if err := rq.loadReviews(ctx, query, nodes,
 			func(n *Review) { n.appendNamedReviews(name) },
 			func(n *Review, e *Topic) { n.appendNamedReviews(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range rq.withNamedTaggedWith {
+		if err := rq.loadTaggedWith(ctx, query, nodes,
+			func(n *Review) { n.appendNamedTaggedWith(name) },
+			func(n *Review, e *Tag) { n.appendNamedTaggedWith(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -458,6 +510,64 @@ func (rq *ReviewQuery) loadReviews(ctx context.Context, query *TopicQuery, nodes
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "reviews" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (rq *ReviewQuery) loadTaggedWith(ctx context.Context, query *TagQuery, nodes []*Review, init func(*Review), assign func(*Review, *Tag)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Review)
+	nids := make(map[int]map[*Review]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(review.TaggedWithTable)
+		s.Join(joinT).On(s.C(tag.FieldID), joinT.C(review.TaggedWithPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(review.TaggedWithPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(review.TaggedWithPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(sql.NullInt64)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := int(values[0].(*sql.NullInt64).Int64)
+			inValue := int(values[1].(*sql.NullInt64).Int64)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Review]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "tagged_with" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)
@@ -580,6 +690,20 @@ func (rq *ReviewQuery) WithNamedReviews(name string, opts ...func(*TopicQuery)) 
 		rq.withNamedReviews = make(map[string]*TopicQuery)
 	}
 	rq.withNamedReviews[name] = query
+	return rq
+}
+
+// WithNamedTaggedWith tells the query-builder to eager-load the nodes that are connected to the "tagged_with"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (rq *ReviewQuery) WithNamedTaggedWith(name string, opts ...func(*TagQuery)) *ReviewQuery {
+	query := &TagQuery{config: rq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	if rq.withNamedTaggedWith == nil {
+		rq.withNamedTaggedWith = make(map[string]*TagQuery)
+	}
+	rq.withNamedTaggedWith[name] = query
 	return rq
 }
 

@@ -385,6 +385,34 @@ func HasIncludesWith(preds ...predicate.Album) predicate.Topic {
 	})
 }
 
+// HasTaggedWith applies the HasEdge predicate on the "tagged_with" edge.
+func HasTaggedWith() predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaggedWithTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TaggedWithTable, TaggedWithPrimaryKey...),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTaggedWithWith applies the HasEdge predicate on the "tagged_with" edge with a given conditions (other predicates).
+func HasTaggedWithWith(preds ...predicate.Tag) predicate.Topic {
+	return predicate.Topic(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaggedWithInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, TaggedWithTable, TaggedWithPrimaryKey...),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Topic) predicate.Topic {
 	return predicate.Topic(func(s *sql.Selector) {

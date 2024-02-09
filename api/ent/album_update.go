@@ -9,11 +9,13 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -33,6 +35,24 @@ func (au *AlbumUpdate) Where(ps ...predicate.Album) *AlbumUpdate {
 // SetUpdatedAt sets the "updated_at" field.
 func (au *AlbumUpdate) SetUpdatedAt(t time.Time) *AlbumUpdate {
 	au.mutation.SetUpdatedAt(t)
+	return au
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (au *AlbumUpdate) SetMetaLabels(s []string) *AlbumUpdate {
+	au.mutation.SetMetaLabels(s)
+	return au
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (au *AlbumUpdate) AppendMetaLabels(s []string) *AlbumUpdate {
+	au.mutation.AppendMetaLabels(s)
+	return au
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (au *AlbumUpdate) SetSpotifyURL(s string) *AlbumUpdate {
+	au.mutation.SetSpotifyURL(s)
 	return au
 }
 
@@ -70,6 +90,21 @@ func (au *AlbumUpdate) AddIncludedIn(t ...*Topic) *AlbumUpdate {
 		ids[i] = t[i].ID
 	}
 	return au.AddIncludedInIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (au *AlbumUpdate) AddTaggedWithIDs(ids ...int) *AlbumUpdate {
+	au.mutation.AddTaggedWithIDs(ids...)
+	return au
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (au *AlbumUpdate) AddTaggedWith(t ...*Tag) *AlbumUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the AlbumMutation object of the builder.
@@ -117,6 +152,27 @@ func (au *AlbumUpdate) RemoveIncludedIn(t ...*Topic) *AlbumUpdate {
 		ids[i] = t[i].ID
 	}
 	return au.RemoveIncludedInIDs(ids...)
+}
+
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (au *AlbumUpdate) ClearTaggedWith() *AlbumUpdate {
+	au.mutation.ClearTaggedWith()
+	return au
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (au *AlbumUpdate) RemoveTaggedWithIDs(ids ...int) *AlbumUpdate {
+	au.mutation.RemoveTaggedWithIDs(ids...)
+	return au
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (au *AlbumUpdate) RemoveTaggedWith(t ...*Tag) *AlbumUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.RemoveTaggedWithIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -190,6 +246,11 @@ func (au *AlbumUpdate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (au *AlbumUpdate) check() error {
+	if v, ok := au.mutation.SpotifyURL(); ok {
+		if err := album.SpotifyURLValidator(v); err != nil {
+			return &ValidationError{Name: "spotify_url", err: fmt.Errorf(`ent: validator failed for field "Album.spotify_url": %w`, err)}
+		}
+	}
 	if v, ok := au.mutation.Name(); ok {
 		if err := album.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Album.name": %w`, err)}
@@ -218,6 +279,17 @@ func (au *AlbumUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := au.mutation.UpdatedAt(); ok {
 		_spec.SetField(album.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := au.mutation.MetaLabels(); ok {
+		_spec.SetField(album.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := au.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, album.FieldMetaLabels, value)
+		})
+	}
+	if value, ok := au.mutation.SpotifyURL(); ok {
+		_spec.SetField(album.FieldSpotifyURL, field.TypeString, value)
 	}
 	if value, ok := au.mutation.Name(); ok {
 		_spec.SetField(album.FieldName, field.TypeString, value)
@@ -330,6 +402,60 @@ func (au *AlbumUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if au.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   album.TaggedWithTable,
+			Columns: album.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !au.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   album.TaggedWithTable,
+			Columns: album.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   album.TaggedWithTable,
+			Columns: album.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{album.Label}
@@ -352,6 +478,24 @@ type AlbumUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (auo *AlbumUpdateOne) SetUpdatedAt(t time.Time) *AlbumUpdateOne {
 	auo.mutation.SetUpdatedAt(t)
+	return auo
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (auo *AlbumUpdateOne) SetMetaLabels(s []string) *AlbumUpdateOne {
+	auo.mutation.SetMetaLabels(s)
+	return auo
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (auo *AlbumUpdateOne) AppendMetaLabels(s []string) *AlbumUpdateOne {
+	auo.mutation.AppendMetaLabels(s)
+	return auo
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (auo *AlbumUpdateOne) SetSpotifyURL(s string) *AlbumUpdateOne {
+	auo.mutation.SetSpotifyURL(s)
 	return auo
 }
 
@@ -389,6 +533,21 @@ func (auo *AlbumUpdateOne) AddIncludedIn(t ...*Topic) *AlbumUpdateOne {
 		ids[i] = t[i].ID
 	}
 	return auo.AddIncludedInIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (auo *AlbumUpdateOne) AddTaggedWithIDs(ids ...int) *AlbumUpdateOne {
+	auo.mutation.AddTaggedWithIDs(ids...)
+	return auo
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (auo *AlbumUpdateOne) AddTaggedWith(t ...*Tag) *AlbumUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the AlbumMutation object of the builder.
@@ -436,6 +595,27 @@ func (auo *AlbumUpdateOne) RemoveIncludedIn(t ...*Topic) *AlbumUpdateOne {
 		ids[i] = t[i].ID
 	}
 	return auo.RemoveIncludedInIDs(ids...)
+}
+
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (auo *AlbumUpdateOne) ClearTaggedWith() *AlbumUpdateOne {
+	auo.mutation.ClearTaggedWith()
+	return auo
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (auo *AlbumUpdateOne) RemoveTaggedWithIDs(ids ...int) *AlbumUpdateOne {
+	auo.mutation.RemoveTaggedWithIDs(ids...)
+	return auo
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (auo *AlbumUpdateOne) RemoveTaggedWith(t ...*Tag) *AlbumUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.RemoveTaggedWithIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -522,6 +702,11 @@ func (auo *AlbumUpdateOne) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (auo *AlbumUpdateOne) check() error {
+	if v, ok := auo.mutation.SpotifyURL(); ok {
+		if err := album.SpotifyURLValidator(v); err != nil {
+			return &ValidationError{Name: "spotify_url", err: fmt.Errorf(`ent: validator failed for field "Album.spotify_url": %w`, err)}
+		}
+	}
 	if v, ok := auo.mutation.Name(); ok {
 		if err := album.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Album.name": %w`, err)}
@@ -567,6 +752,17 @@ func (auo *AlbumUpdateOne) sqlSave(ctx context.Context) (_node *Album, err error
 	}
 	if value, ok := auo.mutation.UpdatedAt(); ok {
 		_spec.SetField(album.FieldUpdatedAt, field.TypeTime, value)
+	}
+	if value, ok := auo.mutation.MetaLabels(); ok {
+		_spec.SetField(album.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := auo.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, album.FieldMetaLabels, value)
+		})
+	}
+	if value, ok := auo.mutation.SpotifyURL(); ok {
+		_spec.SetField(album.FieldSpotifyURL, field.TypeString, value)
 	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.SetField(album.FieldName, field.TypeString, value)
@@ -671,6 +867,60 @@ func (auo *AlbumUpdateOne) sqlSave(ctx context.Context) (_node *Album, err error
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: topic.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   album.TaggedWithTable,
+			Columns: album.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !auo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   album.TaggedWithTable,
+			Columns: album.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   album.TaggedWithTable,
+			Columns: album.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

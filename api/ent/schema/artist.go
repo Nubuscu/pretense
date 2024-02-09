@@ -16,6 +16,7 @@ type Artist struct {
 func (Artist) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		DefaultsMixin{},
+		SpotifyMixin{},
 	}
 }
 
@@ -30,6 +31,7 @@ func (Artist) Fields() []ent.Field {
 func (Artist) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("wrote", Album.Type),
+		edge.To("tagged_with", Tag.Type),
 	}
 }
 

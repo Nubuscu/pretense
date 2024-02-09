@@ -10,6 +10,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/predicate"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 
 	"entgo.io/ent/dialect/sql"
@@ -28,10 +29,12 @@ type TopicQuery struct {
 	predicates          []predicate.Topic
 	withReviewedBy      *ReviewQuery
 	withIncludes        *AlbumQuery
+	withTaggedWith      *TagQuery
 	modifiers           []func(*sql.Selector)
 	loadTotal           []func(context.Context, []*Topic) error
 	withNamedReviewedBy map[string]*ReviewQuery
 	withNamedIncludes   map[string]*AlbumQuery
+	withNamedTaggedWith map[string]*TagQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -105,6 +108,28 @@ func (tq *TopicQuery) QueryIncludes() *AlbumQuery {
 			sqlgraph.From(topic.Table, topic.FieldID, selector),
 			sqlgraph.To(album.Table, album.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, topic.IncludesTable, topic.IncludesPrimaryKey...),
+		)
+		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTaggedWith chains the current query on the "tagged_with" edge.
+func (tq *TopicQuery) QueryTaggedWith() *TagQuery {
+	query := &TagQuery{config: tq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(topic.Table, topic.FieldID, selector),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, topic.TaggedWithTable, topic.TaggedWithPrimaryKey...),
 		)
 		fromU = sqlgraph.SetNeighbors(tq.driver.Dialect(), step)
 		return fromU, nil
@@ -295,6 +320,7 @@ func (tq *TopicQuery) Clone() *TopicQuery {
 		predicates:     append([]predicate.Topic{}, tq.predicates...),
 		withReviewedBy: tq.withReviewedBy.Clone(),
 		withIncludes:   tq.withIncludes.Clone(),
+		withTaggedWith: tq.withTaggedWith.Clone(),
 		// clone intermediate query.
 		sql:    tq.sql.Clone(),
 		path:   tq.path,
@@ -321,6 +347,17 @@ func (tq *TopicQuery) WithIncludes(opts ...func(*AlbumQuery)) *TopicQuery {
 		opt(query)
 	}
 	tq.withIncludes = query
+	return tq
+}
+
+// WithTaggedWith tells the query-builder to eager-load the nodes that are connected to
+// the "tagged_with" edge. The optional arguments are used to configure the query builder of the edge.
+func (tq *TopicQuery) WithTaggedWith(opts ...func(*TagQuery)) *TopicQuery {
+	query := &TagQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tq.withTaggedWith = query
 	return tq
 }
 
@@ -397,9 +434,10 @@ func (tq *TopicQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Topic,
 	var (
 		nodes       = []*Topic{}
 		_spec       = tq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			tq.withReviewedBy != nil,
 			tq.withIncludes != nil,
+			tq.withTaggedWith != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -437,6 +475,13 @@ func (tq *TopicQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Topic,
 			return nil, err
 		}
 	}
+	if query := tq.withTaggedWith; query != nil {
+		if err := tq.loadTaggedWith(ctx, query, nodes,
+			func(n *Topic) { n.Edges.TaggedWith = []*Tag{} },
+			func(n *Topic, e *Tag) { n.Edges.TaggedWith = append(n.Edges.TaggedWith, e) }); err != nil {
+			return nil, err
+		}
+	}
 	for name, query := range tq.withNamedReviewedBy {
 		if err := tq.loadReviewedBy(ctx, query, nodes,
 			func(n *Topic) { n.appendNamedReviewedBy(name) },
@@ -448,6 +493,13 @@ func (tq *TopicQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Topic,
 		if err := tq.loadIncludes(ctx, query, nodes,
 			func(n *Topic) { n.appendNamedIncludes(name) },
 			func(n *Topic, e *Album) { n.appendNamedIncludes(name, e) }); err != nil {
+			return nil, err
+		}
+	}
+	for name, query := range tq.withNamedTaggedWith {
+		if err := tq.loadTaggedWith(ctx, query, nodes,
+			func(n *Topic) { n.appendNamedTaggedWith(name) },
+			func(n *Topic, e *Tag) { n.appendNamedTaggedWith(name, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -568,6 +620,64 @@ func (tq *TopicQuery) loadIncludes(ctx context.Context, query *AlbumQuery, nodes
 		nodes, ok := nids[n.ID]
 		if !ok {
 			return fmt.Errorf(`unexpected "includes" node returned %v`, n.ID)
+		}
+		for kn := range nodes {
+			assign(kn, n)
+		}
+	}
+	return nil
+}
+func (tq *TopicQuery) loadTaggedWith(ctx context.Context, query *TagQuery, nodes []*Topic, init func(*Topic), assign func(*Topic, *Tag)) error {
+	edgeIDs := make([]driver.Value, len(nodes))
+	byID := make(map[int]*Topic)
+	nids := make(map[int]map[*Topic]struct{})
+	for i, node := range nodes {
+		edgeIDs[i] = node.ID
+		byID[node.ID] = node
+		if init != nil {
+			init(node)
+		}
+	}
+	query.Where(func(s *sql.Selector) {
+		joinT := sql.Table(topic.TaggedWithTable)
+		s.Join(joinT).On(s.C(tag.FieldID), joinT.C(topic.TaggedWithPrimaryKey[1]))
+		s.Where(sql.InValues(joinT.C(topic.TaggedWithPrimaryKey[0]), edgeIDs...))
+		columns := s.SelectedColumns()
+		s.Select(joinT.C(topic.TaggedWithPrimaryKey[0]))
+		s.AppendSelect(columns...)
+		s.SetDistinct(false)
+	})
+	if err := query.prepareQuery(ctx); err != nil {
+		return err
+	}
+	neighbors, err := query.sqlAll(ctx, func(_ context.Context, spec *sqlgraph.QuerySpec) {
+		assign := spec.Assign
+		values := spec.ScanValues
+		spec.ScanValues = func(columns []string) ([]any, error) {
+			values, err := values(columns[1:])
+			if err != nil {
+				return nil, err
+			}
+			return append([]any{new(sql.NullInt64)}, values...), nil
+		}
+		spec.Assign = func(columns []string, values []any) error {
+			outValue := int(values[0].(*sql.NullInt64).Int64)
+			inValue := int(values[1].(*sql.NullInt64).Int64)
+			if nids[inValue] == nil {
+				nids[inValue] = map[*Topic]struct{}{byID[outValue]: {}}
+				return assign(columns[1:], values[1:])
+			}
+			nids[inValue][byID[outValue]] = struct{}{}
+			return nil
+		}
+	})
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected "tagged_with" node returned %v`, n.ID)
 		}
 		for kn := range nodes {
 			assign(kn, n)
@@ -704,6 +814,20 @@ func (tq *TopicQuery) WithNamedIncludes(name string, opts ...func(*AlbumQuery)) 
 		tq.withNamedIncludes = make(map[string]*AlbumQuery)
 	}
 	tq.withNamedIncludes[name] = query
+	return tq
+}
+
+// WithNamedTaggedWith tells the query-builder to eager-load the nodes that are connected to the "tagged_with"
+// edge with the given name. The optional arguments are used to configure the query builder of the edge.
+func (tq *TopicQuery) WithNamedTaggedWith(name string, opts ...func(*TagQuery)) *TopicQuery {
+	query := &TagQuery{config: tq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	if tq.withNamedTaggedWith == nil {
+		tq.withNamedTaggedWith = make(map[string]*TagQuery)
+	}
+	tq.withNamedTaggedWith[name] = query
 	return tq
 }
 

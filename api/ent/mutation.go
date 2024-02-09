@@ -10,6 +10,7 @@ import (
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"sync"
 	"time"
@@ -29,6 +30,7 @@ const (
 	TypeAlbum  = "Album"
 	TypeArtist = "Artist"
 	TypeReview = "Review"
+	TypeTag    = "Tag"
 	TypeTopic  = "Topic"
 )
 
@@ -40,6 +42,9 @@ type AlbumMutation struct {
 	id                 *int
 	created_at         *time.Time
 	updated_at         *time.Time
+	meta_labels        *[]string
+	appendmeta_labels  []string
+	spotify_url        *string
 	name               *string
 	clearedFields      map[string]struct{}
 	by                 map[int]struct{}
@@ -48,6 +53,9 @@ type AlbumMutation struct {
 	included_in        map[int]struct{}
 	removedincluded_in map[int]struct{}
 	clearedincluded_in bool
+	tagged_with        map[int]struct{}
+	removedtagged_with map[int]struct{}
+	clearedtagged_with bool
 	done               bool
 	oldValue           func(context.Context) (*Album, error)
 	predicates         []predicate.Album
@@ -223,6 +231,93 @@ func (m *AlbumMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (m *AlbumMutation) SetMetaLabels(s []string) {
+	m.meta_labels = &s
+	m.appendmeta_labels = nil
+}
+
+// MetaLabels returns the value of the "meta_labels" field in the mutation.
+func (m *AlbumMutation) MetaLabels() (r []string, exists bool) {
+	v := m.meta_labels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetaLabels returns the old "meta_labels" field's value of the Album entity.
+// If the Album object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AlbumMutation) OldMetaLabels(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetaLabels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetaLabels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetaLabels: %w", err)
+	}
+	return oldValue.MetaLabels, nil
+}
+
+// AppendMetaLabels adds s to the "meta_labels" field.
+func (m *AlbumMutation) AppendMetaLabels(s []string) {
+	m.appendmeta_labels = append(m.appendmeta_labels, s...)
+}
+
+// AppendedMetaLabels returns the list of values that were appended to the "meta_labels" field in this mutation.
+func (m *AlbumMutation) AppendedMetaLabels() ([]string, bool) {
+	if len(m.appendmeta_labels) == 0 {
+		return nil, false
+	}
+	return m.appendmeta_labels, true
+}
+
+// ResetMetaLabels resets all changes to the "meta_labels" field.
+func (m *AlbumMutation) ResetMetaLabels() {
+	m.meta_labels = nil
+	m.appendmeta_labels = nil
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (m *AlbumMutation) SetSpotifyURL(s string) {
+	m.spotify_url = &s
+}
+
+// SpotifyURL returns the value of the "spotify_url" field in the mutation.
+func (m *AlbumMutation) SpotifyURL() (r string, exists bool) {
+	v := m.spotify_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpotifyURL returns the old "spotify_url" field's value of the Album entity.
+// If the Album object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AlbumMutation) OldSpotifyURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpotifyURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpotifyURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpotifyURL: %w", err)
+	}
+	return oldValue.SpotifyURL, nil
+}
+
+// ResetSpotifyURL resets all changes to the "spotify_url" field.
+func (m *AlbumMutation) ResetSpotifyURL() {
+	m.spotify_url = nil
+}
+
 // SetName sets the "name" field.
 func (m *AlbumMutation) SetName(s string) {
 	m.name = &s
@@ -367,6 +462,60 @@ func (m *AlbumMutation) ResetIncludedIn() {
 	m.removedincluded_in = nil
 }
 
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by ids.
+func (m *AlbumMutation) AddTaggedWithIDs(ids ...int) {
+	if m.tagged_with == nil {
+		m.tagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTaggedWith clears the "tagged_with" edge to the Tag entity.
+func (m *AlbumMutation) ClearTaggedWith() {
+	m.clearedtagged_with = true
+}
+
+// TaggedWithCleared reports if the "tagged_with" edge to the Tag entity was cleared.
+func (m *AlbumMutation) TaggedWithCleared() bool {
+	return m.clearedtagged_with
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to the Tag entity by IDs.
+func (m *AlbumMutation) RemoveTaggedWithIDs(ids ...int) {
+	if m.removedtagged_with == nil {
+		m.removedtagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tagged_with, ids[i])
+		m.removedtagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTaggedWith returns the removed IDs of the "tagged_with" edge to the Tag entity.
+func (m *AlbumMutation) RemovedTaggedWithIDs() (ids []int) {
+	for id := range m.removedtagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TaggedWithIDs returns the "tagged_with" edge IDs in the mutation.
+func (m *AlbumMutation) TaggedWithIDs() (ids []int) {
+	for id := range m.tagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTaggedWith resets all changes to the "tagged_with" edge.
+func (m *AlbumMutation) ResetTaggedWith() {
+	m.tagged_with = nil
+	m.clearedtagged_with = false
+	m.removedtagged_with = nil
+}
+
 // Where appends a list predicates to the AlbumMutation builder.
 func (m *AlbumMutation) Where(ps ...predicate.Album) {
 	m.predicates = append(m.predicates, ps...)
@@ -386,12 +535,18 @@ func (m *AlbumMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AlbumMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, album.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, album.FieldUpdatedAt)
+	}
+	if m.meta_labels != nil {
+		fields = append(fields, album.FieldMetaLabels)
+	}
+	if m.spotify_url != nil {
+		fields = append(fields, album.FieldSpotifyURL)
 	}
 	if m.name != nil {
 		fields = append(fields, album.FieldName)
@@ -408,6 +563,10 @@ func (m *AlbumMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case album.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case album.FieldMetaLabels:
+		return m.MetaLabels()
+	case album.FieldSpotifyURL:
+		return m.SpotifyURL()
 	case album.FieldName:
 		return m.Name()
 	}
@@ -423,6 +582,10 @@ func (m *AlbumMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldCreatedAt(ctx)
 	case album.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case album.FieldMetaLabels:
+		return m.OldMetaLabels(ctx)
+	case album.FieldSpotifyURL:
+		return m.OldSpotifyURL(ctx)
 	case album.FieldName:
 		return m.OldName(ctx)
 	}
@@ -447,6 +610,20 @@ func (m *AlbumMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case album.FieldMetaLabels:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetaLabels(v)
+		return nil
+	case album.FieldSpotifyURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpotifyURL(v)
 		return nil
 	case album.FieldName:
 		v, ok := value.(string)
@@ -510,6 +687,12 @@ func (m *AlbumMutation) ResetField(name string) error {
 	case album.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case album.FieldMetaLabels:
+		m.ResetMetaLabels()
+		return nil
+	case album.FieldSpotifyURL:
+		m.ResetSpotifyURL()
+		return nil
 	case album.FieldName:
 		m.ResetName()
 		return nil
@@ -519,12 +702,15 @@ func (m *AlbumMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AlbumMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.by != nil {
 		edges = append(edges, album.EdgeBy)
 	}
 	if m.included_in != nil {
 		edges = append(edges, album.EdgeIncludedIn)
+	}
+	if m.tagged_with != nil {
+		edges = append(edges, album.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -545,18 +731,27 @@ func (m *AlbumMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case album.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.tagged_with))
+		for id := range m.tagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AlbumMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedby != nil {
 		edges = append(edges, album.EdgeBy)
 	}
 	if m.removedincluded_in != nil {
 		edges = append(edges, album.EdgeIncludedIn)
+	}
+	if m.removedtagged_with != nil {
+		edges = append(edges, album.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -577,18 +772,27 @@ func (m *AlbumMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case album.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.removedtagged_with))
+		for id := range m.removedtagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AlbumMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedby {
 		edges = append(edges, album.EdgeBy)
 	}
 	if m.clearedincluded_in {
 		edges = append(edges, album.EdgeIncludedIn)
+	}
+	if m.clearedtagged_with {
+		edges = append(edges, album.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -601,6 +805,8 @@ func (m *AlbumMutation) EdgeCleared(name string) bool {
 		return m.clearedby
 	case album.EdgeIncludedIn:
 		return m.clearedincluded_in
+	case album.EdgeTaggedWith:
+		return m.clearedtagged_with
 	}
 	return false
 }
@@ -623,6 +829,9 @@ func (m *AlbumMutation) ResetEdge(name string) error {
 	case album.EdgeIncludedIn:
 		m.ResetIncludedIn()
 		return nil
+	case album.EdgeTaggedWith:
+		m.ResetTaggedWith()
+		return nil
 	}
 	return fmt.Errorf("unknown Album edge %s", name)
 }
@@ -630,19 +839,25 @@ func (m *AlbumMutation) ResetEdge(name string) error {
 // ArtistMutation represents an operation that mutates the Artist nodes in the graph.
 type ArtistMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	created_at    *time.Time
-	updated_at    *time.Time
-	name          *string
-	clearedFields map[string]struct{}
-	wrote         map[int]struct{}
-	removedwrote  map[int]struct{}
-	clearedwrote  bool
-	done          bool
-	oldValue      func(context.Context) (*Artist, error)
-	predicates    []predicate.Artist
+	op                 Op
+	typ                string
+	id                 *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	meta_labels        *[]string
+	appendmeta_labels  []string
+	spotify_url        *string
+	name               *string
+	clearedFields      map[string]struct{}
+	wrote              map[int]struct{}
+	removedwrote       map[int]struct{}
+	clearedwrote       bool
+	tagged_with        map[int]struct{}
+	removedtagged_with map[int]struct{}
+	clearedtagged_with bool
+	done               bool
+	oldValue           func(context.Context) (*Artist, error)
+	predicates         []predicate.Artist
 }
 
 var _ ent.Mutation = (*ArtistMutation)(nil)
@@ -815,6 +1030,93 @@ func (m *ArtistMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (m *ArtistMutation) SetMetaLabels(s []string) {
+	m.meta_labels = &s
+	m.appendmeta_labels = nil
+}
+
+// MetaLabels returns the value of the "meta_labels" field in the mutation.
+func (m *ArtistMutation) MetaLabels() (r []string, exists bool) {
+	v := m.meta_labels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetaLabels returns the old "meta_labels" field's value of the Artist entity.
+// If the Artist object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArtistMutation) OldMetaLabels(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetaLabels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetaLabels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetaLabels: %w", err)
+	}
+	return oldValue.MetaLabels, nil
+}
+
+// AppendMetaLabels adds s to the "meta_labels" field.
+func (m *ArtistMutation) AppendMetaLabels(s []string) {
+	m.appendmeta_labels = append(m.appendmeta_labels, s...)
+}
+
+// AppendedMetaLabels returns the list of values that were appended to the "meta_labels" field in this mutation.
+func (m *ArtistMutation) AppendedMetaLabels() ([]string, bool) {
+	if len(m.appendmeta_labels) == 0 {
+		return nil, false
+	}
+	return m.appendmeta_labels, true
+}
+
+// ResetMetaLabels resets all changes to the "meta_labels" field.
+func (m *ArtistMutation) ResetMetaLabels() {
+	m.meta_labels = nil
+	m.appendmeta_labels = nil
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (m *ArtistMutation) SetSpotifyURL(s string) {
+	m.spotify_url = &s
+}
+
+// SpotifyURL returns the value of the "spotify_url" field in the mutation.
+func (m *ArtistMutation) SpotifyURL() (r string, exists bool) {
+	v := m.spotify_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSpotifyURL returns the old "spotify_url" field's value of the Artist entity.
+// If the Artist object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ArtistMutation) OldSpotifyURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSpotifyURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSpotifyURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSpotifyURL: %w", err)
+	}
+	return oldValue.SpotifyURL, nil
+}
+
+// ResetSpotifyURL resets all changes to the "spotify_url" field.
+func (m *ArtistMutation) ResetSpotifyURL() {
+	m.spotify_url = nil
+}
+
 // SetName sets the "name" field.
 func (m *ArtistMutation) SetName(s string) {
 	m.name = &s
@@ -905,6 +1207,60 @@ func (m *ArtistMutation) ResetWrote() {
 	m.removedwrote = nil
 }
 
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by ids.
+func (m *ArtistMutation) AddTaggedWithIDs(ids ...int) {
+	if m.tagged_with == nil {
+		m.tagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTaggedWith clears the "tagged_with" edge to the Tag entity.
+func (m *ArtistMutation) ClearTaggedWith() {
+	m.clearedtagged_with = true
+}
+
+// TaggedWithCleared reports if the "tagged_with" edge to the Tag entity was cleared.
+func (m *ArtistMutation) TaggedWithCleared() bool {
+	return m.clearedtagged_with
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to the Tag entity by IDs.
+func (m *ArtistMutation) RemoveTaggedWithIDs(ids ...int) {
+	if m.removedtagged_with == nil {
+		m.removedtagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tagged_with, ids[i])
+		m.removedtagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTaggedWith returns the removed IDs of the "tagged_with" edge to the Tag entity.
+func (m *ArtistMutation) RemovedTaggedWithIDs() (ids []int) {
+	for id := range m.removedtagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TaggedWithIDs returns the "tagged_with" edge IDs in the mutation.
+func (m *ArtistMutation) TaggedWithIDs() (ids []int) {
+	for id := range m.tagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTaggedWith resets all changes to the "tagged_with" edge.
+func (m *ArtistMutation) ResetTaggedWith() {
+	m.tagged_with = nil
+	m.clearedtagged_with = false
+	m.removedtagged_with = nil
+}
+
 // Where appends a list predicates to the ArtistMutation builder.
 func (m *ArtistMutation) Where(ps ...predicate.Artist) {
 	m.predicates = append(m.predicates, ps...)
@@ -924,12 +1280,18 @@ func (m *ArtistMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ArtistMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, artist.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, artist.FieldUpdatedAt)
+	}
+	if m.meta_labels != nil {
+		fields = append(fields, artist.FieldMetaLabels)
+	}
+	if m.spotify_url != nil {
+		fields = append(fields, artist.FieldSpotifyURL)
 	}
 	if m.name != nil {
 		fields = append(fields, artist.FieldName)
@@ -946,6 +1308,10 @@ func (m *ArtistMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case artist.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case artist.FieldMetaLabels:
+		return m.MetaLabels()
+	case artist.FieldSpotifyURL:
+		return m.SpotifyURL()
 	case artist.FieldName:
 		return m.Name()
 	}
@@ -961,6 +1327,10 @@ func (m *ArtistMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldCreatedAt(ctx)
 	case artist.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case artist.FieldMetaLabels:
+		return m.OldMetaLabels(ctx)
+	case artist.FieldSpotifyURL:
+		return m.OldSpotifyURL(ctx)
 	case artist.FieldName:
 		return m.OldName(ctx)
 	}
@@ -985,6 +1355,20 @@ func (m *ArtistMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case artist.FieldMetaLabels:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetaLabels(v)
+		return nil
+	case artist.FieldSpotifyURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSpotifyURL(v)
 		return nil
 	case artist.FieldName:
 		v, ok := value.(string)
@@ -1048,6 +1432,12 @@ func (m *ArtistMutation) ResetField(name string) error {
 	case artist.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case artist.FieldMetaLabels:
+		m.ResetMetaLabels()
+		return nil
+	case artist.FieldSpotifyURL:
+		m.ResetSpotifyURL()
+		return nil
 	case artist.FieldName:
 		m.ResetName()
 		return nil
@@ -1057,9 +1447,12 @@ func (m *ArtistMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ArtistMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.wrote != nil {
 		edges = append(edges, artist.EdgeWrote)
+	}
+	if m.tagged_with != nil {
+		edges = append(edges, artist.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -1074,15 +1467,24 @@ func (m *ArtistMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case artist.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.tagged_with))
+		for id := range m.tagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ArtistMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedwrote != nil {
 		edges = append(edges, artist.EdgeWrote)
+	}
+	if m.removedtagged_with != nil {
+		edges = append(edges, artist.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -1097,15 +1499,24 @@ func (m *ArtistMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case artist.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.removedtagged_with))
+		for id := range m.removedtagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ArtistMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedwrote {
 		edges = append(edges, artist.EdgeWrote)
+	}
+	if m.clearedtagged_with {
+		edges = append(edges, artist.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -1116,6 +1527,8 @@ func (m *ArtistMutation) EdgeCleared(name string) bool {
 	switch name {
 	case artist.EdgeWrote:
 		return m.clearedwrote
+	case artist.EdgeTaggedWith:
+		return m.clearedtagged_with
 	}
 	return false
 }
@@ -1135,6 +1548,9 @@ func (m *ArtistMutation) ResetEdge(name string) error {
 	case artist.EdgeWrote:
 		m.ResetWrote()
 		return nil
+	case artist.EdgeTaggedWith:
+		m.ResetTaggedWith()
+		return nil
 	}
 	return fmt.Errorf("unknown Artist edge %s", name)
 }
@@ -1142,20 +1558,25 @@ func (m *ArtistMutation) ResetEdge(name string) error {
 // ReviewMutation represents an operation that mutates the Review nodes in the graph.
 type ReviewMutation struct {
 	config
-	op             Op
-	typ            string
-	id             *int
-	created_at     *time.Time
-	updated_at     *time.Time
-	name           *string
-	body           *string
-	clearedFields  map[string]struct{}
-	reviews        map[int]struct{}
-	removedreviews map[int]struct{}
-	clearedreviews bool
-	done           bool
-	oldValue       func(context.Context) (*Review, error)
-	predicates     []predicate.Review
+	op                 Op
+	typ                string
+	id                 *int
+	created_at         *time.Time
+	updated_at         *time.Time
+	meta_labels        *[]string
+	appendmeta_labels  []string
+	name               *string
+	body               *string
+	clearedFields      map[string]struct{}
+	reviews            map[int]struct{}
+	removedreviews     map[int]struct{}
+	clearedreviews     bool
+	tagged_with        map[int]struct{}
+	removedtagged_with map[int]struct{}
+	clearedtagged_with bool
+	done               bool
+	oldValue           func(context.Context) (*Review, error)
+	predicates         []predicate.Review
 }
 
 var _ ent.Mutation = (*ReviewMutation)(nil)
@@ -1328,6 +1749,57 @@ func (m *ReviewMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (m *ReviewMutation) SetMetaLabels(s []string) {
+	m.meta_labels = &s
+	m.appendmeta_labels = nil
+}
+
+// MetaLabels returns the value of the "meta_labels" field in the mutation.
+func (m *ReviewMutation) MetaLabels() (r []string, exists bool) {
+	v := m.meta_labels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetaLabels returns the old "meta_labels" field's value of the Review entity.
+// If the Review object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ReviewMutation) OldMetaLabels(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetaLabels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetaLabels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetaLabels: %w", err)
+	}
+	return oldValue.MetaLabels, nil
+}
+
+// AppendMetaLabels adds s to the "meta_labels" field.
+func (m *ReviewMutation) AppendMetaLabels(s []string) {
+	m.appendmeta_labels = append(m.appendmeta_labels, s...)
+}
+
+// AppendedMetaLabels returns the list of values that were appended to the "meta_labels" field in this mutation.
+func (m *ReviewMutation) AppendedMetaLabels() ([]string, bool) {
+	if len(m.appendmeta_labels) == 0 {
+		return nil, false
+	}
+	return m.appendmeta_labels, true
+}
+
+// ResetMetaLabels resets all changes to the "meta_labels" field.
+func (m *ReviewMutation) ResetMetaLabels() {
+	m.meta_labels = nil
+	m.appendmeta_labels = nil
+}
+
 // SetName sets the "name" field.
 func (m *ReviewMutation) SetName(s string) {
 	m.name = &s
@@ -1454,6 +1926,60 @@ func (m *ReviewMutation) ResetReviews() {
 	m.removedreviews = nil
 }
 
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by ids.
+func (m *ReviewMutation) AddTaggedWithIDs(ids ...int) {
+	if m.tagged_with == nil {
+		m.tagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTaggedWith clears the "tagged_with" edge to the Tag entity.
+func (m *ReviewMutation) ClearTaggedWith() {
+	m.clearedtagged_with = true
+}
+
+// TaggedWithCleared reports if the "tagged_with" edge to the Tag entity was cleared.
+func (m *ReviewMutation) TaggedWithCleared() bool {
+	return m.clearedtagged_with
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to the Tag entity by IDs.
+func (m *ReviewMutation) RemoveTaggedWithIDs(ids ...int) {
+	if m.removedtagged_with == nil {
+		m.removedtagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tagged_with, ids[i])
+		m.removedtagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTaggedWith returns the removed IDs of the "tagged_with" edge to the Tag entity.
+func (m *ReviewMutation) RemovedTaggedWithIDs() (ids []int) {
+	for id := range m.removedtagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TaggedWithIDs returns the "tagged_with" edge IDs in the mutation.
+func (m *ReviewMutation) TaggedWithIDs() (ids []int) {
+	for id := range m.tagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTaggedWith resets all changes to the "tagged_with" edge.
+func (m *ReviewMutation) ResetTaggedWith() {
+	m.tagged_with = nil
+	m.clearedtagged_with = false
+	m.removedtagged_with = nil
+}
+
 // Where appends a list predicates to the ReviewMutation builder.
 func (m *ReviewMutation) Where(ps ...predicate.Review) {
 	m.predicates = append(m.predicates, ps...)
@@ -1473,12 +1999,15 @@ func (m *ReviewMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ReviewMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.created_at != nil {
 		fields = append(fields, review.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, review.FieldUpdatedAt)
+	}
+	if m.meta_labels != nil {
+		fields = append(fields, review.FieldMetaLabels)
 	}
 	if m.name != nil {
 		fields = append(fields, review.FieldName)
@@ -1498,6 +2027,8 @@ func (m *ReviewMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case review.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case review.FieldMetaLabels:
+		return m.MetaLabels()
 	case review.FieldName:
 		return m.Name()
 	case review.FieldBody:
@@ -1515,6 +2046,8 @@ func (m *ReviewMutation) OldField(ctx context.Context, name string) (ent.Value, 
 		return m.OldCreatedAt(ctx)
 	case review.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case review.FieldMetaLabels:
+		return m.OldMetaLabels(ctx)
 	case review.FieldName:
 		return m.OldName(ctx)
 	case review.FieldBody:
@@ -1541,6 +2074,13 @@ func (m *ReviewMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case review.FieldMetaLabels:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetaLabels(v)
 		return nil
 	case review.FieldName:
 		v, ok := value.(string)
@@ -1611,6 +2151,9 @@ func (m *ReviewMutation) ResetField(name string) error {
 	case review.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case review.FieldMetaLabels:
+		m.ResetMetaLabels()
+		return nil
 	case review.FieldName:
 		m.ResetName()
 		return nil
@@ -1623,9 +2166,12 @@ func (m *ReviewMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ReviewMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.reviews != nil {
 		edges = append(edges, review.EdgeReviews)
+	}
+	if m.tagged_with != nil {
+		edges = append(edges, review.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -1640,15 +2186,24 @@ func (m *ReviewMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case review.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.tagged_with))
+		for id := range m.tagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ReviewMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedreviews != nil {
 		edges = append(edges, review.EdgeReviews)
+	}
+	if m.removedtagged_with != nil {
+		edges = append(edges, review.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -1663,15 +2218,24 @@ func (m *ReviewMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case review.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.removedtagged_with))
+		for id := range m.removedtagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ReviewMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedreviews {
 		edges = append(edges, review.EdgeReviews)
+	}
+	if m.clearedtagged_with {
+		edges = append(edges, review.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -1682,6 +2246,8 @@ func (m *ReviewMutation) EdgeCleared(name string) bool {
 	switch name {
 	case review.EdgeReviews:
 		return m.clearedreviews
+	case review.EdgeTaggedWith:
+		return m.clearedtagged_with
 	}
 	return false
 }
@@ -1701,8 +2267,718 @@ func (m *ReviewMutation) ResetEdge(name string) error {
 	case review.EdgeReviews:
 		m.ResetReviews()
 		return nil
+	case review.EdgeTaggedWith:
+		m.ResetTaggedWith()
+		return nil
 	}
 	return fmt.Errorf("unknown Review edge %s", name)
+}
+
+// TagMutation represents an operation that mutates the Tag nodes in the graph.
+type TagMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *int
+	key                *string
+	value              *string
+	clearedFields      map[string]struct{}
+	tags_album         map[int]struct{}
+	removedtags_album  map[int]struct{}
+	clearedtags_album  bool
+	tags_artist        map[int]struct{}
+	removedtags_artist map[int]struct{}
+	clearedtags_artist bool
+	tags_review        map[int]struct{}
+	removedtags_review map[int]struct{}
+	clearedtags_review bool
+	tags_topic         map[int]struct{}
+	removedtags_topic  map[int]struct{}
+	clearedtags_topic  bool
+	done               bool
+	oldValue           func(context.Context) (*Tag, error)
+	predicates         []predicate.Tag
+}
+
+var _ ent.Mutation = (*TagMutation)(nil)
+
+// tagOption allows management of the mutation configuration using functional options.
+type tagOption func(*TagMutation)
+
+// newTagMutation creates new mutation for the Tag entity.
+func newTagMutation(c config, op Op, opts ...tagOption) *TagMutation {
+	m := &TagMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTag,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTagID sets the ID field of the mutation.
+func withTagID(id int) tagOption {
+	return func(m *TagMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Tag
+		)
+		m.oldValue = func(ctx context.Context) (*Tag, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Tag.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTag sets the old Tag of the mutation.
+func withTag(node *Tag) tagOption {
+	return func(m *TagMutation) {
+		m.oldValue = func(context.Context) (*Tag, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TagMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TagMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TagMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TagMutation) IDs(ctx context.Context) ([]int, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []int{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Tag.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetKey sets the "key" field.
+func (m *TagMutation) SetKey(s string) {
+	m.key = &s
+}
+
+// Key returns the value of the "key" field in the mutation.
+func (m *TagMutation) Key() (r string, exists bool) {
+	v := m.key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldKey returns the old "key" field's value of the Tag entity.
+// If the Tag object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TagMutation) OldKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldKey: %w", err)
+	}
+	return oldValue.Key, nil
+}
+
+// ResetKey resets all changes to the "key" field.
+func (m *TagMutation) ResetKey() {
+	m.key = nil
+}
+
+// SetValue sets the "value" field.
+func (m *TagMutation) SetValue(s string) {
+	m.value = &s
+}
+
+// Value returns the value of the "value" field in the mutation.
+func (m *TagMutation) Value() (r string, exists bool) {
+	v := m.value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValue returns the old "value" field's value of the Tag entity.
+// If the Tag object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TagMutation) OldValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
+	}
+	return oldValue.Value, nil
+}
+
+// ResetValue resets all changes to the "value" field.
+func (m *TagMutation) ResetValue() {
+	m.value = nil
+}
+
+// AddTagsAlbumIDs adds the "tags_album" edge to the Album entity by ids.
+func (m *TagMutation) AddTagsAlbumIDs(ids ...int) {
+	if m.tags_album == nil {
+		m.tags_album = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tags_album[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTagsAlbum clears the "tags_album" edge to the Album entity.
+func (m *TagMutation) ClearTagsAlbum() {
+	m.clearedtags_album = true
+}
+
+// TagsAlbumCleared reports if the "tags_album" edge to the Album entity was cleared.
+func (m *TagMutation) TagsAlbumCleared() bool {
+	return m.clearedtags_album
+}
+
+// RemoveTagsAlbumIDs removes the "tags_album" edge to the Album entity by IDs.
+func (m *TagMutation) RemoveTagsAlbumIDs(ids ...int) {
+	if m.removedtags_album == nil {
+		m.removedtags_album = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tags_album, ids[i])
+		m.removedtags_album[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTagsAlbum returns the removed IDs of the "tags_album" edge to the Album entity.
+func (m *TagMutation) RemovedTagsAlbumIDs() (ids []int) {
+	for id := range m.removedtags_album {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsAlbumIDs returns the "tags_album" edge IDs in the mutation.
+func (m *TagMutation) TagsAlbumIDs() (ids []int) {
+	for id := range m.tags_album {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTagsAlbum resets all changes to the "tags_album" edge.
+func (m *TagMutation) ResetTagsAlbum() {
+	m.tags_album = nil
+	m.clearedtags_album = false
+	m.removedtags_album = nil
+}
+
+// AddTagsArtistIDs adds the "tags_artist" edge to the Artist entity by ids.
+func (m *TagMutation) AddTagsArtistIDs(ids ...int) {
+	if m.tags_artist == nil {
+		m.tags_artist = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tags_artist[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTagsArtist clears the "tags_artist" edge to the Artist entity.
+func (m *TagMutation) ClearTagsArtist() {
+	m.clearedtags_artist = true
+}
+
+// TagsArtistCleared reports if the "tags_artist" edge to the Artist entity was cleared.
+func (m *TagMutation) TagsArtistCleared() bool {
+	return m.clearedtags_artist
+}
+
+// RemoveTagsArtistIDs removes the "tags_artist" edge to the Artist entity by IDs.
+func (m *TagMutation) RemoveTagsArtistIDs(ids ...int) {
+	if m.removedtags_artist == nil {
+		m.removedtags_artist = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tags_artist, ids[i])
+		m.removedtags_artist[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTagsArtist returns the removed IDs of the "tags_artist" edge to the Artist entity.
+func (m *TagMutation) RemovedTagsArtistIDs() (ids []int) {
+	for id := range m.removedtags_artist {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsArtistIDs returns the "tags_artist" edge IDs in the mutation.
+func (m *TagMutation) TagsArtistIDs() (ids []int) {
+	for id := range m.tags_artist {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTagsArtist resets all changes to the "tags_artist" edge.
+func (m *TagMutation) ResetTagsArtist() {
+	m.tags_artist = nil
+	m.clearedtags_artist = false
+	m.removedtags_artist = nil
+}
+
+// AddTagsReviewIDs adds the "tags_review" edge to the Review entity by ids.
+func (m *TagMutation) AddTagsReviewIDs(ids ...int) {
+	if m.tags_review == nil {
+		m.tags_review = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tags_review[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTagsReview clears the "tags_review" edge to the Review entity.
+func (m *TagMutation) ClearTagsReview() {
+	m.clearedtags_review = true
+}
+
+// TagsReviewCleared reports if the "tags_review" edge to the Review entity was cleared.
+func (m *TagMutation) TagsReviewCleared() bool {
+	return m.clearedtags_review
+}
+
+// RemoveTagsReviewIDs removes the "tags_review" edge to the Review entity by IDs.
+func (m *TagMutation) RemoveTagsReviewIDs(ids ...int) {
+	if m.removedtags_review == nil {
+		m.removedtags_review = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tags_review, ids[i])
+		m.removedtags_review[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTagsReview returns the removed IDs of the "tags_review" edge to the Review entity.
+func (m *TagMutation) RemovedTagsReviewIDs() (ids []int) {
+	for id := range m.removedtags_review {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsReviewIDs returns the "tags_review" edge IDs in the mutation.
+func (m *TagMutation) TagsReviewIDs() (ids []int) {
+	for id := range m.tags_review {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTagsReview resets all changes to the "tags_review" edge.
+func (m *TagMutation) ResetTagsReview() {
+	m.tags_review = nil
+	m.clearedtags_review = false
+	m.removedtags_review = nil
+}
+
+// AddTagsTopicIDs adds the "tags_topic" edge to the Topic entity by ids.
+func (m *TagMutation) AddTagsTopicIDs(ids ...int) {
+	if m.tags_topic == nil {
+		m.tags_topic = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tags_topic[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTagsTopic clears the "tags_topic" edge to the Topic entity.
+func (m *TagMutation) ClearTagsTopic() {
+	m.clearedtags_topic = true
+}
+
+// TagsTopicCleared reports if the "tags_topic" edge to the Topic entity was cleared.
+func (m *TagMutation) TagsTopicCleared() bool {
+	return m.clearedtags_topic
+}
+
+// RemoveTagsTopicIDs removes the "tags_topic" edge to the Topic entity by IDs.
+func (m *TagMutation) RemoveTagsTopicIDs(ids ...int) {
+	if m.removedtags_topic == nil {
+		m.removedtags_topic = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tags_topic, ids[i])
+		m.removedtags_topic[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTagsTopic returns the removed IDs of the "tags_topic" edge to the Topic entity.
+func (m *TagMutation) RemovedTagsTopicIDs() (ids []int) {
+	for id := range m.removedtags_topic {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TagsTopicIDs returns the "tags_topic" edge IDs in the mutation.
+func (m *TagMutation) TagsTopicIDs() (ids []int) {
+	for id := range m.tags_topic {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTagsTopic resets all changes to the "tags_topic" edge.
+func (m *TagMutation) ResetTagsTopic() {
+	m.tags_topic = nil
+	m.clearedtags_topic = false
+	m.removedtags_topic = nil
+}
+
+// Where appends a list predicates to the TagMutation builder.
+func (m *TagMutation) Where(ps ...predicate.Tag) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *TagMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Tag).
+func (m *TagMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TagMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.key != nil {
+		fields = append(fields, tag.FieldKey)
+	}
+	if m.value != nil {
+		fields = append(fields, tag.FieldValue)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TagMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case tag.FieldKey:
+		return m.Key()
+	case tag.FieldValue:
+		return m.Value()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TagMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case tag.FieldKey:
+		return m.OldKey(ctx)
+	case tag.FieldValue:
+		return m.OldValue(ctx)
+	}
+	return nil, fmt.Errorf("unknown Tag field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TagMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case tag.FieldKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetKey(v)
+		return nil
+	case tag.FieldValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValue(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Tag field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TagMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TagMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TagMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Tag numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TagMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TagMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TagMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Tag nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TagMutation) ResetField(name string) error {
+	switch name {
+	case tag.FieldKey:
+		m.ResetKey()
+		return nil
+	case tag.FieldValue:
+		m.ResetValue()
+		return nil
+	}
+	return fmt.Errorf("unknown Tag field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TagMutation) AddedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.tags_album != nil {
+		edges = append(edges, tag.EdgeTagsAlbum)
+	}
+	if m.tags_artist != nil {
+		edges = append(edges, tag.EdgeTagsArtist)
+	}
+	if m.tags_review != nil {
+		edges = append(edges, tag.EdgeTagsReview)
+	}
+	if m.tags_topic != nil {
+		edges = append(edges, tag.EdgeTagsTopic)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TagMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case tag.EdgeTagsAlbum:
+		ids := make([]ent.Value, 0, len(m.tags_album))
+		for id := range m.tags_album {
+			ids = append(ids, id)
+		}
+		return ids
+	case tag.EdgeTagsArtist:
+		ids := make([]ent.Value, 0, len(m.tags_artist))
+		for id := range m.tags_artist {
+			ids = append(ids, id)
+		}
+		return ids
+	case tag.EdgeTagsReview:
+		ids := make([]ent.Value, 0, len(m.tags_review))
+		for id := range m.tags_review {
+			ids = append(ids, id)
+		}
+		return ids
+	case tag.EdgeTagsTopic:
+		ids := make([]ent.Value, 0, len(m.tags_topic))
+		for id := range m.tags_topic {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TagMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.removedtags_album != nil {
+		edges = append(edges, tag.EdgeTagsAlbum)
+	}
+	if m.removedtags_artist != nil {
+		edges = append(edges, tag.EdgeTagsArtist)
+	}
+	if m.removedtags_review != nil {
+		edges = append(edges, tag.EdgeTagsReview)
+	}
+	if m.removedtags_topic != nil {
+		edges = append(edges, tag.EdgeTagsTopic)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TagMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case tag.EdgeTagsAlbum:
+		ids := make([]ent.Value, 0, len(m.removedtags_album))
+		for id := range m.removedtags_album {
+			ids = append(ids, id)
+		}
+		return ids
+	case tag.EdgeTagsArtist:
+		ids := make([]ent.Value, 0, len(m.removedtags_artist))
+		for id := range m.removedtags_artist {
+			ids = append(ids, id)
+		}
+		return ids
+	case tag.EdgeTagsReview:
+		ids := make([]ent.Value, 0, len(m.removedtags_review))
+		for id := range m.removedtags_review {
+			ids = append(ids, id)
+		}
+		return ids
+	case tag.EdgeTagsTopic:
+		ids := make([]ent.Value, 0, len(m.removedtags_topic))
+		for id := range m.removedtags_topic {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TagMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 4)
+	if m.clearedtags_album {
+		edges = append(edges, tag.EdgeTagsAlbum)
+	}
+	if m.clearedtags_artist {
+		edges = append(edges, tag.EdgeTagsArtist)
+	}
+	if m.clearedtags_review {
+		edges = append(edges, tag.EdgeTagsReview)
+	}
+	if m.clearedtags_topic {
+		edges = append(edges, tag.EdgeTagsTopic)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TagMutation) EdgeCleared(name string) bool {
+	switch name {
+	case tag.EdgeTagsAlbum:
+		return m.clearedtags_album
+	case tag.EdgeTagsArtist:
+		return m.clearedtags_artist
+	case tag.EdgeTagsReview:
+		return m.clearedtags_review
+	case tag.EdgeTagsTopic:
+		return m.clearedtags_topic
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TagMutation) ClearEdge(name string) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Tag unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TagMutation) ResetEdge(name string) error {
+	switch name {
+	case tag.EdgeTagsAlbum:
+		m.ResetTagsAlbum()
+		return nil
+	case tag.EdgeTagsArtist:
+		m.ResetTagsArtist()
+		return nil
+	case tag.EdgeTagsReview:
+		m.ResetTagsReview()
+		return nil
+	case tag.EdgeTagsTopic:
+		m.ResetTagsTopic()
+		return nil
+	}
+	return fmt.Errorf("unknown Tag edge %s", name)
 }
 
 // TopicMutation represents an operation that mutates the Topic nodes in the graph.
@@ -1713,6 +2989,8 @@ type TopicMutation struct {
 	id                 *int
 	created_at         *time.Time
 	updated_at         *time.Time
+	meta_labels        *[]string
+	appendmeta_labels  []string
 	name               *string
 	clearedFields      map[string]struct{}
 	reviewed_by        map[int]struct{}
@@ -1721,6 +2999,9 @@ type TopicMutation struct {
 	includes           map[int]struct{}
 	removedincludes    map[int]struct{}
 	clearedincludes    bool
+	tagged_with        map[int]struct{}
+	removedtagged_with map[int]struct{}
+	clearedtagged_with bool
 	done               bool
 	oldValue           func(context.Context) (*Topic, error)
 	predicates         []predicate.Topic
@@ -1896,6 +3177,57 @@ func (m *TopicMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (m *TopicMutation) SetMetaLabels(s []string) {
+	m.meta_labels = &s
+	m.appendmeta_labels = nil
+}
+
+// MetaLabels returns the value of the "meta_labels" field in the mutation.
+func (m *TopicMutation) MetaLabels() (r []string, exists bool) {
+	v := m.meta_labels
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMetaLabels returns the old "meta_labels" field's value of the Topic entity.
+// If the Topic object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TopicMutation) OldMetaLabels(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMetaLabels is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMetaLabels requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMetaLabels: %w", err)
+	}
+	return oldValue.MetaLabels, nil
+}
+
+// AppendMetaLabels adds s to the "meta_labels" field.
+func (m *TopicMutation) AppendMetaLabels(s []string) {
+	m.appendmeta_labels = append(m.appendmeta_labels, s...)
+}
+
+// AppendedMetaLabels returns the list of values that were appended to the "meta_labels" field in this mutation.
+func (m *TopicMutation) AppendedMetaLabels() ([]string, bool) {
+	if len(m.appendmeta_labels) == 0 {
+		return nil, false
+	}
+	return m.appendmeta_labels, true
+}
+
+// ResetMetaLabels resets all changes to the "meta_labels" field.
+func (m *TopicMutation) ResetMetaLabels() {
+	m.meta_labels = nil
+	m.appendmeta_labels = nil
+}
+
 // SetName sets the "name" field.
 func (m *TopicMutation) SetName(s string) {
 	m.name = &s
@@ -2040,6 +3372,60 @@ func (m *TopicMutation) ResetIncludes() {
 	m.removedincludes = nil
 }
 
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by ids.
+func (m *TopicMutation) AddTaggedWithIDs(ids ...int) {
+	if m.tagged_with == nil {
+		m.tagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.tagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTaggedWith clears the "tagged_with" edge to the Tag entity.
+func (m *TopicMutation) ClearTaggedWith() {
+	m.clearedtagged_with = true
+}
+
+// TaggedWithCleared reports if the "tagged_with" edge to the Tag entity was cleared.
+func (m *TopicMutation) TaggedWithCleared() bool {
+	return m.clearedtagged_with
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to the Tag entity by IDs.
+func (m *TopicMutation) RemoveTaggedWithIDs(ids ...int) {
+	if m.removedtagged_with == nil {
+		m.removedtagged_with = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.tagged_with, ids[i])
+		m.removedtagged_with[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTaggedWith returns the removed IDs of the "tagged_with" edge to the Tag entity.
+func (m *TopicMutation) RemovedTaggedWithIDs() (ids []int) {
+	for id := range m.removedtagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TaggedWithIDs returns the "tagged_with" edge IDs in the mutation.
+func (m *TopicMutation) TaggedWithIDs() (ids []int) {
+	for id := range m.tagged_with {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTaggedWith resets all changes to the "tagged_with" edge.
+func (m *TopicMutation) ResetTaggedWith() {
+	m.tagged_with = nil
+	m.clearedtagged_with = false
+	m.removedtagged_with = nil
+}
+
 // Where appends a list predicates to the TopicMutation builder.
 func (m *TopicMutation) Where(ps ...predicate.Topic) {
 	m.predicates = append(m.predicates, ps...)
@@ -2059,12 +3445,15 @@ func (m *TopicMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TopicMutation) Fields() []string {
-	fields := make([]string, 0, 3)
+	fields := make([]string, 0, 4)
 	if m.created_at != nil {
 		fields = append(fields, topic.FieldCreatedAt)
 	}
 	if m.updated_at != nil {
 		fields = append(fields, topic.FieldUpdatedAt)
+	}
+	if m.meta_labels != nil {
+		fields = append(fields, topic.FieldMetaLabels)
 	}
 	if m.name != nil {
 		fields = append(fields, topic.FieldName)
@@ -2081,6 +3470,8 @@ func (m *TopicMutation) Field(name string) (ent.Value, bool) {
 		return m.CreatedAt()
 	case topic.FieldUpdatedAt:
 		return m.UpdatedAt()
+	case topic.FieldMetaLabels:
+		return m.MetaLabels()
 	case topic.FieldName:
 		return m.Name()
 	}
@@ -2096,6 +3487,8 @@ func (m *TopicMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldCreatedAt(ctx)
 	case topic.FieldUpdatedAt:
 		return m.OldUpdatedAt(ctx)
+	case topic.FieldMetaLabels:
+		return m.OldMetaLabels(ctx)
 	case topic.FieldName:
 		return m.OldName(ctx)
 	}
@@ -2120,6 +3513,13 @@ func (m *TopicMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdatedAt(v)
+		return nil
+	case topic.FieldMetaLabels:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMetaLabels(v)
 		return nil
 	case topic.FieldName:
 		v, ok := value.(string)
@@ -2183,6 +3583,9 @@ func (m *TopicMutation) ResetField(name string) error {
 	case topic.FieldUpdatedAt:
 		m.ResetUpdatedAt()
 		return nil
+	case topic.FieldMetaLabels:
+		m.ResetMetaLabels()
+		return nil
 	case topic.FieldName:
 		m.ResetName()
 		return nil
@@ -2192,12 +3595,15 @@ func (m *TopicMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TopicMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.reviewed_by != nil {
 		edges = append(edges, topic.EdgeReviewedBy)
 	}
 	if m.includes != nil {
 		edges = append(edges, topic.EdgeIncludes)
+	}
+	if m.tagged_with != nil {
+		edges = append(edges, topic.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -2218,18 +3624,27 @@ func (m *TopicMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case topic.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.tagged_with))
+		for id := range m.tagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TopicMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedreviewed_by != nil {
 		edges = append(edges, topic.EdgeReviewedBy)
 	}
 	if m.removedincludes != nil {
 		edges = append(edges, topic.EdgeIncludes)
+	}
+	if m.removedtagged_with != nil {
+		edges = append(edges, topic.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -2250,18 +3665,27 @@ func (m *TopicMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case topic.EdgeTaggedWith:
+		ids := make([]ent.Value, 0, len(m.removedtagged_with))
+		for id := range m.removedtagged_with {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TopicMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.clearedreviewed_by {
 		edges = append(edges, topic.EdgeReviewedBy)
 	}
 	if m.clearedincludes {
 		edges = append(edges, topic.EdgeIncludes)
+	}
+	if m.clearedtagged_with {
+		edges = append(edges, topic.EdgeTaggedWith)
 	}
 	return edges
 }
@@ -2274,6 +3698,8 @@ func (m *TopicMutation) EdgeCleared(name string) bool {
 		return m.clearedreviewed_by
 	case topic.EdgeIncludes:
 		return m.clearedincludes
+	case topic.EdgeTaggedWith:
+		return m.clearedtagged_with
 	}
 	return false
 }
@@ -2295,6 +3721,9 @@ func (m *TopicMutation) ResetEdge(name string) error {
 		return nil
 	case topic.EdgeIncludes:
 		m.ResetIncludes()
+		return nil
+	case topic.EdgeTaggedWith:
+		m.ResetTaggedWith()
 		return nil
 	}
 	return fmt.Errorf("unknown Topic edge %s", name)

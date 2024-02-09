@@ -26,8 +26,10 @@ func (DefaultsMixin) Fields() []ent.Field {
 		field.Time("updated_at").
 			Default(time.Now).
 			UpdateDefault(time.Now),
+		field.Strings("meta_labels").Default([]string{}),
 	}
 }
+
 func (DefaultsMixin) Annotations() []schema.Annotation {
 	return []schema.Annotation{
 		entgql.QueryField(),
@@ -42,5 +44,15 @@ type ReviewableMixin struct {
 func (ReviewableMixin) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("reviewed_by", Review.Type).Ref("reviews"),
+	}
+}
+
+type SpotifyMixin struct {
+	mixin.Schema
+}
+
+func (SpotifyMixin) Fields() []ent.Field {
+	return []ent.Field{
+		field.String("spotify_url").NotEmpty(),
 	}
 }

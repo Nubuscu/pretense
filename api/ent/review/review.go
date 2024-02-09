@@ -15,12 +15,16 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldMetaLabels holds the string denoting the meta_labels field in the database.
+	FieldMetaLabels = "meta_labels"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// FieldBody holds the string denoting the body field in the database.
 	FieldBody = "body"
 	// EdgeReviews holds the string denoting the reviews edge name in mutations.
 	EdgeReviews = "reviews"
+	// EdgeTaggedWith holds the string denoting the tagged_with edge name in mutations.
+	EdgeTaggedWith = "tagged_with"
 	// Table holds the table name of the review in the database.
 	Table = "reviews"
 	// ReviewsTable is the table that holds the reviews relation/edge. The primary key declared below.
@@ -28,6 +32,11 @@ const (
 	// ReviewsInverseTable is the table name for the Topic entity.
 	// It exists in this package in order to avoid circular dependency with the "topic" package.
 	ReviewsInverseTable = "topics"
+	// TaggedWithTable is the table that holds the tagged_with relation/edge. The primary key declared below.
+	TaggedWithTable = "review_tagged_with"
+	// TaggedWithInverseTable is the table name for the Tag entity.
+	// It exists in this package in order to avoid circular dependency with the "tag" package.
+	TaggedWithInverseTable = "tags"
 )
 
 // Columns holds all SQL columns for review fields.
@@ -35,6 +44,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldMetaLabels,
 	FieldName,
 	FieldBody,
 }
@@ -43,6 +53,9 @@ var (
 	// ReviewsPrimaryKey and ReviewsColumn2 are the table columns denoting the
 	// primary key for the reviews relation (M2M).
 	ReviewsPrimaryKey = []string{"review_id", "topic_id"}
+	// TaggedWithPrimaryKey and TaggedWithColumn2 are the table columns denoting the
+	// primary key for the tagged_with relation (M2M).
+	TaggedWithPrimaryKey = []string{"review_id", "tag_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -62,6 +75,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultMetaLabels holds the default value on creation for the "meta_labels" field.
+	DefaultMetaLabels []string
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
 	// BodyValidator is a validator for the "body" field. It is called by the builders before save.

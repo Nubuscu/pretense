@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/predicate"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"entgo.io/ent/dialect/sql/sqljson"
 	"entgo.io/ent/schema/field"
 )
 
@@ -32,6 +34,18 @@ func (ru *ReviewUpdate) Where(ps ...predicate.Review) *ReviewUpdate {
 // SetUpdatedAt sets the "updated_at" field.
 func (ru *ReviewUpdate) SetUpdatedAt(t time.Time) *ReviewUpdate {
 	ru.mutation.SetUpdatedAt(t)
+	return ru
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (ru *ReviewUpdate) SetMetaLabels(s []string) *ReviewUpdate {
+	ru.mutation.SetMetaLabels(s)
+	return ru
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (ru *ReviewUpdate) AppendMetaLabels(s []string) *ReviewUpdate {
+	ru.mutation.AppendMetaLabels(s)
 	return ru
 }
 
@@ -62,6 +76,21 @@ func (ru *ReviewUpdate) AddReviews(t ...*Topic) *ReviewUpdate {
 	return ru.AddReviewIDs(ids...)
 }
 
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (ru *ReviewUpdate) AddTaggedWithIDs(ids ...int) *ReviewUpdate {
+	ru.mutation.AddTaggedWithIDs(ids...)
+	return ru
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (ru *ReviewUpdate) AddTaggedWith(t ...*Tag) *ReviewUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ru.AddTaggedWithIDs(ids...)
+}
+
 // Mutation returns the ReviewMutation object of the builder.
 func (ru *ReviewUpdate) Mutation() *ReviewMutation {
 	return ru.mutation
@@ -86,6 +115,27 @@ func (ru *ReviewUpdate) RemoveReviews(t ...*Topic) *ReviewUpdate {
 		ids[i] = t[i].ID
 	}
 	return ru.RemoveReviewIDs(ids...)
+}
+
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (ru *ReviewUpdate) ClearTaggedWith() *ReviewUpdate {
+	ru.mutation.ClearTaggedWith()
+	return ru
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (ru *ReviewUpdate) RemoveTaggedWithIDs(ids ...int) *ReviewUpdate {
+	ru.mutation.RemoveTaggedWithIDs(ids...)
+	return ru
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (ru *ReviewUpdate) RemoveTaggedWith(t ...*Tag) *ReviewUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ru.RemoveTaggedWithIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -193,6 +243,14 @@ func (ru *ReviewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := ru.mutation.UpdatedAt(); ok {
 		_spec.SetField(review.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ru.mutation.MetaLabels(); ok {
+		_spec.SetField(review.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := ru.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, review.FieldMetaLabels, value)
+		})
+	}
 	if value, ok := ru.mutation.Name(); ok {
 		_spec.SetField(review.FieldName, field.TypeString, value)
 	}
@@ -253,6 +311,60 @@ func (ru *ReviewUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if ru.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   review.TaggedWithTable,
+			Columns: review.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !ru.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   review.TaggedWithTable,
+			Columns: review.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ru.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   review.TaggedWithTable,
+			Columns: review.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{review.Label}
@@ -275,6 +387,18 @@ type ReviewUpdateOne struct {
 // SetUpdatedAt sets the "updated_at" field.
 func (ruo *ReviewUpdateOne) SetUpdatedAt(t time.Time) *ReviewUpdateOne {
 	ruo.mutation.SetUpdatedAt(t)
+	return ruo
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (ruo *ReviewUpdateOne) SetMetaLabels(s []string) *ReviewUpdateOne {
+	ruo.mutation.SetMetaLabels(s)
+	return ruo
+}
+
+// AppendMetaLabels appends s to the "meta_labels" field.
+func (ruo *ReviewUpdateOne) AppendMetaLabels(s []string) *ReviewUpdateOne {
+	ruo.mutation.AppendMetaLabels(s)
 	return ruo
 }
 
@@ -305,6 +429,21 @@ func (ruo *ReviewUpdateOne) AddReviews(t ...*Topic) *ReviewUpdateOne {
 	return ruo.AddReviewIDs(ids...)
 }
 
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (ruo *ReviewUpdateOne) AddTaggedWithIDs(ids ...int) *ReviewUpdateOne {
+	ruo.mutation.AddTaggedWithIDs(ids...)
+	return ruo
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (ruo *ReviewUpdateOne) AddTaggedWith(t ...*Tag) *ReviewUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ruo.AddTaggedWithIDs(ids...)
+}
+
 // Mutation returns the ReviewMutation object of the builder.
 func (ruo *ReviewUpdateOne) Mutation() *ReviewMutation {
 	return ruo.mutation
@@ -329,6 +468,27 @@ func (ruo *ReviewUpdateOne) RemoveReviews(t ...*Topic) *ReviewUpdateOne {
 		ids[i] = t[i].ID
 	}
 	return ruo.RemoveReviewIDs(ids...)
+}
+
+// ClearTaggedWith clears all "tagged_with" edges to the Tag entity.
+func (ruo *ReviewUpdateOne) ClearTaggedWith() *ReviewUpdateOne {
+	ruo.mutation.ClearTaggedWith()
+	return ruo
+}
+
+// RemoveTaggedWithIDs removes the "tagged_with" edge to Tag entities by IDs.
+func (ruo *ReviewUpdateOne) RemoveTaggedWithIDs(ids ...int) *ReviewUpdateOne {
+	ruo.mutation.RemoveTaggedWithIDs(ids...)
+	return ruo
+}
+
+// RemoveTaggedWith removes "tagged_with" edges to Tag entities.
+func (ruo *ReviewUpdateOne) RemoveTaggedWith(t ...*Tag) *ReviewUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ruo.RemoveTaggedWithIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -466,6 +626,14 @@ func (ruo *ReviewUpdateOne) sqlSave(ctx context.Context) (_node *Review, err err
 	if value, ok := ruo.mutation.UpdatedAt(); ok {
 		_spec.SetField(review.FieldUpdatedAt, field.TypeTime, value)
 	}
+	if value, ok := ruo.mutation.MetaLabels(); ok {
+		_spec.SetField(review.FieldMetaLabels, field.TypeJSON, value)
+	}
+	if value, ok := ruo.mutation.AppendedMetaLabels(); ok {
+		_spec.AddModifier(func(u *sql.UpdateBuilder) {
+			sqljson.Append(u, review.FieldMetaLabels, value)
+		})
+	}
 	if value, ok := ruo.mutation.Name(); ok {
 		_spec.SetField(review.FieldName, field.TypeString, value)
 	}
@@ -518,6 +686,60 @@ func (ruo *ReviewUpdateOne) sqlSave(ctx context.Context) (_node *Review, err err
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: topic.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if ruo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   review.TaggedWithTable,
+			Columns: review.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.RemovedTaggedWithIDs(); len(nodes) > 0 && !ruo.mutation.TaggedWithCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   review.TaggedWithTable,
+			Columns: review.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := ruo.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   review.TaggedWithTable,
+			Columns: review.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}

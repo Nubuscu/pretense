@@ -13,6 +13,7 @@ import (
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 
 	"entgo.io/ent/dialect"
@@ -31,6 +32,8 @@ type Client struct {
 	Artist *ArtistClient
 	// Review is the client for interacting with the Review builders.
 	Review *ReviewClient
+	// Tag is the client for interacting with the Tag builders.
+	Tag *TagClient
 	// Topic is the client for interacting with the Topic builders.
 	Topic *TopicClient
 	// additional fields for node api
@@ -51,6 +54,7 @@ func (c *Client) init() {
 	c.Album = NewAlbumClient(c.config)
 	c.Artist = NewArtistClient(c.config)
 	c.Review = NewReviewClient(c.config)
+	c.Tag = NewTagClient(c.config)
 	c.Topic = NewTopicClient(c.config)
 }
 
@@ -88,6 +92,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Album:  NewAlbumClient(cfg),
 		Artist: NewArtistClient(cfg),
 		Review: NewReviewClient(cfg),
+		Tag:    NewTagClient(cfg),
 		Topic:  NewTopicClient(cfg),
 	}, nil
 }
@@ -111,6 +116,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Album:  NewAlbumClient(cfg),
 		Artist: NewArtistClient(cfg),
 		Review: NewReviewClient(cfg),
+		Tag:    NewTagClient(cfg),
 		Topic:  NewTopicClient(cfg),
 	}, nil
 }
@@ -143,6 +149,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Album.Use(hooks...)
 	c.Artist.Use(hooks...)
 	c.Review.Use(hooks...)
+	c.Tag.Use(hooks...)
 	c.Topic.Use(hooks...)
 }
 
@@ -263,6 +270,22 @@ func (c *AlbumClient) QueryIncludedIn(a *Album) *TopicQuery {
 	return query
 }
 
+// QueryTaggedWith queries the tagged_with edge of a Album.
+func (c *AlbumClient) QueryTaggedWith(a *Album) *TagQuery {
+	query := &TagQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(album.Table, album.FieldID, id),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, album.TaggedWithTable, album.TaggedWithPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *AlbumClient) Hooks() []Hook {
 	return c.hooks.Album
@@ -362,6 +385,22 @@ func (c *ArtistClient) QueryWrote(a *Artist) *AlbumQuery {
 			sqlgraph.From(artist.Table, artist.FieldID, id),
 			sqlgraph.To(album.Table, album.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, artist.WroteTable, artist.WrotePrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTaggedWith queries the tagged_with edge of a Artist.
+func (c *ArtistClient) QueryTaggedWith(a *Artist) *TagQuery {
+	query := &TagQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(artist.Table, artist.FieldID, id),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, artist.TaggedWithTable, artist.TaggedWithPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -475,9 +514,179 @@ func (c *ReviewClient) QueryReviews(r *Review) *TopicQuery {
 	return query
 }
 
+// QueryTaggedWith queries the tagged_with edge of a Review.
+func (c *ReviewClient) QueryTaggedWith(r *Review) *TagQuery {
+	query := &TagQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := r.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(review.Table, review.FieldID, id),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, review.TaggedWithTable, review.TaggedWithPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(r.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *ReviewClient) Hooks() []Hook {
 	return c.hooks.Review
+}
+
+// TagClient is a client for the Tag schema.
+type TagClient struct {
+	config
+}
+
+// NewTagClient returns a client for the Tag from the given config.
+func NewTagClient(c config) *TagClient {
+	return &TagClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tag.Hooks(f(g(h())))`.
+func (c *TagClient) Use(hooks ...Hook) {
+	c.hooks.Tag = append(c.hooks.Tag, hooks...)
+}
+
+// Create returns a builder for creating a Tag entity.
+func (c *TagClient) Create() *TagCreate {
+	mutation := newTagMutation(c.config, OpCreate)
+	return &TagCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Tag entities.
+func (c *TagClient) CreateBulk(builders ...*TagCreate) *TagCreateBulk {
+	return &TagCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Tag.
+func (c *TagClient) Update() *TagUpdate {
+	mutation := newTagMutation(c.config, OpUpdate)
+	return &TagUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TagClient) UpdateOne(t *Tag) *TagUpdateOne {
+	mutation := newTagMutation(c.config, OpUpdateOne, withTag(t))
+	return &TagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TagClient) UpdateOneID(id int) *TagUpdateOne {
+	mutation := newTagMutation(c.config, OpUpdateOne, withTagID(id))
+	return &TagUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Tag.
+func (c *TagClient) Delete() *TagDelete {
+	mutation := newTagMutation(c.config, OpDelete)
+	return &TagDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TagClient) DeleteOne(t *Tag) *TagDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TagClient) DeleteOneID(id int) *TagDeleteOne {
+	builder := c.Delete().Where(tag.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TagDeleteOne{builder}
+}
+
+// Query returns a query builder for Tag.
+func (c *TagClient) Query() *TagQuery {
+	return &TagQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Tag entity by its id.
+func (c *TagClient) Get(ctx context.Context, id int) (*Tag, error) {
+	return c.Query().Where(tag.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TagClient) GetX(ctx context.Context, id int) *Tag {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryTagsAlbum queries the tags_album edge of a Tag.
+func (c *TagClient) QueryTagsAlbum(t *Tag) *AlbumQuery {
+	query := &AlbumQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, id),
+			sqlgraph.To(album.Table, album.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.TagsAlbumTable, tag.TagsAlbumPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTagsArtist queries the tags_artist edge of a Tag.
+func (c *TagClient) QueryTagsArtist(t *Tag) *ArtistQuery {
+	query := &ArtistQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, id),
+			sqlgraph.To(artist.Table, artist.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.TagsArtistTable, tag.TagsArtistPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTagsReview queries the tags_review edge of a Tag.
+func (c *TagClient) QueryTagsReview(t *Tag) *ReviewQuery {
+	query := &ReviewQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, id),
+			sqlgraph.To(review.Table, review.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.TagsReviewTable, tag.TagsReviewPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTagsTopic queries the tags_topic edge of a Tag.
+func (c *TagClient) QueryTagsTopic(t *Tag) *TopicQuery {
+	query := &TopicQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tag.Table, tag.FieldID, id),
+			sqlgraph.To(topic.Table, topic.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, true, tag.TagsTopicTable, tag.TagsTopicPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TagClient) Hooks() []Hook {
+	return c.hooks.Tag
 }
 
 // TopicClient is a client for the Topic schema.
@@ -590,6 +799,22 @@ func (c *TopicClient) QueryIncludes(t *Topic) *AlbumQuery {
 			sqlgraph.From(topic.Table, topic.FieldID, id),
 			sqlgraph.To(album.Table, album.FieldID),
 			sqlgraph.Edge(sqlgraph.M2M, false, topic.IncludesTable, topic.IncludesPrimaryKey...),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTaggedWith queries the tagged_with edge of a Topic.
+func (c *TopicClient) QueryTaggedWith(t *Topic) *TagQuery {
+	query := &TagQuery{config: c.config}
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(topic.Table, topic.FieldID, id),
+			sqlgraph.To(tag.Table, tag.FieldID),
+			sqlgraph.Edge(sqlgraph.M2M, false, topic.TaggedWithTable, topic.TaggedWithPrimaryKey...),
 		)
 		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
 		return fromV, nil

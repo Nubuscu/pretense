@@ -49,6 +49,18 @@ func (a *AlbumQuery) collectField(ctx context.Context, op *graphql.OperationCont
 			a.WithNamedIncludedIn(alias, func(wq *TopicQuery) {
 				*wq = *query
 			})
+		case "taggedWith":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &TagQuery{config: a.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			a.WithNamedTaggedWith(alias, func(wq *TagQuery) {
+				*wq = *query
+			})
 		}
 	}
 	return nil
@@ -109,6 +121,18 @@ func (a *ArtistQuery) collectField(ctx context.Context, op *graphql.OperationCon
 				return err
 			}
 			a.WithNamedWrote(alias, func(wq *AlbumQuery) {
+				*wq = *query
+			})
+		case "taggedWith":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &TagQuery{config: a.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			a.WithNamedTaggedWith(alias, func(wq *TagQuery) {
 				*wq = *query
 			})
 		}
@@ -173,6 +197,18 @@ func (r *ReviewQuery) collectField(ctx context.Context, op *graphql.OperationCon
 			r.WithNamedReviews(alias, func(wq *TopicQuery) {
 				*wq = *query
 			})
+		case "taggedWith":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &TagQuery{config: r.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			r.WithNamedTaggedWith(alias, func(wq *TagQuery) {
+				*wq = *query
+			})
 		}
 	}
 	return nil
@@ -203,6 +239,104 @@ func newReviewPaginateArgs(rv map[string]interface{}) *reviewPaginateArgs {
 	}
 	if v, ok := rv[whereField].(*ReviewWhereInput); ok {
 		args.opts = append(args.opts, WithReviewFilter(v.Filter))
+	}
+	return args
+}
+
+// CollectFields tells the query-builder to eagerly load connected nodes by resolver context.
+func (t *TagQuery) CollectFields(ctx context.Context, satisfies ...string) (*TagQuery, error) {
+	fc := graphql.GetFieldContext(ctx)
+	if fc == nil {
+		return t, nil
+	}
+	if err := t.collectField(ctx, graphql.GetOperationContext(ctx), fc.Field, nil, satisfies...); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func (t *TagQuery) collectField(ctx context.Context, op *graphql.OperationContext, field graphql.CollectedField, path []string, satisfies ...string) error {
+	path = append([]string(nil), path...)
+	for _, field := range graphql.CollectFields(op, field.Selections, satisfies) {
+		switch field.Name {
+		case "tagsAlbum":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &AlbumQuery{config: t.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			t.WithNamedTagsAlbum(alias, func(wq *AlbumQuery) {
+				*wq = *query
+			})
+		case "tagsArtist":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &ArtistQuery{config: t.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			t.WithNamedTagsArtist(alias, func(wq *ArtistQuery) {
+				*wq = *query
+			})
+		case "tagsReview":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &ReviewQuery{config: t.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			t.WithNamedTagsReview(alias, func(wq *ReviewQuery) {
+				*wq = *query
+			})
+		case "tagsTopic":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &TopicQuery{config: t.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			t.WithNamedTagsTopic(alias, func(wq *TopicQuery) {
+				*wq = *query
+			})
+		}
+	}
+	return nil
+}
+
+type tagPaginateArgs struct {
+	first, last   *int
+	after, before *Cursor
+	opts          []TagPaginateOption
+}
+
+func newTagPaginateArgs(rv map[string]interface{}) *tagPaginateArgs {
+	args := &tagPaginateArgs{}
+	if rv == nil {
+		return args
+	}
+	if v := rv[firstField]; v != nil {
+		args.first = v.(*int)
+	}
+	if v := rv[lastField]; v != nil {
+		args.last = v.(*int)
+	}
+	if v := rv[afterField]; v != nil {
+		args.after = v.(*Cursor)
+	}
+	if v := rv[beforeField]; v != nil {
+		args.before = v.(*Cursor)
+	}
+	if v, ok := rv[whereField].(*TagWhereInput); ok {
+		args.opts = append(args.opts, WithTagFilter(v.Filter))
 	}
 	return args
 }
@@ -245,6 +379,18 @@ func (t *TopicQuery) collectField(ctx context.Context, op *graphql.OperationCont
 				return err
 			}
 			t.WithNamedIncludes(alias, func(wq *AlbumQuery) {
+				*wq = *query
+			})
+		case "taggedWith":
+			var (
+				alias = field.Alias
+				path  = append(path, alias)
+				query = &TagQuery{config: t.config}
+			)
+			if err := query.collectField(ctx, op, field, path, satisfies...); err != nil {
+				return err
+			}
+			t.WithNamedTaggedWith(alias, func(wq *TagQuery) {
 				*wq = *query
 			})
 		}

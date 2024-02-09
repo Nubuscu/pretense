@@ -9,6 +9,7 @@ import (
 	"nubuscu/pretense/ent/artist"
 	"nubuscu/pretense/ent/predicate"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 )
@@ -50,6 +51,21 @@ type AlbumWhereInput struct {
 	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
 	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
 
+	// "spotify_url" field predicates.
+	SpotifyURL             *string  `json:"spotifyURL,omitempty"`
+	SpotifyURLNEQ          *string  `json:"spotifyURLNEQ,omitempty"`
+	SpotifyURLIn           []string `json:"spotifyURLIn,omitempty"`
+	SpotifyURLNotIn        []string `json:"spotifyURLNotIn,omitempty"`
+	SpotifyURLGT           *string  `json:"spotifyURLGT,omitempty"`
+	SpotifyURLGTE          *string  `json:"spotifyURLGTE,omitempty"`
+	SpotifyURLLT           *string  `json:"spotifyURLLT,omitempty"`
+	SpotifyURLLTE          *string  `json:"spotifyURLLTE,omitempty"`
+	SpotifyURLContains     *string  `json:"spotifyURLContains,omitempty"`
+	SpotifyURLHasPrefix    *string  `json:"spotifyURLHasPrefix,omitempty"`
+	SpotifyURLHasSuffix    *string  `json:"spotifyURLHasSuffix,omitempty"`
+	SpotifyURLEqualFold    *string  `json:"spotifyURLEqualFold,omitempty"`
+	SpotifyURLContainsFold *string  `json:"spotifyURLContainsFold,omitempty"`
+
 	// "name" field predicates.
 	Name             *string  `json:"name,omitempty"`
 	NameNEQ          *string  `json:"nameNEQ,omitempty"`
@@ -72,6 +88,10 @@ type AlbumWhereInput struct {
 	// "included_in" edge predicates.
 	HasIncludedIn     *bool              `json:"hasIncludedIn,omitempty"`
 	HasIncludedInWith []*TopicWhereInput `json:"hasIncludedInWith,omitempty"`
+
+	// "tagged_with" edge predicates.
+	HasTaggedWith     *bool            `json:"hasTaggedWith,omitempty"`
+	HasTaggedWithWith []*TagWhereInput `json:"hasTaggedWithWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -217,6 +237,45 @@ func (i *AlbumWhereInput) P() (predicate.Album, error) {
 	if i.UpdatedAtLTE != nil {
 		predicates = append(predicates, album.UpdatedAtLTE(*i.UpdatedAtLTE))
 	}
+	if i.SpotifyURL != nil {
+		predicates = append(predicates, album.SpotifyURLEQ(*i.SpotifyURL))
+	}
+	if i.SpotifyURLNEQ != nil {
+		predicates = append(predicates, album.SpotifyURLNEQ(*i.SpotifyURLNEQ))
+	}
+	if len(i.SpotifyURLIn) > 0 {
+		predicates = append(predicates, album.SpotifyURLIn(i.SpotifyURLIn...))
+	}
+	if len(i.SpotifyURLNotIn) > 0 {
+		predicates = append(predicates, album.SpotifyURLNotIn(i.SpotifyURLNotIn...))
+	}
+	if i.SpotifyURLGT != nil {
+		predicates = append(predicates, album.SpotifyURLGT(*i.SpotifyURLGT))
+	}
+	if i.SpotifyURLGTE != nil {
+		predicates = append(predicates, album.SpotifyURLGTE(*i.SpotifyURLGTE))
+	}
+	if i.SpotifyURLLT != nil {
+		predicates = append(predicates, album.SpotifyURLLT(*i.SpotifyURLLT))
+	}
+	if i.SpotifyURLLTE != nil {
+		predicates = append(predicates, album.SpotifyURLLTE(*i.SpotifyURLLTE))
+	}
+	if i.SpotifyURLContains != nil {
+		predicates = append(predicates, album.SpotifyURLContains(*i.SpotifyURLContains))
+	}
+	if i.SpotifyURLHasPrefix != nil {
+		predicates = append(predicates, album.SpotifyURLHasPrefix(*i.SpotifyURLHasPrefix))
+	}
+	if i.SpotifyURLHasSuffix != nil {
+		predicates = append(predicates, album.SpotifyURLHasSuffix(*i.SpotifyURLHasSuffix))
+	}
+	if i.SpotifyURLEqualFold != nil {
+		predicates = append(predicates, album.SpotifyURLEqualFold(*i.SpotifyURLEqualFold))
+	}
+	if i.SpotifyURLContainsFold != nil {
+		predicates = append(predicates, album.SpotifyURLContainsFold(*i.SpotifyURLContainsFold))
+	}
 	if i.Name != nil {
 		predicates = append(predicates, album.NameEQ(*i.Name))
 	}
@@ -293,6 +352,24 @@ func (i *AlbumWhereInput) P() (predicate.Album, error) {
 		}
 		predicates = append(predicates, album.HasIncludedInWith(with...))
 	}
+	if i.HasTaggedWith != nil {
+		p := album.HasTaggedWith()
+		if !*i.HasTaggedWith {
+			p = album.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTaggedWithWith) > 0 {
+		with := make([]predicate.Tag, 0, len(i.HasTaggedWithWith))
+		for _, w := range i.HasTaggedWithWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTaggedWithWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, album.HasTaggedWithWith(with...))
+	}
 	switch len(predicates) {
 	case 0:
 		return nil, ErrEmptyAlbumWhereInput
@@ -340,6 +417,21 @@ type ArtistWhereInput struct {
 	UpdatedAtLT    *time.Time  `json:"updatedAtLT,omitempty"`
 	UpdatedAtLTE   *time.Time  `json:"updatedAtLTE,omitempty"`
 
+	// "spotify_url" field predicates.
+	SpotifyURL             *string  `json:"spotifyURL,omitempty"`
+	SpotifyURLNEQ          *string  `json:"spotifyURLNEQ,omitempty"`
+	SpotifyURLIn           []string `json:"spotifyURLIn,omitempty"`
+	SpotifyURLNotIn        []string `json:"spotifyURLNotIn,omitempty"`
+	SpotifyURLGT           *string  `json:"spotifyURLGT,omitempty"`
+	SpotifyURLGTE          *string  `json:"spotifyURLGTE,omitempty"`
+	SpotifyURLLT           *string  `json:"spotifyURLLT,omitempty"`
+	SpotifyURLLTE          *string  `json:"spotifyURLLTE,omitempty"`
+	SpotifyURLContains     *string  `json:"spotifyURLContains,omitempty"`
+	SpotifyURLHasPrefix    *string  `json:"spotifyURLHasPrefix,omitempty"`
+	SpotifyURLHasSuffix    *string  `json:"spotifyURLHasSuffix,omitempty"`
+	SpotifyURLEqualFold    *string  `json:"spotifyURLEqualFold,omitempty"`
+	SpotifyURLContainsFold *string  `json:"spotifyURLContainsFold,omitempty"`
+
 	// "name" field predicates.
 	Name             *string  `json:"name,omitempty"`
 	NameNEQ          *string  `json:"nameNEQ,omitempty"`
@@ -358,6 +450,10 @@ type ArtistWhereInput struct {
 	// "wrote" edge predicates.
 	HasWrote     *bool              `json:"hasWrote,omitempty"`
 	HasWroteWith []*AlbumWhereInput `json:"hasWroteWith,omitempty"`
+
+	// "tagged_with" edge predicates.
+	HasTaggedWith     *bool            `json:"hasTaggedWith,omitempty"`
+	HasTaggedWithWith []*TagWhereInput `json:"hasTaggedWithWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -503,6 +599,45 @@ func (i *ArtistWhereInput) P() (predicate.Artist, error) {
 	if i.UpdatedAtLTE != nil {
 		predicates = append(predicates, artist.UpdatedAtLTE(*i.UpdatedAtLTE))
 	}
+	if i.SpotifyURL != nil {
+		predicates = append(predicates, artist.SpotifyURLEQ(*i.SpotifyURL))
+	}
+	if i.SpotifyURLNEQ != nil {
+		predicates = append(predicates, artist.SpotifyURLNEQ(*i.SpotifyURLNEQ))
+	}
+	if len(i.SpotifyURLIn) > 0 {
+		predicates = append(predicates, artist.SpotifyURLIn(i.SpotifyURLIn...))
+	}
+	if len(i.SpotifyURLNotIn) > 0 {
+		predicates = append(predicates, artist.SpotifyURLNotIn(i.SpotifyURLNotIn...))
+	}
+	if i.SpotifyURLGT != nil {
+		predicates = append(predicates, artist.SpotifyURLGT(*i.SpotifyURLGT))
+	}
+	if i.SpotifyURLGTE != nil {
+		predicates = append(predicates, artist.SpotifyURLGTE(*i.SpotifyURLGTE))
+	}
+	if i.SpotifyURLLT != nil {
+		predicates = append(predicates, artist.SpotifyURLLT(*i.SpotifyURLLT))
+	}
+	if i.SpotifyURLLTE != nil {
+		predicates = append(predicates, artist.SpotifyURLLTE(*i.SpotifyURLLTE))
+	}
+	if i.SpotifyURLContains != nil {
+		predicates = append(predicates, artist.SpotifyURLContains(*i.SpotifyURLContains))
+	}
+	if i.SpotifyURLHasPrefix != nil {
+		predicates = append(predicates, artist.SpotifyURLHasPrefix(*i.SpotifyURLHasPrefix))
+	}
+	if i.SpotifyURLHasSuffix != nil {
+		predicates = append(predicates, artist.SpotifyURLHasSuffix(*i.SpotifyURLHasSuffix))
+	}
+	if i.SpotifyURLEqualFold != nil {
+		predicates = append(predicates, artist.SpotifyURLEqualFold(*i.SpotifyURLEqualFold))
+	}
+	if i.SpotifyURLContainsFold != nil {
+		predicates = append(predicates, artist.SpotifyURLContainsFold(*i.SpotifyURLContainsFold))
+	}
 	if i.Name != nil {
 		predicates = append(predicates, artist.NameEQ(*i.Name))
 	}
@@ -560,6 +695,24 @@ func (i *ArtistWhereInput) P() (predicate.Artist, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, artist.HasWroteWith(with...))
+	}
+	if i.HasTaggedWith != nil {
+		p := artist.HasTaggedWith()
+		if !*i.HasTaggedWith {
+			p = artist.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTaggedWithWith) > 0 {
+		with := make([]predicate.Tag, 0, len(i.HasTaggedWithWith))
+		for _, w := range i.HasTaggedWithWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTaggedWithWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, artist.HasTaggedWithWith(with...))
 	}
 	switch len(predicates) {
 	case 0:
@@ -641,6 +794,10 @@ type ReviewWhereInput struct {
 	// "reviews" edge predicates.
 	HasReviews     *bool              `json:"hasReviews,omitempty"`
 	HasReviewsWith []*TopicWhereInput `json:"hasReviewsWith,omitempty"`
+
+	// "tagged_with" edge predicates.
+	HasTaggedWith     *bool            `json:"hasTaggedWith,omitempty"`
+	HasTaggedWithWith []*TagWhereInput `json:"hasTaggedWithWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -883,6 +1040,24 @@ func (i *ReviewWhereInput) P() (predicate.Review, error) {
 		}
 		predicates = append(predicates, review.HasReviewsWith(with...))
 	}
+	if i.HasTaggedWith != nil {
+		p := review.HasTaggedWith()
+		if !*i.HasTaggedWith {
+			p = review.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTaggedWithWith) > 0 {
+		with := make([]predicate.Tag, 0, len(i.HasTaggedWithWith))
+		for _, w := range i.HasTaggedWithWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTaggedWithWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, review.HasTaggedWithWith(with...))
+	}
 	switch len(predicates) {
 	case 0:
 		return nil, ErrEmptyReviewWhereInput
@@ -890,6 +1065,326 @@ func (i *ReviewWhereInput) P() (predicate.Review, error) {
 		return predicates[0], nil
 	default:
 		return review.And(predicates...), nil
+	}
+}
+
+// TagWhereInput represents a where input for filtering Tag queries.
+type TagWhereInput struct {
+	Predicates []predicate.Tag  `json:"-"`
+	Not        *TagWhereInput   `json:"not,omitempty"`
+	Or         []*TagWhereInput `json:"or,omitempty"`
+	And        []*TagWhereInput `json:"and,omitempty"`
+
+	// "id" field predicates.
+	ID      *int  `json:"id,omitempty"`
+	IDNEQ   *int  `json:"idNEQ,omitempty"`
+	IDIn    []int `json:"idIn,omitempty"`
+	IDNotIn []int `json:"idNotIn,omitempty"`
+	IDGT    *int  `json:"idGT,omitempty"`
+	IDGTE   *int  `json:"idGTE,omitempty"`
+	IDLT    *int  `json:"idLT,omitempty"`
+	IDLTE   *int  `json:"idLTE,omitempty"`
+
+	// "key" field predicates.
+	Key             *string  `json:"key,omitempty"`
+	KeyNEQ          *string  `json:"keyNEQ,omitempty"`
+	KeyIn           []string `json:"keyIn,omitempty"`
+	KeyNotIn        []string `json:"keyNotIn,omitempty"`
+	KeyGT           *string  `json:"keyGT,omitempty"`
+	KeyGTE          *string  `json:"keyGTE,omitempty"`
+	KeyLT           *string  `json:"keyLT,omitempty"`
+	KeyLTE          *string  `json:"keyLTE,omitempty"`
+	KeyContains     *string  `json:"keyContains,omitempty"`
+	KeyHasPrefix    *string  `json:"keyHasPrefix,omitempty"`
+	KeyHasSuffix    *string  `json:"keyHasSuffix,omitempty"`
+	KeyEqualFold    *string  `json:"keyEqualFold,omitempty"`
+	KeyContainsFold *string  `json:"keyContainsFold,omitempty"`
+
+	// "value" field predicates.
+	Value             *string  `json:"value,omitempty"`
+	ValueNEQ          *string  `json:"valueNEQ,omitempty"`
+	ValueIn           []string `json:"valueIn,omitempty"`
+	ValueNotIn        []string `json:"valueNotIn,omitempty"`
+	ValueGT           *string  `json:"valueGT,omitempty"`
+	ValueGTE          *string  `json:"valueGTE,omitempty"`
+	ValueLT           *string  `json:"valueLT,omitempty"`
+	ValueLTE          *string  `json:"valueLTE,omitempty"`
+	ValueContains     *string  `json:"valueContains,omitempty"`
+	ValueHasPrefix    *string  `json:"valueHasPrefix,omitempty"`
+	ValueHasSuffix    *string  `json:"valueHasSuffix,omitempty"`
+	ValueEqualFold    *string  `json:"valueEqualFold,omitempty"`
+	ValueContainsFold *string  `json:"valueContainsFold,omitempty"`
+
+	// "tags_album" edge predicates.
+	HasTagsAlbum     *bool              `json:"hasTagsAlbum,omitempty"`
+	HasTagsAlbumWith []*AlbumWhereInput `json:"hasTagsAlbumWith,omitempty"`
+
+	// "tags_artist" edge predicates.
+	HasTagsArtist     *bool               `json:"hasTagsArtist,omitempty"`
+	HasTagsArtistWith []*ArtistWhereInput `json:"hasTagsArtistWith,omitempty"`
+
+	// "tags_review" edge predicates.
+	HasTagsReview     *bool               `json:"hasTagsReview,omitempty"`
+	HasTagsReviewWith []*ReviewWhereInput `json:"hasTagsReviewWith,omitempty"`
+
+	// "tags_topic" edge predicates.
+	HasTagsTopic     *bool              `json:"hasTagsTopic,omitempty"`
+	HasTagsTopicWith []*TopicWhereInput `json:"hasTagsTopicWith,omitempty"`
+}
+
+// AddPredicates adds custom predicates to the where input to be used during the filtering phase.
+func (i *TagWhereInput) AddPredicates(predicates ...predicate.Tag) {
+	i.Predicates = append(i.Predicates, predicates...)
+}
+
+// Filter applies the TagWhereInput filter on the TagQuery builder.
+func (i *TagWhereInput) Filter(q *TagQuery) (*TagQuery, error) {
+	if i == nil {
+		return q, nil
+	}
+	p, err := i.P()
+	if err != nil {
+		if err == ErrEmptyTagWhereInput {
+			return q, nil
+		}
+		return nil, err
+	}
+	return q.Where(p), nil
+}
+
+// ErrEmptyTagWhereInput is returned in case the TagWhereInput is empty.
+var ErrEmptyTagWhereInput = errors.New("ent: empty predicate TagWhereInput")
+
+// P returns a predicate for filtering tags.
+// An error is returned if the input is empty or invalid.
+func (i *TagWhereInput) P() (predicate.Tag, error) {
+	var predicates []predicate.Tag
+	if i.Not != nil {
+		p, err := i.Not.P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'not'", err)
+		}
+		predicates = append(predicates, tag.Not(p))
+	}
+	switch n := len(i.Or); {
+	case n == 1:
+		p, err := i.Or[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'or'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		or := make([]predicate.Tag, 0, n)
+		for _, w := range i.Or {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'or'", err)
+			}
+			or = append(or, p)
+		}
+		predicates = append(predicates, tag.Or(or...))
+	}
+	switch n := len(i.And); {
+	case n == 1:
+		p, err := i.And[0].P()
+		if err != nil {
+			return nil, fmt.Errorf("%w: field 'and'", err)
+		}
+		predicates = append(predicates, p)
+	case n > 1:
+		and := make([]predicate.Tag, 0, n)
+		for _, w := range i.And {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'and'", err)
+			}
+			and = append(and, p)
+		}
+		predicates = append(predicates, tag.And(and...))
+	}
+	predicates = append(predicates, i.Predicates...)
+	if i.ID != nil {
+		predicates = append(predicates, tag.IDEQ(*i.ID))
+	}
+	if i.IDNEQ != nil {
+		predicates = append(predicates, tag.IDNEQ(*i.IDNEQ))
+	}
+	if len(i.IDIn) > 0 {
+		predicates = append(predicates, tag.IDIn(i.IDIn...))
+	}
+	if len(i.IDNotIn) > 0 {
+		predicates = append(predicates, tag.IDNotIn(i.IDNotIn...))
+	}
+	if i.IDGT != nil {
+		predicates = append(predicates, tag.IDGT(*i.IDGT))
+	}
+	if i.IDGTE != nil {
+		predicates = append(predicates, tag.IDGTE(*i.IDGTE))
+	}
+	if i.IDLT != nil {
+		predicates = append(predicates, tag.IDLT(*i.IDLT))
+	}
+	if i.IDLTE != nil {
+		predicates = append(predicates, tag.IDLTE(*i.IDLTE))
+	}
+	if i.Key != nil {
+		predicates = append(predicates, tag.KeyEQ(*i.Key))
+	}
+	if i.KeyNEQ != nil {
+		predicates = append(predicates, tag.KeyNEQ(*i.KeyNEQ))
+	}
+	if len(i.KeyIn) > 0 {
+		predicates = append(predicates, tag.KeyIn(i.KeyIn...))
+	}
+	if len(i.KeyNotIn) > 0 {
+		predicates = append(predicates, tag.KeyNotIn(i.KeyNotIn...))
+	}
+	if i.KeyGT != nil {
+		predicates = append(predicates, tag.KeyGT(*i.KeyGT))
+	}
+	if i.KeyGTE != nil {
+		predicates = append(predicates, tag.KeyGTE(*i.KeyGTE))
+	}
+	if i.KeyLT != nil {
+		predicates = append(predicates, tag.KeyLT(*i.KeyLT))
+	}
+	if i.KeyLTE != nil {
+		predicates = append(predicates, tag.KeyLTE(*i.KeyLTE))
+	}
+	if i.KeyContains != nil {
+		predicates = append(predicates, tag.KeyContains(*i.KeyContains))
+	}
+	if i.KeyHasPrefix != nil {
+		predicates = append(predicates, tag.KeyHasPrefix(*i.KeyHasPrefix))
+	}
+	if i.KeyHasSuffix != nil {
+		predicates = append(predicates, tag.KeyHasSuffix(*i.KeyHasSuffix))
+	}
+	if i.KeyEqualFold != nil {
+		predicates = append(predicates, tag.KeyEqualFold(*i.KeyEqualFold))
+	}
+	if i.KeyContainsFold != nil {
+		predicates = append(predicates, tag.KeyContainsFold(*i.KeyContainsFold))
+	}
+	if i.Value != nil {
+		predicates = append(predicates, tag.ValueEQ(*i.Value))
+	}
+	if i.ValueNEQ != nil {
+		predicates = append(predicates, tag.ValueNEQ(*i.ValueNEQ))
+	}
+	if len(i.ValueIn) > 0 {
+		predicates = append(predicates, tag.ValueIn(i.ValueIn...))
+	}
+	if len(i.ValueNotIn) > 0 {
+		predicates = append(predicates, tag.ValueNotIn(i.ValueNotIn...))
+	}
+	if i.ValueGT != nil {
+		predicates = append(predicates, tag.ValueGT(*i.ValueGT))
+	}
+	if i.ValueGTE != nil {
+		predicates = append(predicates, tag.ValueGTE(*i.ValueGTE))
+	}
+	if i.ValueLT != nil {
+		predicates = append(predicates, tag.ValueLT(*i.ValueLT))
+	}
+	if i.ValueLTE != nil {
+		predicates = append(predicates, tag.ValueLTE(*i.ValueLTE))
+	}
+	if i.ValueContains != nil {
+		predicates = append(predicates, tag.ValueContains(*i.ValueContains))
+	}
+	if i.ValueHasPrefix != nil {
+		predicates = append(predicates, tag.ValueHasPrefix(*i.ValueHasPrefix))
+	}
+	if i.ValueHasSuffix != nil {
+		predicates = append(predicates, tag.ValueHasSuffix(*i.ValueHasSuffix))
+	}
+	if i.ValueEqualFold != nil {
+		predicates = append(predicates, tag.ValueEqualFold(*i.ValueEqualFold))
+	}
+	if i.ValueContainsFold != nil {
+		predicates = append(predicates, tag.ValueContainsFold(*i.ValueContainsFold))
+	}
+
+	if i.HasTagsAlbum != nil {
+		p := tag.HasTagsAlbum()
+		if !*i.HasTagsAlbum {
+			p = tag.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTagsAlbumWith) > 0 {
+		with := make([]predicate.Album, 0, len(i.HasTagsAlbumWith))
+		for _, w := range i.HasTagsAlbumWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTagsAlbumWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, tag.HasTagsAlbumWith(with...))
+	}
+	if i.HasTagsArtist != nil {
+		p := tag.HasTagsArtist()
+		if !*i.HasTagsArtist {
+			p = tag.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTagsArtistWith) > 0 {
+		with := make([]predicate.Artist, 0, len(i.HasTagsArtistWith))
+		for _, w := range i.HasTagsArtistWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTagsArtistWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, tag.HasTagsArtistWith(with...))
+	}
+	if i.HasTagsReview != nil {
+		p := tag.HasTagsReview()
+		if !*i.HasTagsReview {
+			p = tag.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTagsReviewWith) > 0 {
+		with := make([]predicate.Review, 0, len(i.HasTagsReviewWith))
+		for _, w := range i.HasTagsReviewWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTagsReviewWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, tag.HasTagsReviewWith(with...))
+	}
+	if i.HasTagsTopic != nil {
+		p := tag.HasTagsTopic()
+		if !*i.HasTagsTopic {
+			p = tag.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTagsTopicWith) > 0 {
+		with := make([]predicate.Topic, 0, len(i.HasTagsTopicWith))
+		for _, w := range i.HasTagsTopicWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTagsTopicWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, tag.HasTagsTopicWith(with...))
+	}
+	switch len(predicates) {
+	case 0:
+		return nil, ErrEmptyTagWhereInput
+	case 1:
+		return predicates[0], nil
+	default:
+		return tag.And(predicates...), nil
 	}
 }
 
@@ -952,6 +1447,10 @@ type TopicWhereInput struct {
 	// "includes" edge predicates.
 	HasIncludes     *bool              `json:"hasIncludes,omitempty"`
 	HasIncludesWith []*AlbumWhereInput `json:"hasIncludesWith,omitempty"`
+
+	// "tagged_with" edge predicates.
+	HasTaggedWith     *bool            `json:"hasTaggedWith,omitempty"`
+	HasTaggedWithWith []*TagWhereInput `json:"hasTaggedWithWith,omitempty"`
 }
 
 // AddPredicates adds custom predicates to the where input to be used during the filtering phase.
@@ -1172,6 +1671,24 @@ func (i *TopicWhereInput) P() (predicate.Topic, error) {
 			with = append(with, p)
 		}
 		predicates = append(predicates, topic.HasIncludesWith(with...))
+	}
+	if i.HasTaggedWith != nil {
+		p := topic.HasTaggedWith()
+		if !*i.HasTaggedWith {
+			p = topic.Not(p)
+		}
+		predicates = append(predicates, p)
+	}
+	if len(i.HasTaggedWithWith) > 0 {
+		with := make([]predicate.Tag, 0, len(i.HasTaggedWithWith))
+		for _, w := range i.HasTaggedWithWith {
+			p, err := w.P()
+			if err != nil {
+				return nil, fmt.Errorf("%w: field 'HasTaggedWithWith'", err)
+			}
+			with = append(with, p)
+		}
+		predicates = append(predicates, topic.HasTaggedWithWith(with...))
 	}
 	switch len(predicates) {
 	case 0:

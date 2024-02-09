@@ -15,10 +15,16 @@ const (
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
 	FieldUpdatedAt = "updated_at"
+	// FieldMetaLabels holds the string denoting the meta_labels field in the database.
+	FieldMetaLabels = "meta_labels"
+	// FieldSpotifyURL holds the string denoting the spotify_url field in the database.
+	FieldSpotifyURL = "spotify_url"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
 	// EdgeWrote holds the string denoting the wrote edge name in mutations.
 	EdgeWrote = "wrote"
+	// EdgeTaggedWith holds the string denoting the tagged_with edge name in mutations.
+	EdgeTaggedWith = "tagged_with"
 	// Table holds the table name of the artist in the database.
 	Table = "artists"
 	// WroteTable is the table that holds the wrote relation/edge. The primary key declared below.
@@ -26,6 +32,11 @@ const (
 	// WroteInverseTable is the table name for the Album entity.
 	// It exists in this package in order to avoid circular dependency with the "album" package.
 	WroteInverseTable = "albums"
+	// TaggedWithTable is the table that holds the tagged_with relation/edge. The primary key declared below.
+	TaggedWithTable = "artist_tagged_with"
+	// TaggedWithInverseTable is the table name for the Tag entity.
+	// It exists in this package in order to avoid circular dependency with the "tag" package.
+	TaggedWithInverseTable = "tags"
 )
 
 // Columns holds all SQL columns for artist fields.
@@ -33,6 +44,8 @@ var Columns = []string{
 	FieldID,
 	FieldCreatedAt,
 	FieldUpdatedAt,
+	FieldMetaLabels,
+	FieldSpotifyURL,
 	FieldName,
 }
 
@@ -40,6 +53,9 @@ var (
 	// WrotePrimaryKey and WroteColumn2 are the table columns denoting the
 	// primary key for the wrote relation (M2M).
 	WrotePrimaryKey = []string{"artist_id", "album_id"}
+	// TaggedWithPrimaryKey and TaggedWithColumn2 are the table columns denoting the
+	// primary key for the tagged_with relation (M2M).
+	TaggedWithPrimaryKey = []string{"artist_id", "tag_id"}
 )
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -59,4 +75,8 @@ var (
 	DefaultUpdatedAt func() time.Time
 	// UpdateDefaultUpdatedAt holds the default value on update for the "updated_at" field.
 	UpdateDefaultUpdatedAt func() time.Time
+	// DefaultMetaLabels holds the default value on creation for the "meta_labels" field.
+	DefaultMetaLabels []string
+	// SpotifyURLValidator is a validator for the "spotify_url" field. It is called by the builders before save.
+	SpotifyURLValidator func(string) error
 )

@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"nubuscu/pretense/ent/topic"
 	"strings"
@@ -20,6 +21,8 @@ type Topic struct {
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
 	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// MetaLabels holds the value of the "meta_labels" field.
+	MetaLabels []string `json:"meta_labels,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -33,14 +36,17 @@ type TopicEdges struct {
 	ReviewedBy []*Review `json:"reviewed_by,omitempty"`
 	// Includes holds the value of the includes edge.
 	Includes []*Album `json:"includes,omitempty"`
+	// TaggedWith holds the value of the tagged_with edge.
+	TaggedWith []*Tag `json:"tagged_with,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 	// totalCount holds the count of the edges above.
-	totalCount [2]map[string]int
+	totalCount [3]map[string]int
 
 	namedReviewedBy map[string][]*Review
 	namedIncludes   map[string][]*Album
+	namedTaggedWith map[string][]*Tag
 }
 
 // ReviewedByOrErr returns the ReviewedBy value or an error if the edge
@@ -61,11 +67,22 @@ func (e TopicEdges) IncludesOrErr() ([]*Album, error) {
 	return nil, &NotLoadedError{edge: "includes"}
 }
 
+// TaggedWithOrErr returns the TaggedWith value or an error if the edge
+// was not loaded in eager-loading.
+func (e TopicEdges) TaggedWithOrErr() ([]*Tag, error) {
+	if e.loadedTypes[2] {
+		return e.TaggedWith, nil
+	}
+	return nil, &NotLoadedError{edge: "tagged_with"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Topic) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case topic.FieldMetaLabels:
+			values[i] = new([]byte)
 		case topic.FieldID:
 			values[i] = new(sql.NullInt64)
 		case topic.FieldName:
@@ -105,6 +122,14 @@ func (t *Topic) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				t.UpdatedAt = value.Time
 			}
+		case topic.FieldMetaLabels:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field meta_labels", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &t.MetaLabels); err != nil {
+					return fmt.Errorf("unmarshal field meta_labels: %w", err)
+				}
+			}
 		case topic.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -124,6 +149,11 @@ func (t *Topic) QueryReviewedBy() *ReviewQuery {
 // QueryIncludes queries the "includes" edge of the Topic entity.
 func (t *Topic) QueryIncludes() *AlbumQuery {
 	return (&TopicClient{config: t.config}).QueryIncludes(t)
+}
+
+// QueryTaggedWith queries the "tagged_with" edge of the Topic entity.
+func (t *Topic) QueryTaggedWith() *TagQuery {
+	return (&TopicClient{config: t.config}).QueryTaggedWith(t)
 }
 
 // Update returns a builder for updating this Topic.
@@ -154,6 +184,9 @@ func (t *Topic) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("updated_at=")
 	builder.WriteString(t.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("meta_labels=")
+	builder.WriteString(fmt.Sprintf("%v", t.MetaLabels))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(t.Name)
@@ -206,6 +239,30 @@ func (t *Topic) appendNamedIncludes(name string, edges ...*Album) {
 		t.Edges.namedIncludes[name] = []*Album{}
 	} else {
 		t.Edges.namedIncludes[name] = append(t.Edges.namedIncludes[name], edges...)
+	}
+}
+
+// NamedTaggedWith returns the TaggedWith named value or an error if the edge was not
+// loaded in eager-loading with this name.
+func (t *Topic) NamedTaggedWith(name string) ([]*Tag, error) {
+	if t.Edges.namedTaggedWith == nil {
+		return nil, &NotLoadedError{edge: name}
+	}
+	nodes, ok := t.Edges.namedTaggedWith[name]
+	if !ok {
+		return nil, &NotLoadedError{edge: name}
+	}
+	return nodes, nil
+}
+
+func (t *Topic) appendNamedTaggedWith(name string, edges ...*Tag) {
+	if t.Edges.namedTaggedWith == nil {
+		t.Edges.namedTaggedWith = make(map[string][]*Tag)
+	}
+	if len(edges) == 0 {
+		t.Edges.namedTaggedWith[name] = []*Tag{}
+	} else {
+		t.Edges.namedTaggedWith[name] = append(t.Edges.namedTaggedWith[name], edges...)
 	}
 }
 

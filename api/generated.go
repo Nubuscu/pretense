@@ -51,7 +51,10 @@ type ComplexityRoot struct {
 		CreatedAt  func(childComplexity int) int
 		ID         func(childComplexity int) int
 		IncludedIn func(childComplexity int) int
+		MetaLabels func(childComplexity int) int
 		Name       func(childComplexity int) int
+		SpotifyURL func(childComplexity int) int
+		TaggedWith func(childComplexity int) int
 		UpdatedAt  func(childComplexity int) int
 	}
 
@@ -67,11 +70,14 @@ type ComplexityRoot struct {
 	}
 
 	Artist struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Name      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
-		Wrote     func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		MetaLabels func(childComplexity int) int
+		Name       func(childComplexity int) int
+		SpotifyURL func(childComplexity int) int
+		TaggedWith func(childComplexity int) int
+		UpdatedAt  func(childComplexity int) int
+		Wrote      func(childComplexity int) int
 	}
 
 	ArtistConnection struct {
@@ -87,7 +93,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateAlbumAndArtists func(childComplexity int, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) int
-		CreateTopicWithReview func(childComplexity int, topicName string, reviewName string, reviewBody string, albums []*ent.CreateAlbumInput) int
+		CreateTopicWithReview func(childComplexity int, topicName string, reviewName string, reviewBody string, albumNames []string) int
 		UpsertAlbum           func(childComplexity int, input ent.CreateAlbumInput) int
 		UpsertArtist          func(childComplexity int, input ent.CreateArtistInput) int
 		UpsertReview          func(childComplexity int, input ent.CreateReviewInput) int
@@ -111,12 +117,14 @@ type ComplexityRoot struct {
 	}
 
 	Review struct {
-		Body      func(childComplexity int) int
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Reviews   func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		Body       func(childComplexity int) int
+		CreatedAt  func(childComplexity int) int
+		ID         func(childComplexity int) int
+		MetaLabels func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Reviews    func(childComplexity int) int
+		TaggedWith func(childComplexity int) int
+		UpdatedAt  func(childComplexity int) int
 	}
 
 	ReviewConnection struct {
@@ -130,12 +138,24 @@ type ComplexityRoot struct {
 		Node   func(childComplexity int) int
 	}
 
+	Tag struct {
+		ID         func(childComplexity int) int
+		Key        func(childComplexity int) int
+		TagsAlbum  func(childComplexity int) int
+		TagsArtist func(childComplexity int) int
+		TagsReview func(childComplexity int) int
+		TagsTopic  func(childComplexity int) int
+		Value      func(childComplexity int) int
+	}
+
 	Topic struct {
 		CreatedAt  func(childComplexity int) int
 		ID         func(childComplexity int) int
 		Includes   func(childComplexity int) int
+		MetaLabels func(childComplexity int) int
 		Name       func(childComplexity int) int
 		ReviewedBy func(childComplexity int) int
+		TaggedWith func(childComplexity int) int
 		UpdatedAt  func(childComplexity int) int
 	}
 
@@ -157,7 +177,7 @@ type MutationResolver interface {
 	UpsertReview(ctx context.Context, input ent.CreateReviewInput) (*ent.Review, error)
 	UpsertTopic(ctx context.Context, input ent.CreateTopicInput) (*ent.Topic, error)
 	CreateAlbumAndArtists(ctx context.Context, album ent.CreateAlbumInput, artists []*ent.CreateArtistInput) (*ent.Album, error)
-	CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albums []*ent.CreateAlbumInput) (*ent.Topic, error)
+	CreateTopicWithReview(ctx context.Context, topicName string, reviewName string, reviewBody string, albumNames []string) (*ent.Topic, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id int) (ent.Noder, error)
@@ -211,12 +231,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Album.IncludedIn(childComplexity), true
 
+	case "Album.metaLabels":
+		if e.complexity.Album.MetaLabels == nil {
+			break
+		}
+
+		return e.complexity.Album.MetaLabels(childComplexity), true
+
 	case "Album.name":
 		if e.complexity.Album.Name == nil {
 			break
 		}
 
 		return e.complexity.Album.Name(childComplexity), true
+
+	case "Album.spotifyURL":
+		if e.complexity.Album.SpotifyURL == nil {
+			break
+		}
+
+		return e.complexity.Album.SpotifyURL(childComplexity), true
+
+	case "Album.taggedWith":
+		if e.complexity.Album.TaggedWith == nil {
+			break
+		}
+
+		return e.complexity.Album.TaggedWith(childComplexity), true
 
 	case "Album.updatedAt":
 		if e.complexity.Album.UpdatedAt == nil {
@@ -274,12 +315,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Artist.ID(childComplexity), true
 
+	case "Artist.metaLabels":
+		if e.complexity.Artist.MetaLabels == nil {
+			break
+		}
+
+		return e.complexity.Artist.MetaLabels(childComplexity), true
+
 	case "Artist.name":
 		if e.complexity.Artist.Name == nil {
 			break
 		}
 
 		return e.complexity.Artist.Name(childComplexity), true
+
+	case "Artist.spotifyURL":
+		if e.complexity.Artist.SpotifyURL == nil {
+			break
+		}
+
+		return e.complexity.Artist.SpotifyURL(childComplexity), true
+
+	case "Artist.taggedWith":
+		if e.complexity.Artist.TaggedWith == nil {
+			break
+		}
+
+		return e.complexity.Artist.TaggedWith(childComplexity), true
 
 	case "Artist.updatedAt":
 		if e.complexity.Artist.UpdatedAt == nil {
@@ -352,7 +414,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTopicWithReview(childComplexity, args["topicName"].(string), args["reviewName"].(string), args["reviewBody"].(string), args["albums"].([]*ent.CreateAlbumInput)), true
+		return e.complexity.Mutation.CreateTopicWithReview(childComplexity, args["topicName"].(string), args["reviewName"].(string), args["reviewBody"].(string), args["albumNames"].([]string)), true
 
 	case "Mutation.upsertAlbum":
 		if e.complexity.Mutation.UpsertAlbum == nil {
@@ -523,6 +585,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Review.ID(childComplexity), true
 
+	case "Review.metaLabels":
+		if e.complexity.Review.MetaLabels == nil {
+			break
+		}
+
+		return e.complexity.Review.MetaLabels(childComplexity), true
+
 	case "Review.name":
 		if e.complexity.Review.Name == nil {
 			break
@@ -536,6 +605,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Review.Reviews(childComplexity), true
+
+	case "Review.taggedWith":
+		if e.complexity.Review.TaggedWith == nil {
+			break
+		}
+
+		return e.complexity.Review.TaggedWith(childComplexity), true
 
 	case "Review.updatedAt":
 		if e.complexity.Review.UpdatedAt == nil {
@@ -579,6 +655,55 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ReviewEdge.Node(childComplexity), true
 
+	case "Tag.id":
+		if e.complexity.Tag.ID == nil {
+			break
+		}
+
+		return e.complexity.Tag.ID(childComplexity), true
+
+	case "Tag.key":
+		if e.complexity.Tag.Key == nil {
+			break
+		}
+
+		return e.complexity.Tag.Key(childComplexity), true
+
+	case "Tag.tagsAlbum":
+		if e.complexity.Tag.TagsAlbum == nil {
+			break
+		}
+
+		return e.complexity.Tag.TagsAlbum(childComplexity), true
+
+	case "Tag.tagsArtist":
+		if e.complexity.Tag.TagsArtist == nil {
+			break
+		}
+
+		return e.complexity.Tag.TagsArtist(childComplexity), true
+
+	case "Tag.tagsReview":
+		if e.complexity.Tag.TagsReview == nil {
+			break
+		}
+
+		return e.complexity.Tag.TagsReview(childComplexity), true
+
+	case "Tag.tagsTopic":
+		if e.complexity.Tag.TagsTopic == nil {
+			break
+		}
+
+		return e.complexity.Tag.TagsTopic(childComplexity), true
+
+	case "Tag.value":
+		if e.complexity.Tag.Value == nil {
+			break
+		}
+
+		return e.complexity.Tag.Value(childComplexity), true
+
 	case "Topic.createdAt":
 		if e.complexity.Topic.CreatedAt == nil {
 			break
@@ -600,6 +725,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Topic.Includes(childComplexity), true
 
+	case "Topic.metaLabels":
+		if e.complexity.Topic.MetaLabels == nil {
+			break
+		}
+
+		return e.complexity.Topic.MetaLabels(childComplexity), true
+
 	case "Topic.name":
 		if e.complexity.Topic.Name == nil {
 			break
@@ -613,6 +745,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Topic.ReviewedBy(childComplexity), true
+
+	case "Topic.taggedWith":
+		if e.complexity.Topic.TaggedWith == nil {
+			break
+		}
+
+		return e.complexity.Topic.TaggedWith(childComplexity), true
 
 	case "Topic.updatedAt":
 		if e.complexity.Topic.UpdatedAt == nil {
@@ -671,6 +810,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateReviewInput,
 		ec.unmarshalInputCreateTopicInput,
 		ec.unmarshalInputReviewWhereInput,
+		ec.unmarshalInputTagWhereInput,
 		ec.unmarshalInputTopicWhereInput,
 		ec.unmarshalInputUpdateAlbumInput,
 		ec.unmarshalInputUpdateArtistInput,
@@ -810,15 +950,15 @@ func (ec *executionContext) field_Mutation_createTopicWithReview_args(ctx contex
 		}
 	}
 	args["reviewBody"] = arg2
-	var arg3 []*ent.CreateAlbumInput
-	if tmp, ok := rawArgs["albums"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("albums"))
-		arg3, err = ec.unmarshalNCreateAlbumInput2ᚕᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInputᚄ(ctx, tmp)
+	var arg3 []string
+	if tmp, ok := rawArgs["albumNames"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("albumNames"))
+		arg3, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["albums"] = arg3
+	args["albumNames"] = arg3
 	return args, nil
 }
 
@@ -1301,6 +1441,94 @@ func (ec *executionContext) fieldContext_Album_updatedAt(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Album_metaLabels(ctx context.Context, field graphql.CollectedField, obj *ent.Album) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Album_metaLabels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MetaLabels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Album_metaLabels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Album",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Album_spotifyURL(ctx context.Context, field graphql.CollectedField, obj *ent.Album) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Album_spotifyURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SpotifyURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Album_spotifyURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Album",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Album_name(ctx context.Context, field graphql.CollectedField, obj *ent.Album) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Album_name(ctx, field)
 	if err != nil {
@@ -1387,10 +1615,16 @@ func (ec *executionContext) fieldContext_Album_by(ctx context.Context, field gra
 				return ec.fieldContext_Artist_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Artist_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Artist_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Artist_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Artist_name(ctx, field)
 			case "wrote":
 				return ec.fieldContext_Artist_wrote(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Artist_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Artist", field.Name)
 		},
@@ -1440,14 +1674,75 @@ func (ec *executionContext) fieldContext_Album_includedIn(ctx context.Context, f
 				return ec.fieldContext_Topic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Topic_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Topic_name(ctx, field)
 			case "reviewedBy":
 				return ec.fieldContext_Topic_reviewedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Topic_includes(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Topic_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Album_taggedWith(ctx context.Context, field graphql.CollectedField, obj *ent.Album) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Album_taggedWith(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaggedWith(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Tag)
+	fc.Result = res
+	return ec.marshalOTag2ᚕᚖnubuscuᚋpretenseᚋentᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Album_taggedWith(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Album",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "key":
+				return ec.fieldContext_Tag_key(ctx, field)
+			case "value":
+				return ec.fieldContext_Tag_value(ctx, field)
+			case "tagsAlbum":
+				return ec.fieldContext_Tag_tagsAlbum(ctx, field)
+			case "tagsArtist":
+				return ec.fieldContext_Tag_tagsArtist(ctx, field)
+			case "tagsReview":
+				return ec.fieldContext_Tag_tagsReview(ctx, field)
+			case "tagsTopic":
+				return ec.fieldContext_Tag_tagsTopic(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
 	}
 	return fc, nil
@@ -1640,12 +1935,18 @@ func (ec *executionContext) fieldContext_AlbumEdge_node(ctx context.Context, fie
 				return ec.fieldContext_Album_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Album_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Album_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Album_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Album_name(ctx, field)
 			case "by":
 				return ec.fieldContext_Album_by(ctx, field)
 			case "includedIn":
 				return ec.fieldContext_Album_includedIn(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Album_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
 		},
@@ -1829,6 +2130,94 @@ func (ec *executionContext) fieldContext_Artist_updatedAt(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Artist_metaLabels(ctx context.Context, field graphql.CollectedField, obj *ent.Artist) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Artist_metaLabels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MetaLabels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Artist_metaLabels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Artist",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Artist_spotifyURL(ctx context.Context, field graphql.CollectedField, obj *ent.Artist) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Artist_spotifyURL(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.SpotifyURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Artist_spotifyURL(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Artist",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Artist_name(ctx context.Context, field graphql.CollectedField, obj *ent.Artist) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Artist_name(ctx, field)
 	if err != nil {
@@ -1915,14 +2304,77 @@ func (ec *executionContext) fieldContext_Artist_wrote(ctx context.Context, field
 				return ec.fieldContext_Album_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Album_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Album_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Album_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Album_name(ctx, field)
 			case "by":
 				return ec.fieldContext_Album_by(ctx, field)
 			case "includedIn":
 				return ec.fieldContext_Album_includedIn(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Album_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Artist_taggedWith(ctx context.Context, field graphql.CollectedField, obj *ent.Artist) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Artist_taggedWith(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaggedWith(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Tag)
+	fc.Result = res
+	return ec.marshalOTag2ᚕᚖnubuscuᚋpretenseᚋentᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Artist_taggedWith(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Artist",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "key":
+				return ec.fieldContext_Tag_key(ctx, field)
+			case "value":
+				return ec.fieldContext_Tag_value(ctx, field)
+			case "tagsAlbum":
+				return ec.fieldContext_Tag_tagsAlbum(ctx, field)
+			case "tagsArtist":
+				return ec.fieldContext_Tag_tagsArtist(ctx, field)
+			case "tagsReview":
+				return ec.fieldContext_Tag_tagsReview(ctx, field)
+			case "tagsTopic":
+				return ec.fieldContext_Tag_tagsTopic(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
 	}
 	return fc, nil
@@ -2115,10 +2567,16 @@ func (ec *executionContext) fieldContext_ArtistEdge_node(ctx context.Context, fi
 				return ec.fieldContext_Artist_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Artist_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Artist_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Artist_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Artist_name(ctx, field)
 			case "wrote":
 				return ec.fieldContext_Artist_wrote(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Artist_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Artist", field.Name)
 		},
@@ -2212,12 +2670,18 @@ func (ec *executionContext) fieldContext_Mutation_upsertAlbum(ctx context.Contex
 				return ec.fieldContext_Album_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Album_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Album_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Album_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Album_name(ctx, field)
 			case "by":
 				return ec.fieldContext_Album_by(ctx, field)
 			case "includedIn":
 				return ec.fieldContext_Album_includedIn(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Album_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
 		},
@@ -2278,10 +2742,16 @@ func (ec *executionContext) fieldContext_Mutation_upsertArtist(ctx context.Conte
 				return ec.fieldContext_Artist_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Artist_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Artist_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Artist_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Artist_name(ctx, field)
 			case "wrote":
 				return ec.fieldContext_Artist_wrote(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Artist_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Artist", field.Name)
 		},
@@ -2342,12 +2812,16 @@ func (ec *executionContext) fieldContext_Mutation_upsertReview(ctx context.Conte
 				return ec.fieldContext_Review_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Review_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Review_name(ctx, field)
 			case "body":
 				return ec.fieldContext_Review_body(ctx, field)
 			case "reviews":
 				return ec.fieldContext_Review_reviews(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Review_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
 		},
@@ -2408,12 +2882,16 @@ func (ec *executionContext) fieldContext_Mutation_upsertTopic(ctx context.Contex
 				return ec.fieldContext_Topic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Topic_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Topic_name(ctx, field)
 			case "reviewedBy":
 				return ec.fieldContext_Topic_reviewedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Topic_includes(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Topic_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
 		},
@@ -2474,12 +2952,18 @@ func (ec *executionContext) fieldContext_Mutation_createAlbumAndArtists(ctx cont
 				return ec.fieldContext_Album_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Album_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Album_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Album_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Album_name(ctx, field)
 			case "by":
 				return ec.fieldContext_Album_by(ctx, field)
 			case "includedIn":
 				return ec.fieldContext_Album_includedIn(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Album_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
 		},
@@ -2512,7 +2996,7 @@ func (ec *executionContext) _Mutation_createTopicWithReview(ctx context.Context,
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateTopicWithReview(rctx, fc.Args["topicName"].(string), fc.Args["reviewName"].(string), fc.Args["reviewBody"].(string), fc.Args["albums"].([]*ent.CreateAlbumInput))
+		return ec.resolvers.Mutation().CreateTopicWithReview(rctx, fc.Args["topicName"].(string), fc.Args["reviewName"].(string), fc.Args["reviewBody"].(string), fc.Args["albumNames"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2540,12 +3024,16 @@ func (ec *executionContext) fieldContext_Mutation_createTopicWithReview(ctx cont
 				return ec.fieldContext_Topic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Topic_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Topic_name(ctx, field)
 			case "reviewedBy":
 				return ec.fieldContext_Topic_reviewedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Topic_includes(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Topic_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
 		},
@@ -3354,6 +3842,50 @@ func (ec *executionContext) fieldContext_Review_updatedAt(ctx context.Context, f
 	return fc, nil
 }
 
+func (ec *executionContext) _Review_metaLabels(ctx context.Context, field graphql.CollectedField, obj *ent.Review) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Review_metaLabels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MetaLabels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Review_metaLabels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Review",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Review_name(ctx context.Context, field graphql.CollectedField, obj *ent.Review) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Review_name(ctx, field)
 	if err != nil {
@@ -3484,14 +4016,75 @@ func (ec *executionContext) fieldContext_Review_reviews(ctx context.Context, fie
 				return ec.fieldContext_Topic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Topic_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Topic_name(ctx, field)
 			case "reviewedBy":
 				return ec.fieldContext_Topic_reviewedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Topic_includes(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Topic_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Review_taggedWith(ctx context.Context, field graphql.CollectedField, obj *ent.Review) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Review_taggedWith(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaggedWith(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Tag)
+	fc.Result = res
+	return ec.marshalOTag2ᚕᚖnubuscuᚋpretenseᚋentᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Review_taggedWith(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Review",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "key":
+				return ec.fieldContext_Tag_key(ctx, field)
+			case "value":
+				return ec.fieldContext_Tag_value(ctx, field)
+			case "tagsAlbum":
+				return ec.fieldContext_Tag_tagsAlbum(ctx, field)
+			case "tagsArtist":
+				return ec.fieldContext_Tag_tagsArtist(ctx, field)
+			case "tagsReview":
+				return ec.fieldContext_Tag_tagsReview(ctx, field)
+			case "tagsTopic":
+				return ec.fieldContext_Tag_tagsTopic(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
 	}
 	return fc, nil
@@ -3684,12 +4277,16 @@ func (ec *executionContext) fieldContext_ReviewEdge_node(ctx context.Context, fi
 				return ec.fieldContext_Review_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Review_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Review_name(ctx, field)
 			case "body":
 				return ec.fieldContext_Review_body(ctx, field)
 			case "reviews":
 				return ec.fieldContext_Review_reviews(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Review_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
 		},
@@ -3736,6 +4333,376 @@ func (ec *executionContext) fieldContext_ReviewEdge_cursor(ctx context.Context, 
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Cursor does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_id(ctx context.Context, field graphql.CollectedField, obj *ent.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_id(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNID2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_key(ctx context.Context, field graphql.CollectedField, obj *ent.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_key(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Key, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_key(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_value(ctx context.Context, field graphql.CollectedField, obj *ent.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_value(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_value(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_tagsAlbum(ctx context.Context, field graphql.CollectedField, obj *ent.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_tagsAlbum(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TagsAlbum(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Album)
+	fc.Result = res
+	return ec.marshalOAlbum2ᚕᚖnubuscuᚋpretenseᚋentᚐAlbumᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_tagsAlbum(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Album_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Album_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Album_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Album_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Album_spotifyURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Album_name(ctx, field)
+			case "by":
+				return ec.fieldContext_Album_by(ctx, field)
+			case "includedIn":
+				return ec.fieldContext_Album_includedIn(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Album_taggedWith(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_tagsArtist(ctx context.Context, field graphql.CollectedField, obj *ent.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_tagsArtist(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TagsArtist(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Artist)
+	fc.Result = res
+	return ec.marshalOArtist2ᚕᚖnubuscuᚋpretenseᚋentᚐArtistᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_tagsArtist(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Artist_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Artist_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Artist_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Artist_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Artist_spotifyURL(ctx, field)
+			case "name":
+				return ec.fieldContext_Artist_name(ctx, field)
+			case "wrote":
+				return ec.fieldContext_Artist_wrote(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Artist_taggedWith(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Artist", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_tagsReview(ctx context.Context, field graphql.CollectedField, obj *ent.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_tagsReview(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TagsReview(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Review)
+	fc.Result = res
+	return ec.marshalOReview2ᚕᚖnubuscuᚋpretenseᚋentᚐReviewᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_tagsReview(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Review_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Review_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Review_metaLabels(ctx, field)
+			case "name":
+				return ec.fieldContext_Review_name(ctx, field)
+			case "body":
+				return ec.fieldContext_Review_body(ctx, field)
+			case "reviews":
+				return ec.fieldContext_Review_reviews(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Review_taggedWith(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Tag_tagsTopic(ctx context.Context, field graphql.CollectedField, obj *ent.Tag) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Tag_tagsTopic(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TagsTopic(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Topic)
+	fc.Result = res
+	return ec.marshalOTopic2ᚕᚖnubuscuᚋpretenseᚋentᚐTopicᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Tag_tagsTopic(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Tag",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Topic_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Topic_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Topic_metaLabels(ctx, field)
+			case "name":
+				return ec.fieldContext_Topic_name(ctx, field)
+			case "reviewedBy":
+				return ec.fieldContext_Topic_reviewedBy(ctx, field)
+			case "includes":
+				return ec.fieldContext_Topic_includes(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Topic_taggedWith(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
 		},
 	}
 	return fc, nil
@@ -3873,6 +4840,50 @@ func (ec *executionContext) fieldContext_Topic_updatedAt(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Topic_metaLabels(ctx context.Context, field graphql.CollectedField, obj *ent.Topic) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Topic_metaLabels(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MetaLabels, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Topic_metaLabels(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Topic",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Topic_name(ctx context.Context, field graphql.CollectedField, obj *ent.Topic) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Topic_name(ctx, field)
 	if err != nil {
@@ -3959,12 +4970,16 @@ func (ec *executionContext) fieldContext_Topic_reviewedBy(ctx context.Context, f
 				return ec.fieldContext_Review_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Review_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Review_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Review_name(ctx, field)
 			case "body":
 				return ec.fieldContext_Review_body(ctx, field)
 			case "reviews":
 				return ec.fieldContext_Review_reviews(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Review_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Review", field.Name)
 		},
@@ -4014,14 +5029,77 @@ func (ec *executionContext) fieldContext_Topic_includes(ctx context.Context, fie
 				return ec.fieldContext_Album_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Album_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Album_metaLabels(ctx, field)
+			case "spotifyURL":
+				return ec.fieldContext_Album_spotifyURL(ctx, field)
 			case "name":
 				return ec.fieldContext_Album_name(ctx, field)
 			case "by":
 				return ec.fieldContext_Album_by(ctx, field)
 			case "includedIn":
 				return ec.fieldContext_Album_includedIn(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Album_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Album", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Topic_taggedWith(ctx context.Context, field graphql.CollectedField, obj *ent.Topic) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Topic_taggedWith(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TaggedWith(ctx)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*ent.Tag)
+	fc.Result = res
+	return ec.marshalOTag2ᚕᚖnubuscuᚋpretenseᚋentᚐTagᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Topic_taggedWith(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Topic",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Tag_id(ctx, field)
+			case "key":
+				return ec.fieldContext_Tag_key(ctx, field)
+			case "value":
+				return ec.fieldContext_Tag_value(ctx, field)
+			case "tagsAlbum":
+				return ec.fieldContext_Tag_tagsAlbum(ctx, field)
+			case "tagsArtist":
+				return ec.fieldContext_Tag_tagsArtist(ctx, field)
+			case "tagsReview":
+				return ec.fieldContext_Tag_tagsReview(ctx, field)
+			case "tagsTopic":
+				return ec.fieldContext_Tag_tagsTopic(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Tag", field.Name)
 		},
 	}
 	return fc, nil
@@ -4214,12 +5292,16 @@ func (ec *executionContext) fieldContext_TopicEdge_node(ctx context.Context, fie
 				return ec.fieldContext_Topic_createdAt(ctx, field)
 			case "updatedAt":
 				return ec.fieldContext_Topic_updatedAt(ctx, field)
+			case "metaLabels":
+				return ec.fieldContext_Topic_metaLabels(ctx, field)
 			case "name":
 				return ec.fieldContext_Topic_name(ctx, field)
 			case "reviewedBy":
 				return ec.fieldContext_Topic_reviewedBy(ctx, field)
 			case "includes":
 				return ec.fieldContext_Topic_includes(ctx, field)
+			case "taggedWith":
+				return ec.fieldContext_Topic_taggedWith(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Topic", field.Name)
 		},
@@ -6051,7 +7133,7 @@ func (ec *executionContext) unmarshalInputAlbumWhereInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "hasBy", "hasByWith", "hasIncludedIn", "hasIncludedInWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "spotifyURL", "spotifyURLNEQ", "spotifyURLIn", "spotifyURLNotIn", "spotifyURLGT", "spotifyURLGTE", "spotifyURLLT", "spotifyURLLTE", "spotifyURLContains", "spotifyURLHasPrefix", "spotifyURLHasSuffix", "spotifyURLEqualFold", "spotifyURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "hasBy", "hasByWith", "hasIncludedIn", "hasIncludedInWith", "hasTaggedWith", "hasTaggedWithWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6274,6 +7356,110 @@ func (ec *executionContext) unmarshalInputAlbumWhereInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "spotifyURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURL"))
+			it.SpotifyURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLNEQ"))
+			it.SpotifyURLNEQ, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLIn"))
+			it.SpotifyURLIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLNotIn"))
+			it.SpotifyURLNotIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLGT"))
+			it.SpotifyURLGT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLGTE"))
+			it.SpotifyURLGTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLLT"))
+			it.SpotifyURLLT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLLTE"))
+			it.SpotifyURLLTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLContains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLContains"))
+			it.SpotifyURLContains, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLHasPrefix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLHasPrefix"))
+			it.SpotifyURLHasPrefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLHasSuffix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLHasSuffix"))
+			it.SpotifyURLHasSuffix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLEqualFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLEqualFold"))
+			it.SpotifyURLEqualFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLContainsFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLContainsFold"))
+			it.SpotifyURLContainsFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
@@ -6410,6 +7596,22 @@ func (ec *executionContext) unmarshalInputAlbumWhereInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "hasTaggedWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWith"))
+			it.HasTaggedWith, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTaggedWithWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWithWith"))
+			it.HasTaggedWithWith, err = ec.unmarshalOTagWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTagWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -6423,7 +7625,7 @@ func (ec *executionContext) unmarshalInputArtistWhereInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "hasWrote", "hasWroteWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "spotifyURL", "spotifyURLNEQ", "spotifyURLIn", "spotifyURLNotIn", "spotifyURLGT", "spotifyURLGTE", "spotifyURLLT", "spotifyURLLTE", "spotifyURLContains", "spotifyURLHasPrefix", "spotifyURLHasSuffix", "spotifyURLEqualFold", "spotifyURLContainsFold", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "hasWrote", "hasWroteWith", "hasTaggedWith", "hasTaggedWithWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6646,6 +7848,110 @@ func (ec *executionContext) unmarshalInputArtistWhereInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "spotifyURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURL"))
+			it.SpotifyURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLNEQ"))
+			it.SpotifyURLNEQ, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLIn"))
+			it.SpotifyURLIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLNotIn"))
+			it.SpotifyURLNotIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLGT"))
+			it.SpotifyURLGT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLGTE"))
+			it.SpotifyURLGTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLLT"))
+			it.SpotifyURLLT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLLTE"))
+			it.SpotifyURLLTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLContains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLContains"))
+			it.SpotifyURLContains, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLHasPrefix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLHasPrefix"))
+			it.SpotifyURLHasPrefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLHasSuffix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLHasSuffix"))
+			it.SpotifyURLHasSuffix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLEqualFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLEqualFold"))
+			it.SpotifyURLEqualFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURLContainsFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURLContainsFold"))
+			it.SpotifyURLContainsFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "name":
 			var err error
 
@@ -6766,6 +8072,22 @@ func (ec *executionContext) unmarshalInputArtistWhereInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "hasTaggedWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWith"))
+			it.HasTaggedWith, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTaggedWithWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWithWith"))
+			it.HasTaggedWithWith, err = ec.unmarshalOTagWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTagWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -6779,7 +8101,7 @@ func (ec *executionContext) unmarshalInputCreateAlbumInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"createdAt", "updatedAt", "name", "byIDs", "includedInIDs"}
+	fieldsInOrder := [...]string{"createdAt", "updatedAt", "metaLabels", "spotifyURL", "name", "byIDs", "includedInIDs", "taggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6799,6 +8121,22 @@ func (ec *executionContext) unmarshalInputCreateAlbumInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURL"))
+			it.SpotifyURL, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6826,6 +8164,14 @@ func (ec *executionContext) unmarshalInputCreateAlbumInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "taggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taggedWithIDs"))
+			it.TaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -6839,7 +8185,7 @@ func (ec *executionContext) unmarshalInputCreateArtistInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"createdAt", "updatedAt", "name", "wroteIDs"}
+	fieldsInOrder := [...]string{"createdAt", "updatedAt", "metaLabels", "spotifyURL", "name", "wroteIDs", "taggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6859,6 +8205,22 @@ func (ec *executionContext) unmarshalInputCreateArtistInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURL"))
+			it.SpotifyURL, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6878,6 +8240,14 @@ func (ec *executionContext) unmarshalInputCreateArtistInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "taggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taggedWithIDs"))
+			it.TaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -6891,7 +8261,7 @@ func (ec *executionContext) unmarshalInputCreateReviewInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"createdAt", "updatedAt", "name", "body", "reviewIDs"}
+	fieldsInOrder := [...]string{"createdAt", "updatedAt", "metaLabels", "name", "body", "reviewIDs", "taggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6911,6 +8281,14 @@ func (ec *executionContext) unmarshalInputCreateReviewInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6938,6 +8316,14 @@ func (ec *executionContext) unmarshalInputCreateReviewInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "taggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taggedWithIDs"))
+			it.TaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -6951,7 +8337,7 @@ func (ec *executionContext) unmarshalInputCreateTopicInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"createdAt", "updatedAt", "name", "reviewedByIDs", "includeIDs"}
+	fieldsInOrder := [...]string{"createdAt", "updatedAt", "metaLabels", "name", "reviewedByIDs", "includeIDs", "taggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6971,6 +8357,14 @@ func (ec *executionContext) unmarshalInputCreateTopicInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6998,6 +8392,14 @@ func (ec *executionContext) unmarshalInputCreateTopicInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "taggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("taggedWithIDs"))
+			it.TaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -7011,7 +8413,7 @@ func (ec *executionContext) unmarshalInputReviewWhereInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "body", "bodyNEQ", "bodyIn", "bodyNotIn", "bodyGT", "bodyGTE", "bodyLT", "bodyLTE", "bodyContains", "bodyHasPrefix", "bodyHasSuffix", "bodyEqualFold", "bodyContainsFold", "hasReviews", "hasReviewsWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "body", "bodyNEQ", "bodyIn", "bodyNotIn", "bodyGT", "bodyGTE", "bodyLT", "bodyLTE", "bodyContains", "bodyHasPrefix", "bodyHasSuffix", "bodyEqualFold", "bodyContainsFold", "hasReviews", "hasReviewsWith", "hasTaggedWith", "hasTaggedWithWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7458,6 +8860,402 @@ func (ec *executionContext) unmarshalInputReviewWhereInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "hasTaggedWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWith"))
+			it.HasTaggedWith, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTaggedWithWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWithWith"))
+			it.HasTaggedWithWith, err = ec.unmarshalOTagWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTagWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTagWhereInput(ctx context.Context, obj interface{}) (ent.TagWhereInput, error) {
+	var it ent.TagWhereInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "key", "keyNEQ", "keyIn", "keyNotIn", "keyGT", "keyGTE", "keyLT", "keyLTE", "keyContains", "keyHasPrefix", "keyHasSuffix", "keyEqualFold", "keyContainsFold", "value", "valueNEQ", "valueIn", "valueNotIn", "valueGT", "valueGTE", "valueLT", "valueLTE", "valueContains", "valueHasPrefix", "valueHasSuffix", "valueEqualFold", "valueContainsFold", "hasTagsAlbum", "hasTagsAlbumWith", "hasTagsArtist", "hasTagsArtistWith", "hasTagsReview", "hasTagsReviewWith", "hasTagsTopic", "hasTagsTopicWith"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "not":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("not"))
+			it.Not, err = ec.unmarshalOTagWhereInput2ᚖnubuscuᚋpretenseᚋentᚐTagWhereInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "and":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("and"))
+			it.And, err = ec.unmarshalOTagWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTagWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "or":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("or"))
+			it.Or, err = ec.unmarshalOTagWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTagWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNEQ"))
+			it.IDNEQ, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idIn"))
+			it.IDIn, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idNotIn"))
+			it.IDNotIn, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGT"))
+			it.IDGT, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idGTE"))
+			it.IDGTE, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLT"))
+			it.IDLT, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "idLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("idLTE"))
+			it.IDLTE, err = ec.unmarshalOID2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "key":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("key"))
+			it.Key, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyNEQ"))
+			it.KeyNEQ, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyIn"))
+			it.KeyIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyNotIn"))
+			it.KeyNotIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyGT"))
+			it.KeyGT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyGTE"))
+			it.KeyGTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyLT"))
+			it.KeyLT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyLTE"))
+			it.KeyLTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyContains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyContains"))
+			it.KeyContains, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyHasPrefix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyHasPrefix"))
+			it.KeyHasPrefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyHasSuffix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyHasSuffix"))
+			it.KeyHasSuffix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyEqualFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyEqualFold"))
+			it.KeyEqualFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "keyContainsFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("keyContainsFold"))
+			it.KeyContainsFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueNEQ":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueNEQ"))
+			it.ValueNEQ, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueIn"))
+			it.ValueIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueNotIn":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueNotIn"))
+			it.ValueNotIn, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueGT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueGT"))
+			it.ValueGT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueGTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueGTE"))
+			it.ValueGTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueLT":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueLT"))
+			it.ValueLT, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueLTE":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueLTE"))
+			it.ValueLTE, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueContains":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueContains"))
+			it.ValueContains, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueHasPrefix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueHasPrefix"))
+			it.ValueHasPrefix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueHasSuffix":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueHasSuffix"))
+			it.ValueHasSuffix, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueEqualFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueEqualFold"))
+			it.ValueEqualFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "valueContainsFold":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueContainsFold"))
+			it.ValueContainsFold, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsAlbum":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsAlbum"))
+			it.HasTagsAlbum, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsAlbumWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsAlbumWith"))
+			it.HasTagsAlbumWith, err = ec.unmarshalOAlbumWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐAlbumWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsArtist":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsArtist"))
+			it.HasTagsArtist, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsArtistWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsArtistWith"))
+			it.HasTagsArtistWith, err = ec.unmarshalOArtistWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐArtistWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsReview":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsReview"))
+			it.HasTagsReview, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsReviewWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsReviewWith"))
+			it.HasTagsReviewWith, err = ec.unmarshalOReviewWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐReviewWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsTopic":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsTopic"))
+			it.HasTagsTopic, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTagsTopicWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTagsTopicWith"))
+			it.HasTagsTopicWith, err = ec.unmarshalOTopicWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTopicWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -7471,7 +9269,7 @@ func (ec *executionContext) unmarshalInputTopicWhereInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "hasReviewedBy", "hasReviewedByWith", "hasIncludes", "hasIncludesWith"}
+	fieldsInOrder := [...]string{"not", "and", "or", "id", "idNEQ", "idIn", "idNotIn", "idGT", "idGTE", "idLT", "idLTE", "createdAt", "createdAtNEQ", "createdAtIn", "createdAtNotIn", "createdAtGT", "createdAtGTE", "createdAtLT", "createdAtLTE", "updatedAt", "updatedAtNEQ", "updatedAtIn", "updatedAtNotIn", "updatedAtGT", "updatedAtGTE", "updatedAtLT", "updatedAtLTE", "name", "nameNEQ", "nameIn", "nameNotIn", "nameGT", "nameGTE", "nameLT", "nameLTE", "nameContains", "nameHasPrefix", "nameHasSuffix", "nameEqualFold", "nameContainsFold", "hasReviewedBy", "hasReviewedByWith", "hasIncludes", "hasIncludesWith", "hasTaggedWith", "hasTaggedWithWith"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7830,6 +9628,22 @@ func (ec *executionContext) unmarshalInputTopicWhereInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "hasTaggedWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWith"))
+			it.HasTaggedWith, err = ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hasTaggedWithWith":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hasTaggedWithWith"))
+			it.HasTaggedWithWith, err = ec.unmarshalOTagWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTagWhereInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -7843,7 +9657,7 @@ func (ec *executionContext) unmarshalInputUpdateAlbumInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"updatedAt", "name", "addByIDs", "removeByIDs", "addIncludedInIDs", "removeIncludedInIDs"}
+	fieldsInOrder := [...]string{"updatedAt", "metaLabels", "appendMetaLabels", "spotifyURL", "name", "addByIDs", "removeByIDs", "addIncludedInIDs", "removeIncludedInIDs", "addTaggedWithIDs", "removeTaggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7855,6 +9669,30 @@ func (ec *executionContext) unmarshalInputUpdateAlbumInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appendMetaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appendMetaLabels"))
+			it.AppendMetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURL"))
+			it.SpotifyURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7898,6 +9736,22 @@ func (ec *executionContext) unmarshalInputUpdateAlbumInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "addTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addTaggedWithIDs"))
+			it.AddTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeTaggedWithIDs"))
+			it.RemoveTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -7911,7 +9765,7 @@ func (ec *executionContext) unmarshalInputUpdateArtistInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"updatedAt", "name", "addWroteIDs", "removeWroteIDs"}
+	fieldsInOrder := [...]string{"updatedAt", "metaLabels", "appendMetaLabels", "spotifyURL", "name", "addWroteIDs", "removeWroteIDs", "addTaggedWithIDs", "removeTaggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7923,6 +9777,30 @@ func (ec *executionContext) unmarshalInputUpdateArtistInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appendMetaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appendMetaLabels"))
+			it.AppendMetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "spotifyURL":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("spotifyURL"))
+			it.SpotifyURL, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -7950,6 +9828,22 @@ func (ec *executionContext) unmarshalInputUpdateArtistInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "addTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addTaggedWithIDs"))
+			it.AddTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeTaggedWithIDs"))
+			it.RemoveTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -7963,7 +9857,7 @@ func (ec *executionContext) unmarshalInputUpdateReviewInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"updatedAt", "name", "body", "addReviewIDs", "removeReviewIDs"}
+	fieldsInOrder := [...]string{"updatedAt", "metaLabels", "appendMetaLabels", "name", "body", "addReviewIDs", "removeReviewIDs", "addTaggedWithIDs", "removeTaggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -7975,6 +9869,22 @@ func (ec *executionContext) unmarshalInputUpdateReviewInput(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appendMetaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appendMetaLabels"))
+			it.AppendMetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8010,6 +9920,22 @@ func (ec *executionContext) unmarshalInputUpdateReviewInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "addTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addTaggedWithIDs"))
+			it.AddTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeTaggedWithIDs"))
+			it.RemoveTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -8023,7 +9949,7 @@ func (ec *executionContext) unmarshalInputUpdateTopicInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"updatedAt", "name", "addReviewedByIDs", "removeReviewedByIDs", "addIncludeIDs", "removeIncludeIDs"}
+	fieldsInOrder := [...]string{"updatedAt", "metaLabels", "appendMetaLabels", "name", "addReviewedByIDs", "removeReviewedByIDs", "addIncludeIDs", "removeIncludeIDs", "addTaggedWithIDs", "removeTaggedWithIDs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8035,6 +9961,22 @@ func (ec *executionContext) unmarshalInputUpdateTopicInput(ctx context.Context, 
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updatedAt"))
 			it.UpdatedAt, err = ec.unmarshalOTime2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "metaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("metaLabels"))
+			it.MetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "appendMetaLabels":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("appendMetaLabels"))
+			it.AppendMetaLabels, err = ec.unmarshalOString2ᚕstringᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8078,6 +10020,22 @@ func (ec *executionContext) unmarshalInputUpdateTopicInput(ctx context.Context, 
 			if err != nil {
 				return it, err
 			}
+		case "addTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("addTaggedWithIDs"))
+			it.AddTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "removeTaggedWithIDs":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("removeTaggedWithIDs"))
+			it.RemoveTaggedWithIDs, err = ec.unmarshalOID2ᚕintᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -8107,6 +10065,11 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Review(ctx, sel, obj)
+	case *ent.Tag:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Tag(ctx, sel, obj)
 	case *ent.Topic:
 		if obj == nil {
 			return graphql.Null
@@ -8152,6 +10115,20 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "metaLabels":
+
+			out.Values[i] = ec._Album_metaLabels(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "spotifyURL":
+
+			out.Values[i] = ec._Album_spotifyURL(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 
 			out.Values[i] = ec._Album_name(ctx, field, obj)
@@ -8186,6 +10163,23 @@ func (ec *executionContext) _Album(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Album_includedIn(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "taggedWith":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Album_taggedWith(ctx, field, obj)
 				return res
 			}
 
@@ -8306,6 +10300,20 @@ func (ec *executionContext) _Artist(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "metaLabels":
+
+			out.Values[i] = ec._Artist_metaLabels(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "spotifyURL":
+
+			out.Values[i] = ec._Artist_spotifyURL(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 
 			out.Values[i] = ec._Artist_name(ctx, field, obj)
@@ -8323,6 +10331,23 @@ func (ec *executionContext) _Artist(ctx context.Context, sel ast.SelectionSet, o
 					}
 				}()
 				res = ec._Artist_wrote(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "taggedWith":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Artist_taggedWith(ctx, field, obj)
 				return res
 			}
 
@@ -8729,6 +10754,13 @@ func (ec *executionContext) _Review(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
+		case "metaLabels":
+
+			out.Values[i] = ec._Review_metaLabels(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 
 			out.Values[i] = ec._Review_name(ctx, field, obj)
@@ -8753,6 +10785,23 @@ func (ec *executionContext) _Review(ctx context.Context, sel ast.SelectionSet, o
 					}
 				}()
 				res = ec._Review_reviews(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "taggedWith":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Review_taggedWith(ctx, field, obj)
 				return res
 			}
 
@@ -8842,6 +10891,116 @@ func (ec *executionContext) _ReviewEdge(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var tagImplementors = []string{"Tag", "Node"}
+
+func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj *ent.Tag) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, tagImplementors)
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Tag")
+		case "id":
+
+			out.Values[i] = ec._Tag_id(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "key":
+
+			out.Values[i] = ec._Tag_key(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "value":
+
+			out.Values[i] = ec._Tag_value(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "tagsAlbum":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_tagsAlbum(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "tagsArtist":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_tagsArtist(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "tagsReview":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_tagsReview(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "tagsTopic":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_tagsTopic(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var topicImplementors = []string{"Topic", "Node"}
 
 func (ec *executionContext) _Topic(ctx context.Context, sel ast.SelectionSet, obj *ent.Topic) graphql.Marshaler {
@@ -8869,6 +11028,13 @@ func (ec *executionContext) _Topic(ctx context.Context, sel ast.SelectionSet, ob
 		case "updatedAt":
 
 			out.Values[i] = ec._Topic_updatedAt(ctx, field, obj)
+
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "metaLabels":
+
+			out.Values[i] = ec._Topic_metaLabels(ctx, field, obj)
 
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
@@ -8907,6 +11073,23 @@ func (ec *executionContext) _Topic(ctx context.Context, sel ast.SelectionSet, ob
 					}
 				}()
 				res = ec._Topic_includes(ctx, field, obj)
+				return res
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return innerFunc(ctx)
+
+			})
+		case "taggedWith":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Topic_taggedWith(ctx, field, obj)
 				return res
 			}
 
@@ -9392,28 +11575,6 @@ func (ec *executionContext) unmarshalNCreateAlbumInput2nubuscuᚋpretenseᚋent�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCreateAlbumInput2ᚕᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInputᚄ(ctx context.Context, v interface{}) ([]*ent.CreateAlbumInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*ent.CreateAlbumInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNCreateAlbumInput2ᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNCreateAlbumInput2ᚖnubuscuᚋpretenseᚋentᚐCreateAlbumInput(ctx context.Context, v interface{}) (*ent.CreateAlbumInput, error) {
-	res, err := ec.unmarshalInputCreateAlbumInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNCreateArtistInput2nubuscuᚋpretenseᚋentᚐCreateArtistInput(ctx context.Context, v interface{}) (ent.CreateArtistInput, error) {
 	res, err := ec.unmarshalInputCreateArtistInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -9607,6 +11768,53 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTag2ᚖnubuscuᚋpretenseᚋentᚐTag(ctx context.Context, sel ast.SelectionSet, v *ent.Tag) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Tag(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTagWhereInput2ᚖnubuscuᚋpretenseᚋentᚐTagWhereInput(ctx context.Context, v interface{}) (*ent.TagWhereInput, error) {
+	res, err := ec.unmarshalInputTagWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
@@ -10467,6 +12675,81 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	}
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) marshalOTag2ᚕᚖnubuscuᚋpretenseᚋentᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*ent.Tag) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNTag2ᚖnubuscuᚋpretenseᚋentᚐTag(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOTagWhereInput2ᚕᚖnubuscuᚋpretenseᚋentᚐTagWhereInputᚄ(ctx context.Context, v interface{}) ([]*ent.TagWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		vSlice = graphql.CoerceList(v)
+	}
+	var err error
+	res := make([]*ent.TagWhereInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNTagWhereInput2ᚖnubuscuᚋpretenseᚋentᚐTagWhereInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOTagWhereInput2ᚖnubuscuᚋpretenseᚋentᚐTagWhereInput(ctx context.Context, v interface{}) (*ent.TagWhereInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTagWhereInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOTime2ᚕtimeᚐTimeᚄ(ctx context.Context, v interface{}) ([]time.Time, error) {

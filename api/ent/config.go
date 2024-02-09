@@ -27,6 +27,7 @@ type hooks struct {
 	Album  []ent.Hook
 	Artist []ent.Hook
 	Review []ent.Hook
+	Tag    []ent.Hook
 	Topic  []ent.Hook
 }
 

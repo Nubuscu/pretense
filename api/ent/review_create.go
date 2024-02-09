@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"nubuscu/pretense/ent/review"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 
@@ -51,6 +52,12 @@ func (rc *ReviewCreate) SetNillableUpdatedAt(t *time.Time) *ReviewCreate {
 	return rc
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (rc *ReviewCreate) SetMetaLabels(s []string) *ReviewCreate {
+	rc.mutation.SetMetaLabels(s)
+	return rc
+}
+
 // SetName sets the "name" field.
 func (rc *ReviewCreate) SetName(s string) *ReviewCreate {
 	rc.mutation.SetName(s)
@@ -76,6 +83,21 @@ func (rc *ReviewCreate) AddReviews(t ...*Topic) *ReviewCreate {
 		ids[i] = t[i].ID
 	}
 	return rc.AddReviewIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (rc *ReviewCreate) AddTaggedWithIDs(ids ...int) *ReviewCreate {
+	rc.mutation.AddTaggedWithIDs(ids...)
+	return rc
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (rc *ReviewCreate) AddTaggedWith(t ...*Tag) *ReviewCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return rc.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the ReviewMutation object of the builder.
@@ -163,6 +185,10 @@ func (rc *ReviewCreate) defaults() {
 		v := review.DefaultUpdatedAt()
 		rc.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := rc.mutation.MetaLabels(); !ok {
+		v := review.DefaultMetaLabels
+		rc.mutation.SetMetaLabels(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -172,6 +198,9 @@ func (rc *ReviewCreate) check() error {
 	}
 	if _, ok := rc.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Review.updated_at"`)}
+	}
+	if _, ok := rc.mutation.MetaLabels(); !ok {
+		return &ValidationError{Name: "meta_labels", err: errors.New(`ent: missing required field "Review.meta_labels"`)}
 	}
 	if _, ok := rc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Review.name"`)}
@@ -225,6 +254,10 @@ func (rc *ReviewCreate) createSpec() (*Review, *sqlgraph.CreateSpec) {
 		_spec.SetField(review.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := rc.mutation.MetaLabels(); ok {
+		_spec.SetField(review.FieldMetaLabels, field.TypeJSON, value)
+		_node.MetaLabels = value
+	}
 	if value, ok := rc.mutation.Name(); ok {
 		_spec.SetField(review.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -244,6 +277,25 @@ func (rc *ReviewCreate) createSpec() (*Review, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: topic.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := rc.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   review.TaggedWithTable,
+			Columns: review.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}
@@ -313,6 +365,18 @@ func (u *ReviewUpsert) SetUpdatedAt(v time.Time) *ReviewUpsert {
 // UpdateUpdatedAt sets the "updated_at" field to the value that was provided on create.
 func (u *ReviewUpsert) UpdateUpdatedAt() *ReviewUpsert {
 	u.SetExcluded(review.FieldUpdatedAt)
+	return u
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (u *ReviewUpsert) SetMetaLabels(v []string) *ReviewUpsert {
+	u.Set(review.FieldMetaLabels, v)
+	return u
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *ReviewUpsert) UpdateMetaLabels() *ReviewUpsert {
+	u.SetExcluded(review.FieldMetaLabels)
 	return u
 }
 
@@ -396,6 +460,20 @@ func (u *ReviewUpsertOne) SetUpdatedAt(v time.Time) *ReviewUpsertOne {
 func (u *ReviewUpsertOne) UpdateUpdatedAt() *ReviewUpsertOne {
 	return u.Update(func(s *ReviewUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (u *ReviewUpsertOne) SetMetaLabels(v []string) *ReviewUpsertOne {
+	return u.Update(func(s *ReviewUpsert) {
+		s.SetMetaLabels(v)
+	})
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *ReviewUpsertOne) UpdateMetaLabels() *ReviewUpsertOne {
+	return u.Update(func(s *ReviewUpsert) {
+		s.UpdateMetaLabels()
 	})
 }
 
@@ -645,6 +723,20 @@ func (u *ReviewUpsertBulk) SetUpdatedAt(v time.Time) *ReviewUpsertBulk {
 func (u *ReviewUpsertBulk) UpdateUpdatedAt() *ReviewUpsertBulk {
 	return u.Update(func(s *ReviewUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (u *ReviewUpsertBulk) SetMetaLabels(v []string) *ReviewUpsertBulk {
+	return u.Update(func(s *ReviewUpsert) {
+		s.SetMetaLabels(v)
+	})
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *ReviewUpsertBulk) UpdateMetaLabels() *ReviewUpsertBulk {
+	return u.Update(func(s *ReviewUpsert) {
+		s.UpdateMetaLabels()
 	})
 }
 

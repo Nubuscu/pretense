@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"nubuscu/pretense/ent/album"
 	"nubuscu/pretense/ent/artist"
+	"nubuscu/pretense/ent/tag"
 	"nubuscu/pretense/ent/topic"
 	"time"
 
@@ -52,6 +53,18 @@ func (ac *AlbumCreate) SetNillableUpdatedAt(t *time.Time) *AlbumCreate {
 	return ac
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (ac *AlbumCreate) SetMetaLabels(s []string) *AlbumCreate {
+	ac.mutation.SetMetaLabels(s)
+	return ac
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (ac *AlbumCreate) SetSpotifyURL(s string) *AlbumCreate {
+	ac.mutation.SetSpotifyURL(s)
+	return ac
+}
+
 // SetName sets the "name" field.
 func (ac *AlbumCreate) SetName(s string) *AlbumCreate {
 	ac.mutation.SetName(s)
@@ -86,6 +99,21 @@ func (ac *AlbumCreate) AddIncludedIn(t ...*Topic) *AlbumCreate {
 		ids[i] = t[i].ID
 	}
 	return ac.AddIncludedInIDs(ids...)
+}
+
+// AddTaggedWithIDs adds the "tagged_with" edge to the Tag entity by IDs.
+func (ac *AlbumCreate) AddTaggedWithIDs(ids ...int) *AlbumCreate {
+	ac.mutation.AddTaggedWithIDs(ids...)
+	return ac
+}
+
+// AddTaggedWith adds the "tagged_with" edges to the Tag entity.
+func (ac *AlbumCreate) AddTaggedWith(t ...*Tag) *AlbumCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ac.AddTaggedWithIDs(ids...)
 }
 
 // Mutation returns the AlbumMutation object of the builder.
@@ -173,6 +201,10 @@ func (ac *AlbumCreate) defaults() {
 		v := album.DefaultUpdatedAt()
 		ac.mutation.SetUpdatedAt(v)
 	}
+	if _, ok := ac.mutation.MetaLabels(); !ok {
+		v := album.DefaultMetaLabels
+		ac.mutation.SetMetaLabels(v)
+	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -182,6 +214,17 @@ func (ac *AlbumCreate) check() error {
 	}
 	if _, ok := ac.mutation.UpdatedAt(); !ok {
 		return &ValidationError{Name: "updated_at", err: errors.New(`ent: missing required field "Album.updated_at"`)}
+	}
+	if _, ok := ac.mutation.MetaLabels(); !ok {
+		return &ValidationError{Name: "meta_labels", err: errors.New(`ent: missing required field "Album.meta_labels"`)}
+	}
+	if _, ok := ac.mutation.SpotifyURL(); !ok {
+		return &ValidationError{Name: "spotify_url", err: errors.New(`ent: missing required field "Album.spotify_url"`)}
+	}
+	if v, ok := ac.mutation.SpotifyURL(); ok {
+		if err := album.SpotifyURLValidator(v); err != nil {
+			return &ValidationError{Name: "spotify_url", err: fmt.Errorf(`ent: validator failed for field "Album.spotify_url": %w`, err)}
+		}
 	}
 	if _, ok := ac.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Album.name"`)}
@@ -227,6 +270,14 @@ func (ac *AlbumCreate) createSpec() (*Album, *sqlgraph.CreateSpec) {
 		_spec.SetField(album.FieldUpdatedAt, field.TypeTime, value)
 		_node.UpdatedAt = value
 	}
+	if value, ok := ac.mutation.MetaLabels(); ok {
+		_spec.SetField(album.FieldMetaLabels, field.TypeJSON, value)
+		_node.MetaLabels = value
+	}
+	if value, ok := ac.mutation.SpotifyURL(); ok {
+		_spec.SetField(album.FieldSpotifyURL, field.TypeString, value)
+		_node.SpotifyURL = value
+	}
 	if value, ok := ac.mutation.Name(); ok {
 		_spec.SetField(album.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -261,6 +312,25 @@ func (ac *AlbumCreate) createSpec() (*Album, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: topic.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.TaggedWithIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2M,
+			Inverse: false,
+			Table:   album.TaggedWithTable,
+			Columns: album.TaggedWithPrimaryKey,
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tag.FieldID,
 				},
 			},
 		}
@@ -333,6 +403,30 @@ func (u *AlbumUpsert) UpdateUpdatedAt() *AlbumUpsert {
 	return u
 }
 
+// SetMetaLabels sets the "meta_labels" field.
+func (u *AlbumUpsert) SetMetaLabels(v []string) *AlbumUpsert {
+	u.Set(album.FieldMetaLabels, v)
+	return u
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *AlbumUpsert) UpdateMetaLabels() *AlbumUpsert {
+	u.SetExcluded(album.FieldMetaLabels)
+	return u
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (u *AlbumUpsert) SetSpotifyURL(v string) *AlbumUpsert {
+	u.Set(album.FieldSpotifyURL, v)
+	return u
+}
+
+// UpdateSpotifyURL sets the "spotify_url" field to the value that was provided on create.
+func (u *AlbumUpsert) UpdateSpotifyURL() *AlbumUpsert {
+	u.SetExcluded(album.FieldSpotifyURL)
+	return u
+}
+
 // SetName sets the "name" field.
 func (u *AlbumUpsert) SetName(v string) *AlbumUpsert {
 	u.Set(album.FieldName, v)
@@ -401,6 +495,34 @@ func (u *AlbumUpsertOne) SetUpdatedAt(v time.Time) *AlbumUpsertOne {
 func (u *AlbumUpsertOne) UpdateUpdatedAt() *AlbumUpsertOne {
 	return u.Update(func(s *AlbumUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (u *AlbumUpsertOne) SetMetaLabels(v []string) *AlbumUpsertOne {
+	return u.Update(func(s *AlbumUpsert) {
+		s.SetMetaLabels(v)
+	})
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *AlbumUpsertOne) UpdateMetaLabels() *AlbumUpsertOne {
+	return u.Update(func(s *AlbumUpsert) {
+		s.UpdateMetaLabels()
+	})
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (u *AlbumUpsertOne) SetSpotifyURL(v string) *AlbumUpsertOne {
+	return u.Update(func(s *AlbumUpsert) {
+		s.SetSpotifyURL(v)
+	})
+}
+
+// UpdateSpotifyURL sets the "spotify_url" field to the value that was provided on create.
+func (u *AlbumUpsertOne) UpdateSpotifyURL() *AlbumUpsertOne {
+	return u.Update(func(s *AlbumUpsert) {
+		s.UpdateSpotifyURL()
 	})
 }
 
@@ -636,6 +758,34 @@ func (u *AlbumUpsertBulk) SetUpdatedAt(v time.Time) *AlbumUpsertBulk {
 func (u *AlbumUpsertBulk) UpdateUpdatedAt() *AlbumUpsertBulk {
 	return u.Update(func(s *AlbumUpsert) {
 		s.UpdateUpdatedAt()
+	})
+}
+
+// SetMetaLabels sets the "meta_labels" field.
+func (u *AlbumUpsertBulk) SetMetaLabels(v []string) *AlbumUpsertBulk {
+	return u.Update(func(s *AlbumUpsert) {
+		s.SetMetaLabels(v)
+	})
+}
+
+// UpdateMetaLabels sets the "meta_labels" field to the value that was provided on create.
+func (u *AlbumUpsertBulk) UpdateMetaLabels() *AlbumUpsertBulk {
+	return u.Update(func(s *AlbumUpsert) {
+		s.UpdateMetaLabels()
+	})
+}
+
+// SetSpotifyURL sets the "spotify_url" field.
+func (u *AlbumUpsertBulk) SetSpotifyURL(v string) *AlbumUpsertBulk {
+	return u.Update(func(s *AlbumUpsert) {
+		s.SetSpotifyURL(v)
+	})
+}
+
+// UpdateSpotifyURL sets the "spotify_url" field to the value that was provided on create.
+func (u *AlbumUpsertBulk) UpdateSpotifyURL() *AlbumUpsertBulk {
+	return u.Update(func(s *AlbumUpsert) {
+		s.UpdateSpotifyURL()
 	})
 }
 
