@@ -4,18 +4,23 @@ query AllTopics {
       node {
         id
         name
+        metaLabels
         includes {
           id
           name
+          spotifyURL
           by {
             id
             name
+            spotifyURL
+            metaLabels
           }
         }
         reviewedBy {
           id
           name
           body
+          metaLabels
         }
       }
     }
