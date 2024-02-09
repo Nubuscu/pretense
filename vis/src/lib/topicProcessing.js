@@ -18,7 +18,8 @@ export function singleTopic(topicData, topicId = null) {
 			id: topicNodeId,
 			label: topicData.name,
 			isTopic: true,
-			cluster: topicNodeId
+			cluster: topicNodeId,
+			metaLabels: topicData.metaLabels,
 		});
 	}
 	topicData.includes.forEach((album) => {
@@ -28,6 +29,8 @@ export function singleTopic(topicData, topicId = null) {
 			id: albumNodeId,
 			label: `${album.name} - ${album.by.map((a) => a.name).join(', ')}`,
 			artists: album.by,
+			spotify: album.spotifyURL,
+			metaLabels: album.metaLabels,
 			cluster: topicNodeId // for cytoscape-cise
 		};
 		if (topicId !== null) {

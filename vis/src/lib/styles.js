@@ -14,6 +14,7 @@ export const colours = {
   text: '#ffffff',
   bg: '#2c2c2c',
 }
+
 export const graphStyles = [
   {
     selector: 'node',
@@ -32,7 +33,6 @@ export const graphStyles = [
       'color': colours.text,
       'layoutDimensions': {
         'nodeDimensionsIncludeLabels': true,
-
       }
     }
   },
@@ -41,9 +41,9 @@ export const graphStyles = [
     style: {
       'width': '40',
       'height': '40',
-      'shape': 'hexagon',
-      'background-color': colours.nodeTopicDefault,
-      'border-color': colours.nodeTopicDefault,
+      'shape': 'diamond',
+      'background-color': colours.nodeDefault,
+      'border-color': colours.nodeDefault,
     }
   },
   {

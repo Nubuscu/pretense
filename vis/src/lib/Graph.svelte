@@ -11,6 +11,23 @@
 	let refElement = null;
 	let cyInstance = null;
 	export let input = null;
+	const setNodeColours = (nodeEvent, selected = false) => {
+		let edges = nodeEvent.target.connectedEdges();
+		let nextNodes = edges.flatMap((e) => e.connectedNodes().filter((n) => n !== nodeEvent.target));
+		let nextEdges = nextNodes.flatMap((n) => n.connectedEdges().filter((e) => !edges.includes(e)));
+		edges.forEach((e) => {
+			e.style({ 'line-color': selected ? colours.edgeSelected : colours.edgeDefault });
+		});
+		nextNodes.forEach((n) => {
+			n.style({
+				'background-color': selected ? colours.nodeNearby : colours.nodeDefault,
+				'border-color': selected ? colours.nodeNearby : colours.nodeDefault
+			});
+		});
+		nextEdges.forEach((e) => {
+			e.style({ 'line-color': selected ? colours.edgeNearby : colours.edgeDefault });
+		});
+	};
 	$: if (input !== null && cyInstance !== null) {
 		// batch process to stop it trying to reprocess the layout for every new node
 		cyInstance.batch(() => {
@@ -50,12 +67,12 @@
 	onMount(() => {
 		cytoscape.use(cise);
 		cytoscape.use(elk);
+
 		cyInstance = cytoscape({
 			container: refElement,
 			style: graphStyles,
 			wheelSensitivity: 0.15
 		});
-		cyInstance.on('add', () => {});
 		cyInstance.on('tap', 'node[isTopic]', (event) => {
 			let data = event.target.data();
 			// id ~= topic_N
@@ -63,38 +80,14 @@
 			selectedTopicId.set(topicId);
 			openModal.set(true);
 		});
-		cyInstance.on('mouseover', 'node', (event) => {
-			let edges = event.target.connectedEdges();
-			let nextNodes = edges.flatMap((e) => e.connectedNodes().filter((n) => n !== event.target));
-			let nextEdges = nextNodes.flatMap((n) =>
-				n.connectedEdges().filter((e) => !edges.includes(e))
-			);
-			edges.forEach((e) => {
-				e.style({ 'line-color': colours.edgeSelected });
-			});
-			nextNodes.forEach((n) => {
-				n.style({ 'background-color': colours.nodeNearby });
-			});
-			nextEdges.forEach((e) => {
-				e.style({ 'line-color': colours.edgeNearby });
-			});
+		cyInstance.on('tap', 'node[!isTopic]', (event) => {
+			let data = event.target.data();
+			let url = data.spotify;
+			let windowRef = window.open(url, '_blank');
+			windowRef.focus();
 		});
-		cyInstance.on('mouseout', 'node', (event) => {
-			let edges = event.target.connectedEdges();
-			let nextNodes = edges.flatMap((e) => e.connectedNodes().filter((n) => n !== event.target));
-			let nextEdges = nextNodes.flatMap((n) =>
-				n.connectedEdges().filter((e) => !edges.includes(e))
-			);
-			edges.forEach((e) => {
-				e.style({ 'line-color': colours.edgeDefault });
-			});
-			nextNodes.forEach((n) => {
-				n.style({ 'background-color': n.isTopic ? colours.nodeDefault : colours.nodeTopicDefault });
-			});
-			nextEdges.forEach((e) => {
-				e.style({ 'line-color': colours.edgeDefault });
-			});
-		});
+		cyInstance.on('mouseover', 'node', (event) => setNodeColours(event, true));
+		cyInstance.on('mouseout', 'node', (event) => setNodeColours(event, false));
 	});
 </script>
 
