@@ -19,9 +19,6 @@ import uvicorn
 
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger("spotify")
-# a token for the spotify api. e.g.:
-# https://developer.spotify.com/console/get-current-user-saved-albums/?limit=&offset=&market=
-# may expire relatively quickly
 
 CLIENT_ID = "4f5bb5185cd044c5a5e58e22d224587c"
 REDIRECT_URL = "http://localhost:12345/callback"
